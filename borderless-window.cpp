@@ -22,40 +22,6 @@
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "dwmapi.lib")
 
-static void update_region(borderless_window_t *window)
-{
-	RECT old_rgn = window->rgn;
-	RECT r = {0};
-
-	if (IsMaximized(window->hwnd)) 
-	{
-		SystemParametersInfo(SPI_GETWORKAREA, 0, &window->rgn, 0);
-		int work_area_width = window->rgn.right - window->rgn.left;
-        int work_area_height = window->rgn.bottom - window->rgn.top;
-        SetWindowPos(window->hwnd, HWND_TOP, window->rgn.left, window->rgn.top, work_area_width, work_area_height, NULL);
-		return;
-		/* For maximized windows, a region is needed to cut off the non-client
-		   borders that hang over the edge of the screen */
-		/*window->rgn.left = wi.rcClient.left - wi.rcWindow.left;
-		window->rgn.top = wi.rcClient.top - wi.rcWindow.top;
-		window->rgn.right = wi.rcClient.right - wi.rcWindow.left;
-		window->rgn.bottom = wi.rcClient.bottom - wi.rcWindow.top;*/
-	} 
-	else if (window->composition_enabled) 
-	{
-		/* Don't mess with the region when composition is enabled and the
-		   window is not maximized, otherwise it will lose its shadow */
-		window->rgn = r;
-	}
-
-	if (EqualRect(&window->rgn, &old_rgn))
-		return;
-	if (EqualRect(&window->rgn, &r))
-		SetWindowRgn(window->hwnd, NULL, TRUE);
-	else
-		SetWindowRgn(window->hwnd, CreateRectRgnIndirect(&window->rgn), TRUE);
-}
-
 static void handle_compositionchanged(borderless_window_t *window)
 {
 	BOOL enabled = FALSE;
@@ -70,8 +36,6 @@ static void handle_compositionchanged(borderless_window_t *window)
 		DWORD state = DWMNCRP_ENABLED;
 		DwmSetWindowAttribute(window->hwnd, DWMWA_NCRENDERING_POLICY, &state, sizeof(DWORD));
 	}
-
-	update_region(window);
 }
 
 static LRESULT handle_nchittest(borderless_window_t *window, int x, int y)
@@ -120,7 +84,7 @@ static LRESULT CALLBACK borderless_window_proc(HWND hwnd, UINT msg, WPARAM wpara
 	{
 		if (msg == WM_NCCREATE)
 		{
-			borderless_window_t *window = (borderless_window_t*)((CREATESTRUCTW*)lparam)->lpCreateParams;
+			window = (borderless_window_t*)((CREATESTRUCTW*)lparam)->lpCreateParams;
 			SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)window);
 		}
 		return DefWindowProcW(hwnd, msg, wparam, lparam);
@@ -143,16 +107,27 @@ static LRESULT CALLBACK borderless_window_proc(HWND hwnd, UINT msg, WPARAM wpara
 	case WM_SIZE:
 		window->minimized = wparam == SIZE_MINIMIZED;
 		window->maximized = wparam == SIZE_MAXIMIZED;
-		return 0;
-	case WM_WINDOWPOSCHANGED:
-		update_region(window);
-		RECT client;
-		if (GetClientRect(window->hwnd, &client))
+
+		if (window->maximized && (window->width != LOWORD(lparam) || window->height != HIWORD(lparam)))
 		{
-			window->width = client.right - client.left;
-			window->height = client.bottom - client.top;
+			const POINT zero = { 0, 0 };
+			HMONITOR primary = MonitorFromPoint (zero, MONITOR_DEFAULTTOPRIMARY);
+			HMONITOR monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+			
+			if (monitor == primary)
+			{
+				RECT r = {};
+				SystemParametersInfo(SPI_GETWORKAREA, 0, &r, 0);
+				window->width = r.right - r.left;
+				window->height = r.bottom - r.top;
+				SetWindowPos(hwnd, HWND_TOP, r.left, r.top, window->width, window->height, NULL);
+				return 0;
+			}
 		}
-		return DefWindowProcW(hwnd, msg, wparam, lparam); // Must be executed so that WM_SIZE and WM_MOVE get sent properly!
+
+		window->width = LOWORD(lparam);
+		window->height = HIWORD(lparam);
+		return 0;
 	}
 
 	LRESULT result = window->handler(window, msg, wparam, lparam) ? 0 : DefWindowProcW(hwnd, msg, wparam, lparam);
