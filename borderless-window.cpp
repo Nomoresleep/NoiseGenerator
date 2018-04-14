@@ -147,9 +147,11 @@ static LRESULT CALLBACK borderless_window_proc(HWND hwnd, UINT msg, WPARAM wpara
 	case WM_WINDOWPOSCHANGED:
 		update_region(window);
 		RECT client;
-		GetClientRect(window->hwnd, &client);
-		window->width = client.right;
-		window->height = client.bottom;
+		if (GetClientRect(window->hwnd, &client))
+		{
+			window->width = client.right - client.left;
+			window->height = client.bottom - client.top;
+		}
 		return DefWindowProcW(hwnd, msg, wparam, lparam); // Must be executed so that WM_SIZE and WM_MOVE get sent properly!
 	}
 
