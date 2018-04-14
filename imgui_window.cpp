@@ -13,11 +13,30 @@ struct imgui_window_t
 	void *userdata;
 };
 
-bool imgui_window_begin(const char *title)
+static bool imgui_window_context_menu(borderless_window_t* window)
+{
+	bool result = true;
+	if (ImGui::BeginPopupContextItem("window_context_menu"))
+	{
+		if (ImGui::Selectable("Restore")) {}
+		if (ImGui::Selectable("Move")) {}
+		if (ImGui::Selectable("Change Size")) {}
+		if (ImGui::Selectable("Minimize")) {}
+		if (ImGui::Selectable("Maximize")) {}
+		ImGui::Separator();
+		if (ImGui::Selectable("Close")) { result = false; }
+		ImGui::EndPopup();
+	}
+	return result;
+}
+
+bool imgui_window_begin(borderless_window_t* window, const char *title)
 {
 	bool show = true;
-	return ImGui::Begin(title, &show, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse) && show;
+	bool stayOpen = ImGui::Begin(title, &show, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse) && imgui_window_context_menu(window) && show;
+	return stayOpen;
 }
+
 void imgui_window_end()
 {
 	ImGui::End();

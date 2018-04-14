@@ -6,9 +6,10 @@
 #include "imgui_impl_gl3.h"
 #include "imgui_window.cpp"
 
+
 static void imgui_window0(borderless_window_t *window, void * /*userdata*/)
 {
-	if (!imgui_window_begin("Borderless OpenGL Window Example"))
+	if (!imgui_window_begin(window, "Borderless OpenGL Window Example"))
 	{
 		borderless_window_close_all(window);
 		PostQuitMessage(0);
@@ -21,7 +22,7 @@ static void imgui_window0(borderless_window_t *window, void * /*userdata*/)
 
 static void imgui_window1(borderless_window_t * window, void * /*userdata*/)
 {
-	if (!imgui_window_begin("Imgui!"))
+	if (!imgui_window_begin(window, "Imgui!"))
 		PostMessage(window->hwnd, WM_CLOSE, 0, 0);
 
 	if (ImGui::Button("Create Window"))
