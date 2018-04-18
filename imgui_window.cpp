@@ -13,16 +13,31 @@ struct imgui_window_t
 	void *userdata;
 };
 
+void imgui_push_disabled_selected(bool disabled) {
+	if (disabled) { ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.25); }
+}
+void imgui_pop_disabled_selected(bool disabled) {
+	if (disabled) { ImGui::PopStyleVar(); }
+}
 static bool imgui_window_context_menu(borderless_window_t* window)
 {
 	bool result = true;
 	if (ImGui::BeginPopupContextItem("window_context_menu"))
 	{
-		if (ImGui::Selectable("Restore")) {}
-		if (ImGui::Selectable("Move")) {}
-		if (ImGui::Selectable("Change Size")) {}
-		if (ImGui::Selectable("Minimize")) {}
-		if (ImGui::Selectable("Maximize")) {}
+		//TODO:[NoMoreSleep] Is there a possibility to disable selectables other than this tedious workaround? There is a PushItemFlags for disabling in imgui_internal....
+		if (ImGui::Selectable("Restore")) { PostMessage(window->hwnd, WM_SYSCOMMAND, SC_RESTORE, 0); }
+		{
+			imgui_push_disabled_selected(window->maximized);
+			if (ImGui::Selectable("Move") && !window->maximized) { PostMessage(window->hwnd, WM_SYSCOMMAND, SC_MOVE, 0); }
+			if (ImGui::Selectable("Change Size") && !window->maximized) { PostMessage(window->hwnd, WM_SYSCOMMAND, SC_SIZE, 0); }
+			imgui_pop_disabled_selected(window->maximized);
+		}
+		if (ImGui::Selectable("Minimize")) { PostMessage(window->hwnd, WM_SYSCOMMAND, SC_MINIMIZE, 0); }
+		{
+			imgui_push_disabled_selected(window->maximized);
+			if (ImGui::Selectable("Maximize") && !window->maximized) { PostMessage(window->hwnd, WM_SYSCOMMAND, SC_MAXIMIZE, 0); }
+			imgui_pop_disabled_selected(window->maximized);
+		}
 		ImGui::Separator();
 		if (ImGui::Selectable("Close")) { result = false; }
 		ImGui::EndPopup();
@@ -33,8 +48,7 @@ static bool imgui_window_context_menu(borderless_window_t* window)
 bool imgui_window_begin(borderless_window_t* window, const char *title)
 {
 	bool show = true;
-	bool stayOpen = ImGui::Begin(title, &show, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse) && imgui_window_context_menu(window) && show;
-	return stayOpen;
+	return ImGui::Begin(title, &show, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse) && imgui_window_context_menu(window) && show;
 }
 
 void imgui_window_end()
