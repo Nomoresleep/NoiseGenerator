@@ -131,29 +131,11 @@ static LRESULT CALLBACK borderless_window_proc(HWND hwnd, UINT msg, WPARAM wpara
 		window->width = LOWORD(lparam);
 		window->height = HIWORD(lparam);
 		return 0;
-	case WM_KEYUP:
-		// Emulate windows tiling feature triggered via key combo (only works on primary monitor for now):
-		// TODO: Handle multiple monitors!
-		// TODO: Do the same when hitting a monitor edge while dragging!
-		if (((GetKeyState(VK_LWIN) & 0x8000) != 0 ||
-			 (GetKeyState(VK_RWIN) & 0x8000) != 0) &&
-			 (wparam == VK_LEFT ||
-			 wparam == VK_RIGHT ||
-			 wparam == VK_DOWN))
-		{
-			RECT r = {};
-			SystemParametersInfo(SPI_GETWORKAREA, 0, &r, 0);
-			int w = r.right - r.left;
-			int h = r.bottom - r.top;
-			
-			if (wparam == VK_LEFT)
-				SetWindowPos(hwnd, HWND_TOP, r.left, r.top, w / 2, h, NULL);
-			if (wparam == VK_RIGHT)
-				SetWindowPos(hwnd, HWND_TOP, r.left + w / 2, r.top, w / 2, h, NULL);
-			if (wparam == VK_DOWN)
-				ShowWindow(hwnd, SW_RESTORE);
-		}
-		break;
+	//NOTE:[NoMoreSleep] These Messages suppress the rendering of the WS_THICKFRAME (which is necessary for "native" aero snap)
+	case WM_NCCALCSIZE:
+		return 0;
+	case WM_NCACTIVATE:
+			return !(BOOL)wparam;
 	}
 
 	LRESULT result = window->handler(window, msg, wparam, lparam) ? 0 : DefWindowProcW(hwnd, msg, wparam, lparam);
@@ -199,7 +181,8 @@ borderless_window_t* borderless_window_create(LPCWSTR title, int width, int heig
 		WS_EX_APPWINDOW | WS_EX_LAYERED,
 		L"borderless-window",
 		title,
-		WS_POPUP | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_VISIBLE,
+		//NOTE:[NoMoreSleep] WS_THICKFRAME is required for "native" aero snap feature
+		WS_POPUP | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_VISIBLE | WS_THICKFRAME,
 		CW_USEDEFAULT, CW_USEDEFAULT, width, height,
 		NULL, NULL, GetModuleHandle(NULL), window);
 
