@@ -84,13 +84,16 @@ static LRESULT CALLBACK borderless_window_proc(HWND hwnd, UINT msg, WPARAM wpara
 	{
 		if (msg == WM_NCCREATE)
 		{
-			window = (borderless_window_t*)((CREATESTRUCTW*)lparam)->lpCreateParams;
+			CREATESTRUCTW *createStruct = (CREATESTRUCTW*)lparam;
+			window = (borderless_window_t*)createStruct->lpCreateParams;
+			window->hwnd = hwnd;
+			window->hdc = GetDC(hwnd);
+			window->width = createStruct->cx;
+			window->height = createStruct->cy;
 			SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)window);
 		}
 		return DefWindowProcW(hwnd, msg, wparam, lparam);
 	}
-
-	static bool painting = false;
 
 	switch (msg) 
 	{
@@ -100,9 +103,9 @@ static LRESULT CALLBACK borderless_window_proc(HWND hwnd, UINT msg, WPARAM wpara
 	case WM_NCHITTEST:
 		return handle_nchittest(window, GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 	case WM_PAINT:
-		if (painting) // Prevent recursive painting
+		if (window->painting) // Prevent recursive painting
 			return DefWindowProcW(hwnd, msg, wparam, lparam);
-		painting = true;
+		window->painting = true;
 		break;
 	case WM_SIZE:
 		window->minimized = wparam == SIZE_MINIMIZED;
@@ -128,12 +131,35 @@ static LRESULT CALLBACK borderless_window_proc(HWND hwnd, UINT msg, WPARAM wpara
 		window->width = LOWORD(lparam);
 		window->height = HIWORD(lparam);
 		return 0;
+	case WM_KEYUP:
+		// Emulate windows tiling feature triggered via key combo (only works on primary monitor for now):
+		// TODO: Handle multiple monitors!
+		// TODO: Do the same when hitting a monitor edge while dragging!
+		if (((GetKeyState(VK_LWIN) & 0x8000) != 0 ||
+			 (GetKeyState(VK_RWIN) & 0x8000) != 0) &&
+			 (wparam == VK_LEFT ||
+			 wparam == VK_RIGHT ||
+			 wparam == VK_DOWN))
+		{
+			RECT r = {};
+			SystemParametersInfo(SPI_GETWORKAREA, 0, &r, 0);
+			int w = r.right - r.left;
+			int h = r.bottom - r.top;
+			
+			if (wparam == VK_LEFT)
+				SetWindowPos(hwnd, HWND_TOP, r.left, r.top, w / 2, h, NULL);
+			if (wparam == VK_RIGHT)
+				SetWindowPos(hwnd, HWND_TOP, r.left + w / 2, r.top, w / 2, h, NULL);
+			if (wparam == VK_DOWN)
+				ShowWindow(hwnd, SW_RESTORE);
+		}
+		break;
 	}
 
 	LRESULT result = window->handler(window, msg, wparam, lparam) ? 0 : DefWindowProcW(hwnd, msg, wparam, lparam);
 
 	if (msg == WM_PAINT)
-		painting = false;
+		window->painting = false;
 	else if (msg == WM_CLOSE || msg == WM_QUIT)
 	{
 		DestroyWindow(hwnd);
@@ -169,15 +195,13 @@ borderless_window_t* borderless_window_create(LPCWSTR title, int width, int heig
 	window->handler = handler;
 	window->userdata = userdata;
 
-	window->hwnd = CreateWindowExW(
+	CreateWindowExW(
 		WS_EX_APPWINDOW | WS_EX_LAYERED,
 		L"borderless-window",
 		title,
 		WS_POPUP | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_VISIBLE,
 		CW_USEDEFAULT, CW_USEDEFAULT, width, height,
 		NULL, NULL, GetModuleHandle(NULL), window);
-	
-	window->hdc = GetDC(window->hwnd);
 
 	// Necessary if you want compositing to work properly with alpha blending:
 	SetLayeredWindowAttributes(window->hwnd, RGB(255, 0, 255), 255, LWA_COLORKEY);
@@ -193,7 +217,12 @@ static BOOL CALLBACK enum_thread_window(HWND hwnd, LPARAM /*lParam*/)
 	return TRUE;
 }
 
-void borderless_window_close_all(borderless_window_t* root)
+void borderless_window_close_all(borderless_window_t *root)
 {
 	EnumThreadWindows(GetWindowThreadProcessId(root->hwnd, 0), enum_thread_window, NULL);
+}
+
+void borderless_window_close(borderless_window_t *window)
+{
+	PostMessage(window->hwnd, WM_CLOSE, 0, 0);
 }

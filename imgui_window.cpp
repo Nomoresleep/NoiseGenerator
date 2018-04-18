@@ -1,6 +1,7 @@
 static int g_openglMajorVersion;
 static int g_openglMinorVersion;
-static HGLRC hglrc; // Global, shared between windows
+static HGLRC g_hglrc; // Global, shared between windows
+static int g_windowIdCounter = 0; // Helps during debugging
 
 struct imgui_window_t;
 
@@ -11,6 +12,7 @@ struct imgui_window_t
 	ImGuiContext *context;
 	imgui_window_func func;
 	void *userdata;
+	int id;
 };
 
 void imgui_push_disabled_selected(bool disabled) {
@@ -58,7 +60,8 @@ void imgui_window_end()
 
 static bool imgui_message(borderless_window_t *window, UINT msg, WPARAM wparam, LPARAM lparam)
 {
-	ImGui::SetCurrentContext(((imgui_window_t*)window->userdata)->context);
+	imgui_window_t *imgui = (imgui_window_t*)window->userdata;
+	ImGui::SetCurrentContext(imgui->context);
 	
 	if (HIWORD(lparam) < 19 && LOWORD(lparam) < window->width - 17) // TODO: Get title bar dimensions from imgui
 	{
@@ -67,11 +70,11 @@ static bool imgui_message(borderless_window_t *window, UINT msg, WPARAM wparam, 
 	}
 	if (msg == WM_PAINT)
 	{
-		wglMakeCurrent(window->hdc, hglrc);
+		wglMakeCurrent(window->hdc, g_hglrc);
 		ImGui_Impl_WinAPI_GL3_NewFrame(window->hwnd, window->width, window->height, window->width, window->height);
 		ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
 		ImGui::SetNextWindowSize(ImVec2((float)window->width, (float)window->height));
-		((imgui_window_t*)window->userdata)->func(window, ((imgui_window_t*)window->userdata)->userdata);
+		imgui->func(window, imgui->userdata);
 		glViewport(0, 0, window->width, window->height);
 		glClear(GL_COLOR_BUFFER_BIT);
 		ImGui::Render();
@@ -83,7 +86,7 @@ static bool imgui_message(borderless_window_t *window, UINT msg, WPARAM wparam, 
 	{
 		ImGui_Impl_WinAPI_GL3_Shutdown();
 		ImGui::DestroyContext();
-		free((imgui_window_t*)window->userdata);
+		free(imgui);
 		return true;
 	}
 	
@@ -93,15 +96,17 @@ static bool imgui_message(borderless_window_t *window, UINT msg, WPARAM wparam, 
 borderless_window_t * imgui_window_create(LPCWSTR title, int w, int h, imgui_window_func func, void *userdata)
 {
 	ImGuiContext* previous = ImGui::GetCurrentContext();
+	HDC previousDC = wglGetCurrentDC();
 
 	imgui_window_t *imgui = (imgui_window_t*)calloc(1, sizeof(imgui_window_t));
 	imgui->func = func;
 	imgui->userdata = userdata;
+	imgui->id = g_windowIdCounter++;
 	borderless_window_t* window = borderless_window_create(title, w, h, imgui_message, imgui);
 
-	if (!hglrc)
+	if (!g_hglrc)
 	{
-		if (!(hglrc = opengl_create_context(window->hdc, g_openglMajorVersion, g_openglMinorVersion)))
+		if (!(g_hglrc = opengl_create_context(window->hdc, g_openglMajorVersion, g_openglMinorVersion)))
 			ExitProcess(ERROR_INVALID_HANDLE);
 		gladLoadGL();
 	}
@@ -119,6 +124,8 @@ borderless_window_t * imgui_window_create(LPCWSTR title, int w, int h, imgui_win
 	ShowWindow(window->hwnd, SW_SHOWDEFAULT);
 	UpdateWindow(window->hwnd);
 
+	if (previousDC)
+		wglMakeCurrent(previousDC, g_hglrc);
 	ImGui::SetCurrentContext(previous);
 
 	return window;
@@ -133,8 +140,8 @@ void imgui_window_init(int openglMajorVersion, int openglMinorVersion)
 
 void imgui_window_shutdown()
 {
-	opengl_destroy_context(hglrc);
-	hglrc = NULL;
+	opengl_destroy_context(g_hglrc);
+	g_hglrc = NULL;
 	borderless_window_unregister();
 }
 
