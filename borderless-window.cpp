@@ -131,11 +131,50 @@ static LRESULT CALLBACK borderless_window_proc(HWND hwnd, UINT msg, WPARAM wpara
 		window->width = LOWORD(lparam);
 		window->height = HIWORD(lparam);
 		return 0;
-	//NOTE:[NoMoreSleep] These Messages suppress the rendering of the WS_THICKFRAME (which is necessary for "native" aero snap)
-	case WM_NCCALCSIZE:
-		return 0;
-	case WM_NCACTIVATE:
-			return !(BOOL)wparam;
+    case WM_KEYUP:
+        if (((GetKeyState(VK_LWIN) & 0x8000) != 0 ||
+            (GetKeyState(VK_RWIN) & 0x8000) != 0) &&
+            (wparam == VK_LEFT ||
+                wparam == VK_RIGHT ||
+                wparam == VK_DOWN ||
+                wparam == VK_UP))
+        {
+            int x = GetSystemMetrics(SM_XVIRTUALSCREEN);
+            int y = GetSystemMetrics(SM_YVIRTUALSCREEN);
+            int cx = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+            int cy = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+
+            HMONITOR windowMonitor = MonitorFromWindow(window->hwnd, MONITOR_DEFAULTTONEAREST);
+            MONITORINFO monitorInfo = {};
+            monitorInfo.cbSize = sizeof(monitorInfo);
+            if (GetMonitorInfo(windowMonitor, &monitorInfo))
+            {
+                if (window->maximized && wparam != VK_UP)
+                    ShowWindow(hwnd, SW_RESTORE);
+
+                RECT& r = monitorInfo.rcWork;
+                int w = r.right - r.left;
+                int h = r.bottom - r.top;
+
+                if (wparam == VK_LEFT)
+                {
+                    SetWindowPos(hwnd, HWND_TOP, r.left, r.top, w / 2, h, NULL);
+                }
+                else if (wparam == VK_RIGHT)
+                {
+                    SetWindowPos(hwnd, HWND_TOP, r.left + w / 2, r.top, w / 2, h, NULL);
+                }
+                else if (wparam == VK_DOWN)
+                {
+                    ShowWindow(hwnd, SW_RESTORE);
+                }
+                else if (wparam == VK_UP)
+                {
+                    ShowWindow(hwnd, SW_MAXIMIZE);
+                }
+            }
+        }
+        break;
 	}
 
 	LRESULT result = window->handler(window, msg, wparam, lparam) ? 0 : DefWindowProcW(hwnd, msg, wparam, lparam);
@@ -182,7 +221,7 @@ borderless_window_t* borderless_window_create(LPCWSTR title, int width, int heig
 		L"borderless-window",
 		title,
 		//NOTE:[NoMoreSleep] WS_THICKFRAME is required for "native" aero snap feature
-		WS_POPUP | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_VISIBLE | WS_THICKFRAME,
+		WS_POPUP | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_VISIBLE,
 		CW_USEDEFAULT, CW_USEDEFAULT, width, height,
 		NULL, NULL, GetModuleHandle(NULL), window);
 
