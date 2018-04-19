@@ -22,6 +22,65 @@
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "dwmapi.lib")
 
+static BOOL GetClientRectInScreenSpace(borderless_window_t *window, LPRECT rect)
+{
+	RECT clientArea;
+	if (!GetClientRect(window->hwnd, &clientArea))
+		return FALSE;
+	POINT tlClientArea = { clientArea.left, clientArea.top };
+	if (!ClientToScreen(window->hwnd, &tlClientArea))
+		return FALSE;
+
+	rect->left = tlClientArea.x;
+	rect->top = tlClientArea.y;
+	rect->right = tlClientArea.x + clientArea.right;
+	rect->bottom = tlClientArea.y + clientArea.bottom;
+
+	return TRUE;
+}
+
+static BOOL IsLeftSnapped(LPRECT clientRect, LPRECT monitorRect)
+{
+	int monitorWHalf = (monitorRect->right - monitorRect->left) >> 1;
+	int clientW = clientRect->right - clientRect->left;
+	if (clientRect->top == monitorRect->top && clientRect->left == monitorRect->left && clientRect->bottom == monitorRect->bottom && monitorWHalf == clientW)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+static BOOL IsRightSnapped(LPRECT clientRect, LPRECT monitorRect)
+{
+	int monitorWHalf = (monitorRect->right - monitorRect->left) >> 1;
+	int clientW = clientRect->right - clientRect->left;
+	if (clientRect->top == monitorRect->top && clientRect->left == (monitorRect->left + monitorWHalf) && clientRect->bottom == monitorRect->bottom && monitorWHalf == clientW)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+static HMONITOR GetNextMonitorRight(LPRECT monitorRect)
+{
+	POINT pt = { monitorRect->right + 1, (monitorRect->bottom - monitorRect->top) >> 1 };
+	HMONITOR nextMonitor = MonitorFromPoint(pt, MONITOR_DEFAULTTONULL);
+	if (nextMonitor)
+		return nextMonitor;
+	pt.x = -MAXLONG;
+	nextMonitor = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
+	return nextMonitor;
+}
+
+static HMONITOR GetNextMonitorLeft(LPRECT monitorRect)
+{
+	POINT pt = { monitorRect->left - 1, (monitorRect->bottom - monitorRect->top) >> 1 };
+	HMONITOR nextMonitor = MonitorFromPoint(pt, MONITOR_DEFAULTTONULL);
+	if (nextMonitor)
+		return nextMonitor;
+	pt.x = MAXLONG;
+	nextMonitor = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
+	return nextMonitor;
+}
+
 static void handle_compositionchanged(borderless_window_t *window)
 {
 	BOOL enabled = FALSE;
@@ -147,31 +206,57 @@ static LRESULT CALLBACK borderless_window_proc(HWND hwnd, UINT msg, WPARAM wpara
             HMONITOR windowMonitor = MonitorFromWindow(window->hwnd, MONITOR_DEFAULTTONEAREST);
             MONITORINFO monitorInfo = {};
             monitorInfo.cbSize = sizeof(monitorInfo);
-            if (GetMonitorInfo(windowMonitor, &monitorInfo))
+            if (GetMonitorInfoW(windowMonitor, &monitorInfo))
             {
                 if (window->maximized && wparam != VK_UP)
                     ShowWindow(hwnd, SW_RESTORE);
 
-                RECT& r = monitorInfo.rcWork;
-                int w = r.right - r.left;
-                int h = r.bottom - r.top;
+				RECT clientRect;
+				if (GetClientRectInScreenSpace(window, &clientRect))
+				{
 
-                if (wparam == VK_LEFT)
-                {
-                    SetWindowPos(hwnd, HWND_TOP, r.left, r.top, w / 2, h, NULL);
-                }
-                else if (wparam == VK_RIGHT)
-                {
-                    SetWindowPos(hwnd, HWND_TOP, r.left + w / 2, r.top, w / 2, h, NULL);
-                }
-                else if (wparam == VK_DOWN)
-                {
-                    ShowWindow(hwnd, SW_RESTORE);
-                }
-                else if (wparam == VK_UP)
-                {
-                    ShowWindow(hwnd, SW_MAXIMIZE);
-                }
+					RECT& r = monitorInfo.rcWork;
+					int w = r.right - r.left;
+					int h = r.bottom - r.top;
+
+					if (wparam == VK_LEFT)
+					{
+						if (IsLeftSnapped(&clientRect, &monitorInfo.rcWork))
+						{
+							//Note:[NoMoreSleep] Already snapped, select next monitor to snap to
+							HMONITOR nextMonitor = GetNextMonitorLeft(&monitorInfo.rcMonitor);
+							GetMonitorInfoW(nextMonitor, &monitorInfo);
+							w = r.right - r.left;
+							h = r.bottom - r.top;
+							SetWindowPos(hwnd, HWND_TOP, r.left + w / 2, r.top, w / 2, h, NULL);
+						}
+						else
+							SetWindowPos(hwnd, HWND_TOP, r.left, r.top, w / 2, h, NULL);
+					}
+					else if (wparam == VK_RIGHT)
+					{
+						if (IsRightSnapped(&clientRect, &monitorInfo.rcWork))
+						{
+							//Note:[NoMoreSleep] Already snapped, select next monitor to snap to
+							HMONITOR nextMonitor = GetNextMonitorRight(&monitorInfo.rcMonitor);
+							GetMonitorInfoW(nextMonitor, &monitorInfo);
+							w = r.right - r.left;
+							h = r.bottom - r.top;
+							SetWindowPos(hwnd, HWND_TOP, r.left, r.top, w / 2, h, NULL);
+						}
+						else
+							SetWindowPos(hwnd, HWND_TOP, r.left + w / 2, r.top, w / 2, h, NULL);
+
+					}
+					else if (wparam == VK_DOWN)
+					{
+						ShowWindow(hwnd, SW_RESTORE);
+					}
+					else if (wparam == VK_UP)
+					{
+						ShowWindow(hwnd, SW_MAXIMIZE);
+					}
+				}
             }
         }
         break;
