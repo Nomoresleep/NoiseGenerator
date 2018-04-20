@@ -17,6 +17,8 @@ struct borderless_window_t
 	bool composition_enabled;
 	bool painting;
 
+    RECT tile_restore_rect;
+
 	message_handler handler;
 	void* userdata;
 };

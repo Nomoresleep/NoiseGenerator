@@ -107,12 +107,17 @@ static void handle_snap_left(borderless_window_t *window)
         int h = r.bottom - r.top;
         SetWindowPos(window->hwnd, HWND_TOP, r.left + w / 2, r.top, w / 2, h, NULL);
     }
+    else if (IsRightSnapped(&clientRect, &monitorInfo.rcWork))
+    {
+        SetWindowPos(window->hwnd, HWND_TOP, window->tile_restore_rect.left, window->tile_restore_rect.top, window->tile_restore_rect.right - window->tile_restore_rect.left, window->tile_restore_rect.bottom - window->tile_restore_rect.top, NULL);
+    }
     else
     {
         RECT &r = monitorInfo.rcWork;
         int w = r.right - r.left;
         int h = r.bottom - r.top;
         SetWindowPos(window->hwnd, HWND_TOP, r.left, r.top, w / 2, h, NULL);
+        window->tile_restore_rect = clientRect;
     }
 }
 
@@ -144,8 +149,15 @@ static void handle_snap_right(borderless_window_t *window)
         h = r.bottom - r.top;
         SetWindowPos(window->hwnd, HWND_TOP, r.left, r.top, w / 2, h, NULL);
     }
+    else if (IsLeftSnapped(&clientRect, &monitorInfo.rcWork))
+    {
+        SetWindowPos(window->hwnd, HWND_TOP, window->tile_restore_rect.left, window->tile_restore_rect.top, window->tile_restore_rect.right - window->tile_restore_rect.left, window->tile_restore_rect.bottom - window->tile_restore_rect.top, NULL);
+    }
     else
+    {
         SetWindowPos(window->hwnd, HWND_TOP, r.left + w / 2, r.top, w / 2, h, NULL);
+        window->tile_restore_rect = clientRect;
+    }
 }
 
 static void handle_compositionchanged(borderless_window_t *window)
