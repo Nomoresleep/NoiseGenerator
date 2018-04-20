@@ -81,82 +81,65 @@ static HMONITOR GetNextMonitorLeft(LPRECT monitorRect)
 	return nextMonitor;
 }
 
-static void handle_snap_left(borderless_window_t *window)
+static void handle_snap_left(borderless_window_t *window, LPRECT clientRect, LPRECT monitorWork, LPRECT monitor)
 {
-    HMONITOR windowMonitor = MonitorFromWindow(window->hwnd, MONITOR_DEFAULTTONEAREST);
-    MONITORINFO monitorInfo = {};
-    monitorInfo.cbSize = sizeof(monitorInfo);
-
-    if (!GetMonitorInfo(windowMonitor, &monitorInfo))
-        return;
-
-    RECT clientRect;
-    if (!GetClientRectInScreenSpace(window, &clientRect))
-        return;
-
     if (window->maximized)
         ShowWindow(window->hwnd, SW_RESTORE);
 
-    if (IsLeftSnapped(&clientRect, &monitorInfo.rcWork))
+    int w = monitorWork->right - monitorWork->left;
+    int h = monitorWork->bottom - monitorWork->top;
+    if (IsLeftSnapped(clientRect, monitorWork))
     {
         //Note:[NoMoreSleep] Already snapped, select next monitor to snap to
-        HMONITOR nextMonitor = GetNextMonitorLeft(&monitorInfo.rcMonitor);
+        HMONITOR nextMonitor = GetNextMonitorLeft(monitor);
+        MONITORINFO monitorInfo = {};
+        monitorInfo.cbSize = sizeof(monitorInfo);
         GetMonitorInfoW(nextMonitor, &monitorInfo);
         RECT &r = monitorInfo.rcWork;
-        int w = r.right - r.left;
-        int h = r.bottom - r.top;
+        w = r.right - r.left;
+        h = r.bottom - r.top;
         SetWindowPos(window->hwnd, HWND_TOP, r.left + w / 2, r.top, w / 2, h, NULL);
     }
-    else if (IsRightSnapped(&clientRect, &monitorInfo.rcWork))
+    else if (IsRightSnapped(clientRect, monitorWork))
     {
-        SetWindowPos(window->hwnd, HWND_TOP, window->tile_restore_rect.left, window->tile_restore_rect.top, window->tile_restore_rect.right - window->tile_restore_rect.left, window->tile_restore_rect.bottom - window->tile_restore_rect.top, NULL);
+        RECT &r = window->tile_restore_rect;
+        SetWindowPos(window->hwnd, HWND_TOP, r.left, r.top, r.right - r.left, r.bottom - r.top, NULL);
     }
     else
     {
-        RECT &r = monitorInfo.rcWork;
-        int w = r.right - r.left;
-        int h = r.bottom - r.top;
-        SetWindowPos(window->hwnd, HWND_TOP, r.left, r.top, w / 2, h, NULL);
-        window->tile_restore_rect = clientRect;
+        SetWindowPos(window->hwnd, HWND_TOP, monitorWork->left, monitorWork->top, w / 2, h, NULL);
+        window->tile_restore_rect = *clientRect;
     }
 }
 
-static void handle_snap_right(borderless_window_t *window)
+static void handle_snap_right(borderless_window_t *window, LPRECT clientRect, LPRECT monitorWork, LPRECT monitor)
 {
-    HMONITOR windowMonitor = MonitorFromWindow(window->hwnd, MONITOR_DEFAULTTONEAREST);
-    MONITORINFO monitorInfo = {};
-    monitorInfo.cbSize = sizeof(monitorInfo);
-
-    if (!GetMonitorInfo(windowMonitor, &monitorInfo))
-        return;
-
-    RECT clientRect;
-    if (!GetClientRectInScreenSpace(window, &clientRect))
-        return;
-
     if(window->maximized)
         ShowWindow(window->hwnd, SW_RESTORE);
 
-    RECT& r = monitorInfo.rcWork;
-    int w = r.right - r.left;
-    int h = r.bottom - r.top;
-    if (IsRightSnapped(&clientRect, &monitorInfo.rcWork))
+    int w = monitorWork->right - monitorWork->left;
+    int h = monitorWork->bottom - monitorWork->top;
+    if (IsRightSnapped(clientRect, monitorWork))
     {
         //Note:[NoMoreSleep] Already snapped, select next monitor to snap to
-        HMONITOR nextMonitor = GetNextMonitorRight(&monitorInfo.rcMonitor);
+        HMONITOR nextMonitor = GetNextMonitorRight(monitor);
+        MONITORINFO monitorInfo = {};
+        monitorInfo.cbSize = sizeof(monitorInfo);
         GetMonitorInfoW(nextMonitor, &monitorInfo);
+        RECT &r = monitorInfo.rcWork;
         w = r.right - r.left;
         h = r.bottom - r.top;
         SetWindowPos(window->hwnd, HWND_TOP, r.left, r.top, w / 2, h, NULL);
     }
-    else if (IsLeftSnapped(&clientRect, &monitorInfo.rcWork))
+    else if (IsLeftSnapped(clientRect, monitorWork))
     {
-        SetWindowPos(window->hwnd, HWND_TOP, window->tile_restore_rect.left, window->tile_restore_rect.top, window->tile_restore_rect.right - window->tile_restore_rect.left, window->tile_restore_rect.bottom - window->tile_restore_rect.top, NULL);
+        RECT &r = window->tile_restore_rect;
+        SetWindowPos(window->hwnd, HWND_TOP, r.left, r.top, r.right - r.left, r.bottom - r.top, NULL);
     }
     else
     {
-        SetWindowPos(window->hwnd, HWND_TOP, r.left + w / 2, r.top, w / 2, h, NULL);
-        window->tile_restore_rect = clientRect;
+        SetWindowPos(window->hwnd, HWND_TOP, monitorWork->left + w / 2, monitorWork->top, w / 2, h, NULL);
+        window->tile_restore_rect = *clientRect;
     }
 }
 
@@ -277,17 +260,34 @@ static LRESULT CALLBACK borderless_window_proc(HWND hwnd, UINT msg, WPARAM wpara
                 wparam == VK_DOWN ||
                 wparam == VK_UP))
         {
+            HMONITOR windowMonitor = MonitorFromWindow(window->hwnd, MONITOR_DEFAULTTONEAREST);
+            MONITORINFO monitorInfo = {};
+            monitorInfo.cbSize = sizeof(monitorInfo);
+
+            if (!GetMonitorInfo(windowMonitor, &monitorInfo))
+                break;
+
+            RECT clientRect;
+            if (!GetClientRectInScreenSpace(window, &clientRect))
+                break;
+
             if (wparam == VK_LEFT)
             {
-                handle_snap_left(window);
+                handle_snap_left(window, &clientRect, &monitorInfo.rcWork, &monitorInfo.rcMonitor);
             }
             else if (wparam == VK_RIGHT)
             {
-                handle_snap_right(window);
+                handle_snap_right(window, &clientRect, &monitorInfo.rcWork, &monitorInfo.rcMonitor);
             }
             else if (wparam == VK_DOWN)
             {
-                ShowWindow(hwnd, SW_RESTORE);
+                if (IsLeftSnapped(&clientRect, &monitorInfo.rcWork) || IsRightSnapped(&clientRect, &monitorInfo.rcWork))
+                {
+                    RECT &r = window->tile_restore_rect;
+                    SetWindowPos(window->hwnd, HWND_TOP, r.left, r.top, r.right - r.left, r.bottom - r.top, NULL);
+                }
+                else
+                    ShowWindow(hwnd, SW_RESTORE);
             }
             else if (wparam == VK_UP)
             {
