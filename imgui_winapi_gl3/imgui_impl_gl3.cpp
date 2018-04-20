@@ -6,7 +6,7 @@
 // https://github.com/ocornut/imgui
 
 #include "windows.h"
-#include "glad.h"
+#include "glzl_core.hpp"
 #include "imgui.h"
 #include "imgui_impl_gl3.h"
 

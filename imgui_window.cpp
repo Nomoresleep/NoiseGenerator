@@ -96,6 +96,7 @@ static bool imgui_message(borderless_window_t *window, UINT msg, WPARAM wparam, 
 borderless_window_t * imgui_window_create(LPCWSTR title, int w, int h, imgui_window_func func, void *userdata)
 {
 	ImGuiContext* previous = ImGui::GetCurrentContext();
+    zlgl_LoadWGLFunctions();
 	HDC previousDC = wglGetCurrentDC();
 
 	imgui_window_t *imgui = (imgui_window_t*)calloc(1, sizeof(imgui_window_t));
@@ -108,7 +109,6 @@ borderless_window_t * imgui_window_create(LPCWSTR title, int w, int h, imgui_win
 	{
 		if (!(g_hglrc = opengl_create_context(window->hdc, g_openglMajorVersion, g_openglMinorVersion)))
 			ExitProcess(ERROR_INVALID_HANDLE);
-		gladLoadGL();
 	}
 	else
 	{

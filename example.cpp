@@ -1,7 +1,8 @@
 #include <windows.h>
 #include "borderless-window.h"
 #include "opengl_context.h"
-#include "glad.h"
+
+#include "glzl_core.hpp"
 #include "imgui.h"
 #include "imgui_impl_gl3.h"
 #include "imgui_window.cpp"
@@ -40,7 +41,7 @@ int CALLBACK wWinMain(HINSTANCE /*inst*/, HINSTANCE /*prev*/, LPWSTR /*cmd*/, in
 {
 	imgui_window_init(3, 1);
 	imgui_window_create(L"Hello", 1280, 800, imgui_window0, NULL);
-	imgui_window_create(L"World",  640, 480, imgui_window1, NULL);
+	//imgui_window_create(L"World",  640, 480, imgui_window1, NULL);
 	int result = imgui_window_message_loop();
 	imgui_window_shutdown();
 	return result;
