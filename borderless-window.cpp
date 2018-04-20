@@ -81,6 +81,73 @@ static HMONITOR GetNextMonitorLeft(LPRECT monitorRect)
 	return nextMonitor;
 }
 
+static void handle_snap_left(borderless_window_t *window)
+{
+    HMONITOR windowMonitor = MonitorFromWindow(window->hwnd, MONITOR_DEFAULTTONEAREST);
+    MONITORINFO monitorInfo = {};
+    monitorInfo.cbSize = sizeof(monitorInfo);
+
+    if (!GetMonitorInfo(windowMonitor, &monitorInfo))
+        return;
+
+    RECT clientRect;
+    if (!GetClientRectInScreenSpace(window, &clientRect))
+        return;
+
+    if (window->maximized)
+        ShowWindow(window->hwnd, SW_RESTORE);
+
+    if (IsLeftSnapped(&clientRect, &monitorInfo.rcWork))
+    {
+        //Note:[NoMoreSleep] Already snapped, select next monitor to snap to
+        HMONITOR nextMonitor = GetNextMonitorLeft(&monitorInfo.rcMonitor);
+        GetMonitorInfoW(nextMonitor, &monitorInfo);
+        RECT &r = monitorInfo.rcWork;
+        int w = r.right - r.left;
+        int h = r.bottom - r.top;
+        SetWindowPos(window->hwnd, HWND_TOP, r.left + w / 2, r.top, w / 2, h, NULL);
+    }
+    else
+    {
+        RECT &r = monitorInfo.rcWork;
+        int w = r.right - r.left;
+        int h = r.bottom - r.top;
+        SetWindowPos(window->hwnd, HWND_TOP, r.left, r.top, w / 2, h, NULL);
+    }
+}
+
+static void handle_snap_right(borderless_window_t *window)
+{
+    HMONITOR windowMonitor = MonitorFromWindow(window->hwnd, MONITOR_DEFAULTTONEAREST);
+    MONITORINFO monitorInfo = {};
+    monitorInfo.cbSize = sizeof(monitorInfo);
+
+    if (!GetMonitorInfo(windowMonitor, &monitorInfo))
+        return;
+
+    RECT clientRect;
+    if (!GetClientRectInScreenSpace(window, &clientRect))
+        return;
+
+    if(window->maximized)
+        ShowWindow(window->hwnd, SW_RESTORE);
+
+    RECT& r = monitorInfo.rcWork;
+    int w = r.right - r.left;
+    int h = r.bottom - r.top;
+    if (IsRightSnapped(&clientRect, &monitorInfo.rcWork))
+    {
+        //Note:[NoMoreSleep] Already snapped, select next monitor to snap to
+        HMONITOR nextMonitor = GetNextMonitorRight(&monitorInfo.rcMonitor);
+        GetMonitorInfoW(nextMonitor, &monitorInfo);
+        w = r.right - r.left;
+        h = r.bottom - r.top;
+        SetWindowPos(window->hwnd, HWND_TOP, r.left, r.top, w / 2, h, NULL);
+    }
+    else
+        SetWindowPos(window->hwnd, HWND_TOP, r.left + w / 2, r.top, w / 2, h, NULL);
+}
+
 static void handle_compositionchanged(borderless_window_t *window)
 {
 	BOOL enabled = FALSE;
@@ -198,65 +265,21 @@ static LRESULT CALLBACK borderless_window_proc(HWND hwnd, UINT msg, WPARAM wpara
                 wparam == VK_DOWN ||
                 wparam == VK_UP))
         {
-            int x = GetSystemMetrics(SM_XVIRTUALSCREEN);
-            int y = GetSystemMetrics(SM_YVIRTUALSCREEN);
-            int cx = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-            int cy = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-
-            HMONITOR windowMonitor = MonitorFromWindow(window->hwnd, MONITOR_DEFAULTTONEAREST);
-            MONITORINFO monitorInfo = {};
-            monitorInfo.cbSize = sizeof(monitorInfo);
-            if (GetMonitorInfoW(windowMonitor, &monitorInfo))
+            if (wparam == VK_LEFT)
             {
-                if (window->maximized && wparam != VK_UP)
-                    ShowWindow(hwnd, SW_RESTORE);
-
-				RECT clientRect;
-				if (GetClientRectInScreenSpace(window, &clientRect))
-				{
-
-					RECT& r = monitorInfo.rcWork;
-					int w = r.right - r.left;
-					int h = r.bottom - r.top;
-
-					if (wparam == VK_LEFT)
-					{
-						if (IsLeftSnapped(&clientRect, &monitorInfo.rcWork))
-						{
-							//Note:[NoMoreSleep] Already snapped, select next monitor to snap to
-							HMONITOR nextMonitor = GetNextMonitorLeft(&monitorInfo.rcMonitor);
-							GetMonitorInfoW(nextMonitor, &monitorInfo);
-							w = r.right - r.left;
-							h = r.bottom - r.top;
-							SetWindowPos(hwnd, HWND_TOP, r.left + w / 2, r.top, w / 2, h, NULL);
-						}
-						else
-							SetWindowPos(hwnd, HWND_TOP, r.left, r.top, w / 2, h, NULL);
-					}
-					else if (wparam == VK_RIGHT)
-					{
-						if (IsRightSnapped(&clientRect, &monitorInfo.rcWork))
-						{
-							//Note:[NoMoreSleep] Already snapped, select next monitor to snap to
-							HMONITOR nextMonitor = GetNextMonitorRight(&monitorInfo.rcMonitor);
-							GetMonitorInfoW(nextMonitor, &monitorInfo);
-							w = r.right - r.left;
-							h = r.bottom - r.top;
-							SetWindowPos(hwnd, HWND_TOP, r.left, r.top, w / 2, h, NULL);
-						}
-						else
-							SetWindowPos(hwnd, HWND_TOP, r.left + w / 2, r.top, w / 2, h, NULL);
-
-					}
-					else if (wparam == VK_DOWN)
-					{
-						ShowWindow(hwnd, SW_RESTORE);
-					}
-					else if (wparam == VK_UP)
-					{
-						ShowWindow(hwnd, SW_MAXIMIZE);
-					}
-				}
+                handle_snap_left(window);
+            }
+            else if (wparam == VK_RIGHT)
+            {
+                handle_snap_right(window);
+            }
+            else if (wparam == VK_DOWN)
+            {
+                ShowWindow(hwnd, SW_RESTORE);
+            }
+            else if (wparam == VK_UP)
+            {
+                ShowWindow(hwnd, SW_MAXIMIZE);
             }
         }
         break;
