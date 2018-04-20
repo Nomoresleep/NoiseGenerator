@@ -239,7 +239,7 @@ static LRESULT CALLBACK borderless_window_proc(HWND hwnd, UINT msg, WPARAM wpara
 
 			MONITORINFO monitorInfo = {};
 			monitorInfo.cbSize = sizeof(monitorInfo);
-			if (GetMonitorInfo(monitor, &monitorInfo))
+			if (GetMonitorInfoW(monitor, &monitorInfo))
 			{
 				RECT &r = monitorInfo.rcWork;
 				window->width = r.right - r.left;
@@ -264,7 +264,7 @@ static LRESULT CALLBACK borderless_window_proc(HWND hwnd, UINT msg, WPARAM wpara
             MONITORINFO monitorInfo = {};
             monitorInfo.cbSize = sizeof(monitorInfo);
 
-            if (!GetMonitorInfo(windowMonitor, &monitorInfo))
+            if (!GetMonitorInfoW(windowMonitor, &monitorInfo))
                 break;
 
             RECT clientRect;
@@ -355,7 +355,7 @@ borderless_window_t* borderless_window_create(LPCWSTR title, int width, int heig
 
 static BOOL CALLBACK enum_thread_window(HWND hwnd, LPARAM /*lParam*/)
 {
-	PostMessage(hwnd, WM_CLOSE, 0, 0);
+	PostMessageW(hwnd, WM_CLOSE, 0, 0);
 	return TRUE;
 }
 
@@ -366,5 +366,5 @@ void borderless_window_close_all(borderless_window_t *root)
 
 void borderless_window_close(borderless_window_t *window)
 {
-	PostMessage(window->hwnd, WM_CLOSE, 0, 0);
+	PostMessageW(window->hwnd, WM_CLOSE, 0, 0);
 }
