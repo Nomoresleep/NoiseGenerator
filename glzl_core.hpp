@@ -7175,7 +7175,7 @@ static HGLRC zlgl_create_context(int RequiredVersion, HDC DeviceContext, ZLGL_op
 					WGL_CONTEXT_MINOR_VERSION_ARB, MinorVersion,
 					WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB |
 						((Descriptor->DebugContext != 0) ? WGL_CONTEXT_DEBUG_BIT_ARB : 0),
-					//WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+					WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
 					0
 				};
 				RenderContext = wglCreateContextAttribsARB(DeviceContext, 0, ContextAttribList);

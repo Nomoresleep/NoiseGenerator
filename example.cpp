@@ -15,7 +15,7 @@ const int height = 1024;
 
 static const char* computeShaderString =
 "#version 430\n"
-"layout(local_size_x = 1, local_size_y = 1) in;\n"
+"layout(local_size_x = 8, local_size_y = 8) in;\n"
 "layout(rg32f, binding = 0) uniform image2D img_output;\n"
 "layout(std430, binding = 0) buffer permutationBuffer\n"
 "{\n"
@@ -68,84 +68,134 @@ static const char* computeShaderString =
 "imageStore(img_output, pixel_coords, pixel_value);\n"
 "}";
 
-static void application_main_loop(borderless_window_t *window, void * /*userdata*/)
+static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 {
-	if (!imgui_window_begin(window, "Borderless OpenGL Window Example"))
+	static bool openContextMenu = false;
+	if (!imgui_window_begin(window, "GLFastNoise", &openContextMenu))
 	{
 		borderless_window_close_all(window);
 		PostQuitMessage(0);
 	}
 
-    glUseProgram(computeProgram);
-    glDispatchCompute((GLuint)width, (GLuint)height, 1);
+	imgui_window_menu_bar(window);
 
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+	imgui_window_context_menu(window, openContextMenu);
 
-    ImGui::Image((void*)textureID, ImVec2(width, height));
+#if 1
+
+	static float freq = 2.0f;
+	ImGui::Columns(2);
+	if (ImGui::CollapsingHeader("Texture Properties", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+
+	}
+	if (ImGui::CollapsingHeader("Noise Properties", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		ImGui::BeginChild("Properties");
+		ImGui::Columns(2);
+		ImGui::PushItemWidth(100.0f);
+		ImGui::Text("Name");
+		ImGui::NextColumn();
+		ImGui::Text("Value");
+		ImGui::Columns(1);
+		ImGui::Separator();
+		ImGui::Columns(2);
+		ImGui::PushItemWidth(100.0f);
+		ImGui::Text("Frequency");
+		ImGui::Text("Frequency1");
+		ImGui::Text("Frequency2");
+		ImGui::NextColumn();
+		ImGui::PushItemWidth(-1.0f);
+		ImGui::SliderFloat("Frequency", &freq, 0.0f, 1.0f);
+		ImGui::SliderFloat("Frequency1", &freq, 0.0f, 1.0f);
+		ImGui::SliderFloat("Frequency2", &freq, 0.0f, 1.0f);
+		ImGui::Columns(1);
+		ImGui::EndChild();
+	}
+	ImGui::NextColumn();
+	ImGui::BeginChild("2", ImVec2(0,0), false, ImGuiWindowFlags_HorizontalScrollbar);
+	ImGui::Image((void*)textureID, ImGui::GetWindowSize());
+	ImGui::EndChild();
+	ImGui::Columns(1);
+
+	{
+		glUseProgram(computeProgram);
+		glDispatchCompute((GLuint)width / 8, (GLuint)height / 8, 1);
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+	}
+#else
+	ImGui::ShowDemoWindow();
+#endif
 	imgui_window_end();
+}
+
+static void app_init_resources()
+{
+	glGenTextures(1, &textureID);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, width, height, 0, GL_RG, GL_FLOAT, 0);
+	glBindImageTexture(0, textureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+
+	GLuint computeShader = glCreateShader(GL_COMPUTE_SHADER);
+	glShaderSource(computeShader, 1, &computeShaderString, 0);
+	glCompileShader(computeShader);
+	GLint logLength = 0;
+	glGetShaderiv(computeShader, GL_INFO_LOG_LENGTH, &logLength);
+	if (logLength > 1)
+	{
+		char* log = new char[logLength];
+		GLsizei length;
+		glGetShaderInfoLog(computeShader, logLength, &length, log);
+		OutputDebugStringA(log);
+		delete[] log;
+		return;
+	}
+	computeProgram = glCreateProgram();
+	glAttachShader(computeProgram, computeShader);
+	glLinkProgram(computeProgram);
+
+	int permutationBuffer12[512];
+	int permutationBuffer[512];
+
+	std::mt19937_64 gen(1337);
+
+	for (int i = 0; i < 256; i++)
+		permutationBuffer[i] = i;
+
+	for (int j = 0; j < 256; j++)
+	{
+		int rng = (int)(gen() % (256 - j));
+		int k = rng + j;
+		int l = permutationBuffer[j];
+		permutationBuffer[j] = permutationBuffer[j + 256] = permutationBuffer[k];
+		permutationBuffer[k] = l;
+		permutationBuffer12[j] = permutationBuffer12[j + 256] = permutationBuffer[j] % 12;
+	}
+
+	GLuint permBufferID;
+	glGenBuffers(1, &permBufferID);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, permBufferID);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(permutationBuffer), permutationBuffer, GL_STATIC_DRAW);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, permBufferID);
+
+	GLuint permBuffer12ID;
+	glGenBuffers(1, &permBuffer12ID);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, permBuffer12ID);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(permutationBuffer12), permutationBuffer12, GL_STATIC_DRAW);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, permBuffer12ID);
 }
 
 int CALLBACK wWinMain(HINSTANCE /*inst*/, HINSTANCE /*prev*/, LPWSTR /*cmd*/, int /*show*/)
 {
 	imgui_window_init(4, 3);
-	imgui_window_create(L"GLFastNoise", 1200, 1200, application_main_loop, NULL);
+	imgui_window_create(L"GLFastNoise", 1200, 1200, app_main_loop, NULL);
 
-    glGenTextures(1, &textureID);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, width, height, 0, GL_RG, GL_FLOAT, 0);
-    glBindImageTexture(0, textureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
-
-    GLuint computeShader = glCreateShader(GL_COMPUTE_SHADER);
-    glShaderSource(computeShader, 1, &computeShaderString, 0);
-    glCompileShader(computeShader);
-    GLint logLength = 0;
-    glGetShaderiv(computeShader, GL_INFO_LOG_LENGTH, &logLength);
-    if (logLength > 1)
-    {
-        char* log = new char[logLength];
-        GLsizei length;
-        glGetShaderInfoLog(computeShader, logLength, &length, log);
-        OutputDebugStringA(log);
-        return -1;
-    }
-    GLuint computeProgram = glCreateProgram();
-    glAttachShader(computeProgram, computeShader);
-    glLinkProgram(computeProgram);
-
-    int permutationBuffer12[512];
-    int permutationBuffer[512];
-
-    std::mt19937_64 gen(1337);
-
-    for (int i = 0; i < 256; i++)
-        permutationBuffer[i] = i;
-
-    for (int j = 0; j < 256; j++)
-    {
-        int rng = (int)(gen() % (256 - j));
-        int k = rng + j;
-        int l = permutationBuffer[j];
-        permutationBuffer[j] = permutationBuffer[j + 256] = permutationBuffer[k];
-        permutationBuffer[k] = l;
-        permutationBuffer12[j] = permutationBuffer12[j + 256] = permutationBuffer[j] % 12;
-    }
-
-    GLuint permBufferID;
-    glGenBuffers(1, &permBufferID);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, permBufferID);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(permutationBuffer), permutationBuffer, GL_STATIC_DRAW);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, permBufferID);
-
-    GLuint permBuffer12ID;
-    glGenBuffers(1, &permBuffer12ID);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, permBuffer12ID);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(permutationBuffer12), permutationBuffer12, GL_STATIC_DRAW);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, permBuffer12ID);
+	app_init_resources();
 
 	int result = imgui_window_message_loop();
 	imgui_window_shutdown();

@@ -50,6 +50,7 @@ HGLRC opengl_create_context(HDC hdc, int version_major, int version_minor)
     ocd.DefFramebufferStencilBits = 8;
     ocd.DebugContext = 0;
     ocd.EnableDoubleBuffering = 1;
+	ocd.EnableVSync = 1;
     ocd.EnforceRequestedVersion = 1;
     ocd.EnableVSync = false;
 
