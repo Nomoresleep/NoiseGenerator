@@ -68,6 +68,8 @@ static const char* computeShaderString =
 "imageStore(img_output, pixel_coords, pixel_value);\n"
 "}";
 
+static float zoomFactor = 1.0f;
+
 static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 {
 	static bool openContextMenu = false;
@@ -113,9 +115,30 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 		ImGui::EndChild();
 	}
 	ImGui::NextColumn();
-	ImGui::BeginChild("2", ImVec2(0,0), false, ImGuiWindowFlags_HorizontalScrollbar);
-	ImGui::Image((void*)textureID, ImGui::GetWindowSize());
+	ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, ImVec4(0,0,0,1));
+	ImGui::BeginChild("2", ImVec2(0,0), false, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+	if (ImGui::IsItemHovered())
+	{
+		zoomFactor = max(0.1f, min(4.0f, zoomFactor + ImGui::GetIO().MouseWheel * 0.1f));
+	}
+	ImVec2 imageSize = { zoomFactor * (float)width, zoomFactor * (float)height};
+
+	//NOTE:[NoMoreSleep] Button necessary for Item activiation query
+	ImGui::ImageButton((void*)textureID, imageSize, ImVec2(0,0), ImVec2(1,1), 0);
+
+	if (ImGui::IsItemActive())
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		ImVec2 mouseDelta = ImVec2(io.MousePos.x - io.MouseClickedPos[0].x, io.MousePos.y - io.MouseClickedPos[0].y);
+		if (mouseDelta.x != 0)
+		{
+			ImGui::SetScrollX(ImGui::GetScrollX() - mouseDelta.x);
+			ImGui::SetScrollY(ImGui::GetScrollY() - mouseDelta.y);
+			ImGui::ResetMouseDragDelta();
+		}
+	}
 	ImGui::EndChild();
+	ImGui::PopStyleColor();
 	ImGui::Columns(1);
 
 	{
@@ -123,6 +146,10 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 		glDispatchCompute((GLuint)width / 8, (GLuint)height / 8, 1);
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 	}
+
+	ImGui::Begin("Style Editor");
+	ImGui::ShowStyleEditor();
+	ImGui::End();
 #else
 	ImGui::ShowDemoWindow();
 #endif
