@@ -161,6 +161,8 @@ borderless_window_t * imgui_window_create(LPCWSTR title, int w, int h, imgui_win
 		wglMakeCurrent(previousDC, g_hglrc);
 	ImGui::SetCurrentContext(previous);
 
+    window->initialized = true;;
+
 	return window;
 }
 

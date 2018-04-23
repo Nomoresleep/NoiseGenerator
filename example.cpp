@@ -8,6 +8,8 @@
 #include "imgui_impl_gl3.h"
 #include "imgui_window.cpp"
 
+#include "ui_slider.h"
+
 GLuint computeProgram;
 GLuint textureID;
 const int width = 1024;
@@ -68,12 +70,14 @@ static const char* computeShaderString =
 "imageStore(img_output, pixel_coords, pixel_value);\n"
 "}";
 
-#define ZOOM_FACTOR_MIN 0.1f
-#define ZOOM_FACTOR_MAX 10.0f
-static float zoomFactor = 1.0f;
+ui::Property<float> zoomProperty(0.2f, 5.0f);
+ui::FloatSlider* zoomSlider;
 
 static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 {
+    if (!window->initialized)
+        return;
+
 	static bool openContextMenu = false;
 	if (!imgui_window_begin(window, "GLFastNoise", &openContextMenu))
 	{
@@ -117,18 +121,18 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 		ImGui::EndChild();
 	}
 	ImGui::NextColumn();
-    if (ImGui::Button("+")) zoomFactor = min(zoomFactor + 0.1f, ZOOM_FACTOR_MAX);
+    if (ImGui::Button("-", ImVec2(ImGui::GetTextLineHeightWithSpacing(), ImGui::GetTextLineHeightWithSpacing()))) zoomProperty.Set(zoomProperty.Get() - 0.1f);
     ImGui::SameLine();
-    ImGui::SliderFloat("##zoom", &zoomFactor, ZOOM_FACTOR_MIN, ZOOM_FACTOR_MAX);
+    zoomSlider->Render();
     ImGui::SameLine();
-    if (ImGui::Button("-")) zoomFactor = max(zoomFactor - 0.1f, ZOOM_FACTOR_MIN);
+    if (ImGui::Button("+")) zoomProperty.Set(zoomProperty.Get() + 0.1f);
 	ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, ImVec4(0,0,0,1));
 	ImGui::BeginChild("2", ImVec2(0,0), false, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 	if (ImGui::IsItemHovered())
 	{
-		zoomFactor = max(ZOOM_FACTOR_MIN, min(ZOOM_FACTOR_MAX, zoomFactor + ImGui::GetIO().MouseWheel * 0.1f));
+		zoomProperty.Set(zoomProperty.Get() + ImGui::GetIO().MouseWheel * 0.1f);
 	}
-	ImVec2 imageSize = { zoomFactor * (float)width, zoomFactor * (float)height};
+	ImVec2 imageSize = { zoomProperty.Get() * (float)width, zoomProperty.Get() * (float)height};
 
 	//NOTE:[NoMoreSleep] Button necessary for Item activiation query
 	ImGui::ImageButton((void*)textureID, imageSize, ImVec2(0,0), ImVec2(1,1), 0);
@@ -223,6 +227,9 @@ static void app_init_resources()
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, permBuffer12ID);
 	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(permutationBuffer12), permutationBuffer12, GL_STATIC_DRAW);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, permBuffer12ID);
+
+    zoomProperty.Set(1.0f);
+    zoomSlider = new ui::FloatSlider(&zoomProperty, "##zoom" );
 }
 
 int CALLBACK wWinMain(HINSTANCE /*inst*/, HINSTANCE /*prev*/, LPWSTR /*cmd*/, int /*show*/)

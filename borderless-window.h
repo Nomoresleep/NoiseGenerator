@@ -16,6 +16,7 @@ struct borderless_window_t
 	bool maximized;
 	bool composition_enabled;
 	bool painting;
+    bool initialized;
 
     RECT tile_restore_rect;
 
