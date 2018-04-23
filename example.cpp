@@ -68,6 +68,8 @@ static const char* computeShaderString =
 "imageStore(img_output, pixel_coords, pixel_value);\n"
 "}";
 
+#define ZOOM_FACTOR_MIN 0.1f
+#define ZOOM_FACTOR_MAX 10.0f
 static float zoomFactor = 1.0f;
 
 static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
@@ -115,11 +117,16 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 		ImGui::EndChild();
 	}
 	ImGui::NextColumn();
+    if (ImGui::Button("+")) zoomFactor = min(zoomFactor + 0.1f, ZOOM_FACTOR_MAX);
+    ImGui::SameLine();
+    ImGui::SliderFloat("##zoom", &zoomFactor, ZOOM_FACTOR_MIN, ZOOM_FACTOR_MAX);
+    ImGui::SameLine();
+    if (ImGui::Button("-")) zoomFactor = max(zoomFactor - 0.1f, ZOOM_FACTOR_MIN);
 	ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, ImVec4(0,0,0,1));
 	ImGui::BeginChild("2", ImVec2(0,0), false, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 	if (ImGui::IsItemHovered())
 	{
-		zoomFactor = max(0.1f, min(4.0f, zoomFactor + ImGui::GetIO().MouseWheel * 0.1f));
+		zoomFactor = max(ZOOM_FACTOR_MIN, min(ZOOM_FACTOR_MAX, zoomFactor + ImGui::GetIO().MouseWheel * 0.1f));
 	}
 	ImVec2 imageSize = { zoomFactor * (float)width, zoomFactor * (float)height};
 
@@ -147,10 +154,11 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 	}
 
-	ImGui::Begin("Style Editor");
-	ImGui::ShowStyleEditor();
-	ImGui::End();
 #else
+    ImGui::Begin("Style Editor");
+    ImGui::ShowStyleEditor();
+    ImGui::End();
+
 	ImGui::ShowDemoWindow();
 #endif
 	imgui_window_end();
