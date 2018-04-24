@@ -8,7 +8,7 @@
 #include "imgui_impl_gl3.h"
 #include "imgui_window.cpp"
 
-#include "ui_slider.h"
+#include "nodegraph.h"
 
 GLuint computeProgram;
 GLuint textureID;
@@ -70,10 +70,13 @@ static const char* computeShaderString =
 "imageStore(img_output, pixel_coords, pixel_value);\n"
 "}";
 
-ui::Property<float> zoomProperty(0.2f, 20.0f);
-ui::FloatSlider* zoomSlider;
-ui::Property<float> frequencyProperty(0.01f, 16.0f);
-ui::FloatSlider* frequencySlider;
+static f32 zoom = 1.0f;
+static const f32 zoom_min = 0.2f;
+static const f32 zoom_max = 20.0f;
+
+static f32 frequency = 1.0f;
+static const f32 frequency_min = 0.01f;
+static const f32 frequency_max = 20.0f;
 
 static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 {
@@ -94,65 +97,75 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 #if 1
 
 	static f32 freq = 2.0f;
-	ImGui::Columns(2);
-	if (ImGui::CollapsingHeader("Texture Properties", ImGuiTreeNodeFlags_DefaultOpen))
-	{
+	ImGui::Columns(3);
+    {
+        if (ImGui::CollapsingHeader("Texture Properties", ImGuiTreeNodeFlags_DefaultOpen))
+        {
 
-	}
-	if (ImGui::CollapsingHeader("Noise Properties", ImGuiTreeNodeFlags_DefaultOpen))
-	{
-		ImGui::BeginChild("Properties");
-		ImGui::Columns(2);
-		ImGui::PushItemWidth(100.0f);
-		ImGui::Text("Name");
-		ImGui::NextColumn();
-		ImGui::Text("Value");
-		ImGui::Columns(1);
-		ImGui::Separator();
-		ImGui::Columns(2);
-		ImGui::PushItemWidth(100.0f);
-        ImGui::Text("%s##0", frequencySlider->myLabel);
-        ImGui::Text("%s##1", frequencySlider->myLabel);
-        ImGui::Text("%s##2", frequencySlider->myLabel);
-		ImGui::NextColumn();
-		ImGui::PushItemWidth(-1.0f);
-        frequencySlider->Render();
-        frequencySlider->Render();
-        frequencySlider->Render();
-		ImGui::Columns(1);
-		ImGui::EndChild();
-	}
-	ImGui::NextColumn();
-    if (ImGui::Button("-", ImVec2(ImGui::GetTextLineHeightWithSpacing(), ImGui::GetTextLineHeightWithSpacing()))) zoomProperty.Set(zoomProperty.Get() - 0.1f);
-    ImGui::SameLine();
-    zoomSlider->Render();
-    ImGui::SameLine();
-    if (ImGui::Button("+")) zoomProperty.Set(zoomProperty.Get() + 0.1f);
-	ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, ImVec4(0,0,0,1));
-	ImGui::BeginChild("2", ImVec2(0,0), false, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-	if (ImGui::IsItemHovered())
-	{
-		zoomProperty.Set(zoomProperty.Get() + ImGui::GetIO().MouseWheel * 0.1f);
-	}
-	ImVec2 imageSize = { zoomProperty.Get() * (f32)width, zoomProperty.Get() * (f32)height};
+        }
+        if (ImGui::CollapsingHeader("Noise Properties", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            ImGui::BeginChild("Properties");
+            ImGui::Columns(2);
+            ImGui::PushItemWidth(100.0f);
+            ImGui::Text("Name");
+            ImGui::NextColumn();
+            ImGui::Text("Value");
+            ImGui::Columns(1);
+            ImGui::Separator();
+            ImGui::Columns(2);
+            ImGui::PushItemWidth(100.0f);
+            ImGui::Text("frequency##0");
+            ImGui::Text("frequency##1");
+            ImGui::Text("frequency##2");
+            ImGui::NextColumn();
+            ImGui::PushItemWidth(-1.0f);
+            ImGui::SliderFloat("frequency##3", &zoom, zoom_min, zoom_max);
+            ImGui::SliderFloat("frequency##4", &zoom, zoom_min, zoom_max);
+            ImGui::SliderFloat("frequency##5", &zoom, zoom_min, zoom_max);
+            ImGui::Columns(1);
+            ImGui::EndChild();
+        }
+    }
+    ImGui::NextColumn();
+    {
+        if (ImGui::Button("-", ImVec2(ImGui::GetTextLineHeightWithSpacing(), ImGui::GetTextLineHeightWithSpacing()))) zoom = min(zoom_max, max(zoom_min, zoom - 0.1f));
+        ImGui::SameLine();
+        ImGui::SliderFloat("zoom_slider", &zoom, zoom_min, zoom_max);
+        ImGui::SameLine();
+        if (ImGui::Button("+")) zoom = min(zoom_max, max(zoom_min, zoom + 0.1f));
+        ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, ImVec4(0, 0, 0, 1));
+        ImGui::BeginChild("2", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+        if (ImGui::IsItemHovered())
+        {
+            zoom = min(zoom_max, max(zoom_min, zoom + ImGui::GetIO().MouseWheel * 0.1f));
+        }
+        ImVec2 imageSize = { zoom * (f32)width, zoom * (f32)height };
 
-	//NOTE:[NoMoreSleep] Button necessary for Item activiation query
-	ImGui::ImageButton((void*)textureID, imageSize, ImVec2(0,0), ImVec2(1,1), 0);
+        //NOTE:[NoMoreSleep] Button necessary for Item activiation query
+        ImGui::ImageButton((void*)textureID, imageSize, ImVec2(0, 0), ImVec2(1, 1), 0);
 
-	if (ImGui::IsItemActive())
-	{
-		ImGuiIO& io = ImGui::GetIO();
-		ImVec2 mouseDelta = ImVec2(io.MousePos.x - io.MouseClickedPos[0].x, io.MousePos.y - io.MouseClickedPos[0].y);
-		if (mouseDelta.x != 0)
-		{
-			ImGui::SetScrollX(ImGui::GetScrollX() - mouseDelta.x);
-			ImGui::SetScrollY(ImGui::GetScrollY() - mouseDelta.y);
-			ImGui::ResetMouseDragDelta();
-		}
-	}
-	ImGui::EndChild();
-	ImGui::PopStyleColor();
-	ImGui::Columns(1);
+        if (ImGui::IsItemActive())
+        {
+            ImGuiIO& io = ImGui::GetIO();
+            ImVec2 mouseDelta = ImVec2(io.MousePos.x - io.MouseClickedPos[0].x, io.MousePos.y - io.MouseClickedPos[0].y);
+            if (mouseDelta.x != 0)
+            {
+                ImGui::SetScrollX(ImGui::GetScrollX() - mouseDelta.x);
+                ImGui::SetScrollY(ImGui::GetScrollY() - mouseDelta.y);
+                ImGui::ResetMouseDragDelta();
+            }
+        }
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
+    }
+    ImGui::NextColumn();
+    {
+        ImGui::BeginChild("NodeGraph", ImVec2(ImGui::GetWindowContentRegionWidth(), (ImGui::GetWindowContentRegionMax().y - ImGui::GetWindowContentRegionMin().y) * 0.5f));
+        bool t = true;
+        ShowExampleAppCustomNodeGraph(&t);
+        ImGui::EndChild();
+    }
 
 	{
 		glUseProgram(computeProgram);
@@ -229,12 +242,6 @@ static void app_init_resources()
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, permBuffer12ID);
 	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(permutationBuffer12), permutationBuffer12, GL_STATIC_DRAW);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, permBuffer12ID);
-
-    zoomProperty.Set(1.0f);
-    zoomSlider = new ui::FloatSlider(&zoomProperty, "##zoom" );
-
-    frequencyProperty.Set(1.0f);
-    frequencySlider = new ui::FloatSlider(&frequencyProperty, "frequency");
 }
 
 i32 CALLBACK wWinMain(HINSTANCE /*inst*/, HINSTANCE /*prev*/, LPWSTR /*cmd*/, int /*show*/)
