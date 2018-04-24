@@ -41,8 +41,8 @@ static BOOL GetClientRectInScreenSpace(borderless_window_t *window, LPRECT rect)
 
 static BOOL IsLeftSnapped(LPRECT clientRect, LPRECT monitorRect)
 {
-	int monitorWHalf = (monitorRect->right - monitorRect->left) >> 1;
-	int clientW = clientRect->right - clientRect->left;
+	i32 monitorWHalf = (monitorRect->right - monitorRect->left) >> 1;
+	i32 clientW = clientRect->right - clientRect->left;
 	if (clientRect->top == monitorRect->top && clientRect->left == monitorRect->left && clientRect->bottom == monitorRect->bottom && monitorWHalf == clientW)
 		return TRUE;
 	else
@@ -51,8 +51,8 @@ static BOOL IsLeftSnapped(LPRECT clientRect, LPRECT monitorRect)
 
 static BOOL IsRightSnapped(LPRECT clientRect, LPRECT monitorRect)
 {
-	int monitorWHalf = (monitorRect->right - monitorRect->left) >> 1;
-	int clientW = clientRect->right - clientRect->left;
+	i32 monitorWHalf = (monitorRect->right - monitorRect->left) >> 1;
+	i32 clientW = clientRect->right - clientRect->left;
 	if (clientRect->top == monitorRect->top && clientRect->left == (monitorRect->left + monitorWHalf) && clientRect->bottom == monitorRect->bottom && monitorWHalf == clientW)
 		return TRUE;
 	else
@@ -86,8 +86,8 @@ static void handle_snap_left(borderless_window_t *window, LPRECT clientRect, LPR
     if (window->maximized)
         ShowWindow(window->hwnd, SW_RESTORE);
 
-    int w = monitorWork->right - monitorWork->left;
-    int h = monitorWork->bottom - monitorWork->top;
+    i32 w = monitorWork->right - monitorWork->left;
+    i32 h = monitorWork->bottom - monitorWork->top;
     if (IsLeftSnapped(clientRect, monitorWork))
     {
         //Note:[NoMoreSleep] Already snapped, select next monitor to snap to
@@ -117,8 +117,8 @@ static void handle_snap_right(borderless_window_t *window, LPRECT clientRect, LP
     if(window->maximized)
         ShowWindow(window->hwnd, SW_RESTORE);
 
-    int w = monitorWork->right - monitorWork->left;
-    int h = monitorWork->bottom - monitorWork->top;
+    i32 w = monitorWork->right - monitorWork->left;
+    i32 h = monitorWork->bottom - monitorWork->top;
     if (IsRightSnapped(clientRect, monitorWork))
     {
         //Note:[NoMoreSleep] Already snapped, select next monitor to snap to
@@ -159,7 +159,7 @@ static void handle_compositionchanged(borderless_window_t *window)
 	}
 }
 
-static LRESULT handle_nchittest(borderless_window_t *window, int x, int y)
+static LRESULT handle_nchittest(borderless_window_t *window, i32 x, i32 y)
 {
 	if (IsMaximized(window->hwnd))
 		return HTCLIENT;
@@ -169,31 +169,31 @@ static LRESULT handle_nchittest(borderless_window_t *window, int x, int y)
 
 	/* The horizontal frame should be the same size as the vertical frame,
 	   since the NONCLIENTMETRICS structure does not distinguish between them */
-	int frame_size = GetSystemMetrics(SM_CXFRAME); // + GetSystemMetrics(SM_CXPADDEDBORDER);
+	i32 frame_size = GetSystemMetrics(SM_CXFRAME); // + GetSystemMetrics(SM_CXPADDEDBORDER);
 	/* The diagonal size handles are wider than the frame */
-	int diagonal_width = frame_size * 2 + GetSystemMetrics(SM_CXBORDER);
+	i32 diagonal_width = frame_size * 2 + GetSystemMetrics(SM_CXBORDER);
 
 	if (mouse.y < frame_size) 
 	{
 		if (mouse.x < diagonal_width)
 			return HTTOPLEFT;
-		if (mouse.x >= (int)window->width - diagonal_width)
+		if (mouse.x >= (i32)window->width - diagonal_width)
 			return HTTOPRIGHT;
 		return HTTOP;
 	}
 
-	if (mouse.y >= (int)window->height - frame_size) 
+	if (mouse.y >= (i32)window->height - frame_size) 
 	{
 		if (mouse.x < diagonal_width)
 			return HTBOTTOMLEFT;
-		if (mouse.x >= (int)window->width - (int)diagonal_width)
+		if (mouse.x >= (i32)window->width - (i32)diagonal_width)
 			return HTBOTTOMRIGHT;
 		return HTBOTTOM;
 	}
 
 	if (mouse.x < frame_size)
 		return HTLEFT;
-	if (mouse.x >= (int)window->width - frame_size)
+	if (mouse.x >= (i32)window->width - frame_size)
 		return HTRIGHT;
 	return HTCLIENT;
 }
@@ -224,7 +224,7 @@ static LRESULT CALLBACK borderless_window_proc(HWND hwnd, UINT msg, WPARAM wpara
 	case WM_NCHITTEST:
 		return handle_nchittest(window, GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 	case WM_PAINT:
-		if (window->painting) // Prevent recursive painting
+		if (window->painting) // Prevent recursive pai32ing
 			return DefWindowProcW(hwnd, msg, wparam, lparam);
 		window->painting = true;
 		break;
@@ -329,7 +329,7 @@ void borderless_window_unregister()
 	UnregisterClassW(L"borderless-window", GetModuleHandle(NULL));
 }
 
-borderless_window_t* borderless_window_create(LPCWSTR title, int width, int height, message_handler handler, void* userdata)
+borderless_window_t* borderless_window_create(LPCWSTR title, i32 width, i32 height, message_handler handler, void* userdata)
 {
 	borderless_window_t *window = (borderless_window_t*)calloc(1, sizeof(borderless_window_t));
 

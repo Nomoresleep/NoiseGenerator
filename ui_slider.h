@@ -15,10 +15,10 @@ namespace ui
         const char* myLabel;
     };
 
-    class FloatSlider : public Slider<float>
+    class FloatSlider : public Slider<f32>
     {
     public:
-        FloatSlider(Property<float>* aProperty, const char* aLabel);
+        FloatSlider(Property<f32>* aProperty, const char* aLabel);
         void Render() const override;
     };
 };

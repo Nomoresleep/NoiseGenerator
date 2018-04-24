@@ -12,8 +12,8 @@
 
 GLuint computeProgram;
 GLuint textureID;
-const int width = 1024;
-const int height = 1024;
+const i32 width = 1024;
+const i32 height = 1024;
 
 static const char* computeShaderString =
 "#version 430\n"
@@ -70,8 +70,10 @@ static const char* computeShaderString =
 "imageStore(img_output, pixel_coords, pixel_value);\n"
 "}";
 
-ui::Property<float> zoomProperty(0.2f, 5.0f);
+ui::Property<float> zoomProperty(0.2f, 20.0f);
 ui::FloatSlider* zoomSlider;
+ui::Property<float> frequencyProperty(0.01f, 16.0f);
+ui::FloatSlider* frequencySlider;
 
 static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 {
@@ -91,7 +93,7 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 
 #if 1
 
-	static float freq = 2.0f;
+	static f32 freq = 2.0f;
 	ImGui::Columns(2);
 	if (ImGui::CollapsingHeader("Texture Properties", ImGuiTreeNodeFlags_DefaultOpen))
 	{
@@ -109,14 +111,14 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 		ImGui::Separator();
 		ImGui::Columns(2);
 		ImGui::PushItemWidth(100.0f);
-		ImGui::Text("Frequency");
-		ImGui::Text("Frequency1");
-		ImGui::Text("Frequency2");
+        ImGui::Text("%s##0", frequencySlider->myLabel);
+        ImGui::Text("%s##1", frequencySlider->myLabel);
+        ImGui::Text("%s##2", frequencySlider->myLabel);
 		ImGui::NextColumn();
 		ImGui::PushItemWidth(-1.0f);
-		ImGui::SliderFloat("Frequency", &freq, 0.0f, 1.0f);
-		ImGui::SliderFloat("Frequency1", &freq, 0.0f, 1.0f);
-		ImGui::SliderFloat("Frequency2", &freq, 0.0f, 1.0f);
+        frequencySlider->Render();
+        frequencySlider->Render();
+        frequencySlider->Render();
 		ImGui::Columns(1);
 		ImGui::EndChild();
 	}
@@ -132,7 +134,7 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 	{
 		zoomProperty.Set(zoomProperty.Get() + ImGui::GetIO().MouseWheel * 0.1f);
 	}
-	ImVec2 imageSize = { zoomProperty.Get() * (float)width, zoomProperty.Get() * (float)height};
+	ImVec2 imageSize = { zoomProperty.Get() * (f32)width, zoomProperty.Get() * (f32)height};
 
 	//NOTE:[NoMoreSleep] Button necessary for Item activiation query
 	ImGui::ImageButton((void*)textureID, imageSize, ImVec2(0,0), ImVec2(1,1), 0);
@@ -198,19 +200,19 @@ static void app_init_resources()
 	glAttachShader(computeProgram, computeShader);
 	glLinkProgram(computeProgram);
 
-	int permutationBuffer12[512];
-	int permutationBuffer[512];
+	i32 permutationBuffer12[512];
+	i32 permutationBuffer[512];
 
 	std::mt19937_64 gen(1337);
 
-	for (int i = 0; i < 256; i++)
+	for (i32 i = 0; i < 256; i++)
 		permutationBuffer[i] = i;
 
-	for (int j = 0; j < 256; j++)
+	for (i32 j = 0; j < 256; j++)
 	{
-		int rng = (int)(gen() % (256 - j));
-		int k = rng + j;
-		int l = permutationBuffer[j];
+		i32 rng = (i32)(gen() % (256 - j));
+		i32 k = rng + j;
+		i32 l = permutationBuffer[j];
 		permutationBuffer[j] = permutationBuffer[j + 256] = permutationBuffer[k];
 		permutationBuffer[k] = l;
 		permutationBuffer12[j] = permutationBuffer12[j + 256] = permutationBuffer[j] % 12;
@@ -230,16 +232,19 @@ static void app_init_resources()
 
     zoomProperty.Set(1.0f);
     zoomSlider = new ui::FloatSlider(&zoomProperty, "##zoom" );
+
+    frequencyProperty.Set(1.0f);
+    frequencySlider = new ui::FloatSlider(&frequencyProperty, "frequency");
 }
 
-int CALLBACK wWinMain(HINSTANCE /*inst*/, HINSTANCE /*prev*/, LPWSTR /*cmd*/, int /*show*/)
+i32 CALLBACK wWinMain(HINSTANCE /*inst*/, HINSTANCE /*prev*/, LPWSTR /*cmd*/, int /*show*/)
 {
 	imgui_window_init(4, 3);
 	imgui_window_create(L"GLFastNoise", 1200, 1200, app_main_loop, NULL);
 
 	app_init_resources();
 
-	int result = imgui_window_message_loop();
+	i32 result = imgui_window_message_loop();
 	imgui_window_shutdown();
 	return result;
 }

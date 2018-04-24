@@ -9,21 +9,22 @@
 #include "glzl_core.hpp"
 #include "imgui.h"
 #include "imgui_impl_gl3.h"
+#include "types.h"
 
 // TODO: Add cursor support
 
 // WinAPI data
-static double        g_RcpQueryPerformanceFrequency;
+static f64        g_RcpQueryPerformanceFrequency;
 static LARGE_INTEGER g_QueryPerformanceCounterStart;
-static double        g_Time;
+static f64        g_Time;
 
 // OpenGL data
 static char          g_GlslVersion[32] = "#version 330\n";
 static GLuint        g_FontTexture = 0;
-static int           g_ShaderHandle = 0, g_VertHandle = 0, g_FragHandle = 0;
-static int           g_AttribLocationTex = 0, g_AttribLocationProjMtx = 0;
-static int           g_AttribLocationPosition = 0, g_AttribLocationUV = 0, g_AttribLocationColor = 0;
-static unsigned int  g_VboHandle = 0, g_ElementsHandle = 0;
+static i32           g_ShaderHandle = 0, g_VertHandle = 0, g_FragHandle = 0;
+static i32           g_AttribLocationTex = 0, g_AttribLocationProjMtx = 0;
+static i32           g_AttribLocationPosition = 0, g_AttribLocationUV = 0, g_AttribLocationColor = 0;
+static u32  g_VboHandle = 0, g_ElementsHandle = 0;
 
 // OpenGL2 Render function.
 // (this used to be set in io.RenderDrawListsFn and called by ImGui::Render(), but you can now call this directly from your main loop)
@@ -72,7 +73,7 @@ void ImGui_Impl_WinAPI_GL3_RenderDrawData(ImDrawData* draw_data)
 
 	// Setup viewport, orthographic projection matrix
 	glViewport(0, 0, (GLsizei)fb_width, (GLsizei)fb_height);
-	const float ortho_projection[4][4] =
+	const f32 ortho_projection[4][4] =
 	{
 		{ 2.0f/io.DisplaySize.x, 0.0f,                   0.0f, 0.0f },
 		{ 0.0f,                  2.0f/-io.DisplaySize.y, 0.0f, 0.0f },
@@ -284,7 +285,7 @@ void ImGui_Impl_WinAPI_GL3_InvalidateDeviceObjects()
 bool ImGui_Impl_WinAPI_GL3_Init()
 {
 	ImGuiIO& io = ImGui::GetIO();
-	io.KeyMap[ImGuiKey_Tab] = VK_TAB; // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array that we will update during the application lifetime.
+	io.KeyMap[ImGuiKey_Tab] = VK_TAB; // Keyboard mapping. ImGui will use those indices to peek i32o the io.KeyDown[] array that we will update during the application lifetime.
 	io.KeyMap[ImGuiKey_LeftArrow] = VK_LEFT;
 	io.KeyMap[ImGuiKey_RightArrow] = VK_RIGHT;
 	io.KeyMap[ImGuiKey_UpArrow] = VK_UP;
@@ -311,7 +312,7 @@ bool ImGui_Impl_WinAPI_GL3_Init()
 	{
 		LARGE_INTEGER qpf;
 		QueryPerformanceFrequency(&qpf);
-		g_RcpQueryPerformanceFrequency = 1.0 / (double)qpf.QuadPart;
+		g_RcpQueryPerformanceFrequency = 1.0 / (f64)qpf.QuadPart;
 	}
 
 	if (g_QueryPerformanceCounterStart.QuadPart == 0)
@@ -338,7 +339,7 @@ bool ImGui_Impl_WinAPI_GL3_Handle_Message(HWND hwnd, UINT msg, WPARAM wparam, LP
 		case WM_KEYUP:
 		{
 			bool isDown = ((lparam & (1 << 31)) == 0);
-			unsigned int vkCode = (unsigned int)wparam;
+			u32 vkCode = (u32)wparam;
 			if (vkCode < 256)
 			{
 				io.KeysDown[vkCode] = isDown ? 1 : 0;
@@ -358,8 +359,8 @@ bool ImGui_Impl_WinAPI_GL3_Handle_Message(HWND hwnd, UINT msg, WPARAM wparam, LP
 
 		case WM_MOUSEMOVE:
 		{
-			io.MousePos.x = (float)LOWORD(lparam);
-			io.MousePos.y = (float)HIWORD(lparam);
+			io.MousePos.x = (f32)LOWORD(lparam);
+			io.MousePos.y = (f32)HIWORD(lparam);
 			return true;
 		} break;
 
@@ -405,7 +406,7 @@ bool ImGui_Impl_WinAPI_GL3_Handle_Message(HWND hwnd, UINT msg, WPARAM wparam, LP
 			if (msg == WM_RBUTTONDBLCLK) button = 1;
 			if (msg == WM_MBUTTONDBLCLK) button = 2;
 			
-			// Force a double click:
+			// Force a f64 click:
 			io.MouseDown[button] = true;
 			io.MouseClickedTime[button] = ImGui::GetTime();
 			return true;
@@ -414,7 +415,7 @@ bool ImGui_Impl_WinAPI_GL3_Handle_Message(HWND hwnd, UINT msg, WPARAM wparam, LP
 	return false;
 }
 
-void ImGui_Impl_WinAPI_GL3_NewFrame(HWND hwnd, int w, int h, int display_w, int display_h)
+void ImGui_Impl_WinAPI_GL3_NewFrame(HWND hwnd, i32 w, i32 h, i32 display_w, i32 display_h)
 {
 	ImGuiIO& io = ImGui::GetIO();
 	io.ImeWindowHandle = hwnd;
@@ -435,14 +436,14 @@ void ImGui_Impl_WinAPI_GL3_NewFrame(HWND hwnd, int w, int h, int display_w, int 
 	io.KeySuper = false;
 
 	// Setup display size (every frame to accommodate for window resizing)
-	io.DisplaySize = ImVec2((float)w, (float)h);
-	io.DisplayFramebufferScale = ImVec2(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0);
+	io.DisplaySize = ImVec2((f32)w, (f32)h);
+	io.DisplayFramebufferScale = ImVec2(w > 0 ? ((f32)display_w / w) : 0, h > 0 ? ((f32)display_h / h) : 0);
 
 	// Setup time step
 	LARGE_INTEGER qpc;
 	QueryPerformanceCounter(&qpc);
-	double current_time = (double)(qpc.QuadPart - g_QueryPerformanceCounterStart.QuadPart) * g_RcpQueryPerformanceFrequency;
-	io.DeltaTime = g_Time > 0.0 ? (float)(current_time - g_Time) : (float)(1.0f/60.0f);
+	f64 current_time = (f64)(qpc.QuadPart - g_QueryPerformanceCounterStart.QuadPart) * g_RcpQueryPerformanceFrequency;
+	io.DeltaTime = g_Time > 0.0 ? (f32)(current_time - g_Time) : (f32)(1.0f/60.0f);
 	g_Time = current_time;
 
 	// Start the frame. This call will update the io.WantCaptureMouse, io.WantCaptureKeyboard flag that you can use to dispatch inputs (or not) to your application.

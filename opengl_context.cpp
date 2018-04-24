@@ -1,6 +1,7 @@
 #include <windows.h>
 #define ZLGL_IMPL
 #include "glzl_core.hpp"
+#include "types.h"
 
 #pragma comment(lib, "opengl32.lib")
 
@@ -11,7 +12,7 @@ static void opengl_fatal_error(char *msg)
 
 bool opengl_set_pixelformat(HDC hdc)
 {
-	int pixel_format_attribs[] = {
+	i32 pixel_format_attribs[] = {
 		WGL_DRAW_TO_WINDOW_ARB,     1,
 		WGL_SUPPORT_OPENGL_ARB,     1,
 		WGL_DOUBLE_BUFFER_ARB,      1,
@@ -24,7 +25,7 @@ bool opengl_set_pixelformat(HDC hdc)
 		0
 	};
 
-	int pixel_format;
+	i32 pixel_format;
 	UINT num_formats;
 	wglChoosePixelFormatARB(hdc, pixel_format_attribs, 0, 1, &pixel_format, &num_formats);
 	if (!num_formats)
@@ -38,7 +39,7 @@ bool opengl_set_pixelformat(HDC hdc)
 	return true;
 }
 
-HGLRC opengl_create_context(HDC hdc, int version_major, int version_minor)
+HGLRC opengl_create_context(HDC hdc, i32 version_major, i32 version_minor)
 {
     //Create OpenGL Context
     ZLGL_opengl_version glVersion;
