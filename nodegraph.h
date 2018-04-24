@@ -15,7 +15,8 @@ static inline ImVec2 operator-(const ImVec2& lhs, const ImVec2& rhs) { return Im
 
 class OutputPortBase
 {
-
+public:
+	ImVec2 myPosition;
 };
 
 template <typename Type>
@@ -23,6 +24,27 @@ class OutputPort : public OutputPortBase
 {
 public:
     Type myData;
+};
+
+class InputPortBase
+{
+public:
+	InputPortBase(OutputPortBase* anOutputPort)
+		: myConnectedPort(anOutputPort)
+	{}
+
+	OutputPortBase* myConnectedPort;
+	ImVec2 myPosition;
+};
+
+template <typename Type>
+class InputPort : public InputPortBase
+{
+public:
+	InputPort(OutputPort<Type>* anOutputPort)
+		: InputPortBase(anOutputPort)
+	{}
+
 };
 
 class PropertyBase
@@ -47,6 +69,7 @@ public:
 
     ImVector<PropertyBase*> myProperties;
     ImVector<OutputPortBase*> myOutputs;
+	ImVector<InputPortBase*> myInputs;
 };
 
 
@@ -80,10 +103,21 @@ public:
         myProperties.push_back(aProperty);
         myOutputs.push_back(new OutputPort<Type>());
     };
-
-    OutputPort<Type> myConstantOutput;
 };
 
+template <typename Type>
+class ReadNode : public Node
+{
+public:
+	ReadNode(int id, const char* name, const ImVec2& pos, Property<Type>* aProperty)
+		: Node(id, name, pos)
+	{
+		myProperties.push_back(aProperty);
+		myInputs.push_back(new InputPort<Type>(nullptr));
+	}
+};
+
+static OutputPortBase* g_draggedOutput = nullptr;
 
 // Really dumb data structure provided for the example.
 // Note that we storing links are INDICES (not ID) to make example code shorter, obviously a bad idea for any general purpose code.
@@ -122,8 +156,12 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
         nodes.push_back(new Node(0, "MainTex", ImVec2(40, 50)));
         nodes.push_back(new Node(1, "BumpMap", ImVec2(40, 150)));
         nodes.push_back(new Node(2, "Combine", ImVec2(270, 80)));
-        Property<f32>* floatProperty = new Property<f32>(0.0f, 1.0f);
-        nodes.push_back(new ConstantNode<float>(3, "ConstantNode", ImVec2(40, 250), floatProperty));
+		Property<f32>* floatProperty1 = new Property<f32>(0.0f, 1.0f);
+		nodes.push_back(new ConstantNode<float>(3, "ConstantNode1", ImVec2(40, 250), floatProperty1));
+		Property<f32>* floatProperty2 = new Property<f32>(0.0f, 1.0f);
+		nodes.push_back(new ConstantNode<float>(4, "ConstantNode2", ImVec2(40, 170), floatProperty2));
+		Property<f32>* otherFloatProperty = new Property<f32>(0.0f, 1.0f);
+		nodes.push_back(new ReadNode<f32>(5, "ReadNode", ImVec2(200, 250), otherFloatProperty));
         inited = true;
     }
 
@@ -209,22 +247,55 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
         ImU32 node_bg_color = (node_hovered_in_list == node->myID || node_hovered_in_scene == node->myID || (node_hovered_in_list == -1 && node_selected == node->myID)) ? IM_COL32(75, 75, 75, 255) : IM_COL32(60, 60, 60, 255);
         draw_list->AddRectFilled(node_rect_min, node_rect_max, node_bg_color);
         draw_list->AddRect(node_rect_min, node_rect_max, IM_COL32(100, 100, 100, 255));
-        //for (int slot_idx = 0; slot_idx < node->InputsCount; slot_idx++)
-        //    draw_list->AddCircleFilled(offset + node->GetInputSlotPos(slot_idx), NODE_SLOT_RADIUS, IM_COL32(150, 150, 150, 150));
-        for (int slot_idx = 0; slot_idx < node->myOutputs.size(); slot_idx++)
-        {
-            ImVec2 portPos = ImVec2(node_rect_min.x + node->mySize.x - NODE_SLOT_RADIUS, node_rect_min.y + node->mySize.y * ((float)slot_idx + 1) / ((float)node->myOutputs.size() + 1));
-            ImGui::SetCursorScreenPos(portPos);
-            ImGui::Button("##hello", ImVec2(2.0f * NODE_SLOT_RADIUS, 2.0f * NODE_SLOT_RADIUS));
-            ImVec2 buttonCenter = portPos + ImVec2(NODE_SLOT_RADIUS, NODE_SLOT_RADIUS);
-            if (ImGui::IsItemActive())
-            {
-                draw_list->AddBezierCurve(buttonCenter, buttonCenter + ImVec2(+50, 0), ImGui::GetIO().MousePos + ImVec2(-50, 0), ImGui::GetIO().MousePos, IM_COL32(100, 100, 100, 255), 3.0f);//draw_list->AddCircleFilled(offset + portPos, NODE_SLOT_RADIUS, IM_COL32(150, 150, 150, 150));
-            }
-        }
+		for (int slot_idx = 0; slot_idx < node->myOutputs.size(); slot_idx++)
+		{
+			OutputPortBase* port = node->myOutputs[slot_idx];
+			ImVec2 portPos = ImVec2(node_rect_min.x + node->mySize.x - NODE_SLOT_RADIUS, node_rect_min.y + node->mySize.y * ((float)slot_idx + 1) / ((float)node->myOutputs.size() + 1));
+			ImGui::SetCursorScreenPos(portPos);
+			ImGui::Button("##output", ImVec2(2.0f * NODE_SLOT_RADIUS, 2.0f * NODE_SLOT_RADIUS));
+			ImVec2 buttonCenter = portPos + ImVec2(NODE_SLOT_RADIUS, NODE_SLOT_RADIUS);
+
+			if (ImGui::IsItemActive())
+			{
+				g_draggedOutput = port;
+			}
+			port->myPosition = buttonCenter;
+		}
+
+		for (int slot_idx = 0; slot_idx < node->myInputs.size(); slot_idx++)
+		{
+			InputPortBase* port = node->myInputs[slot_idx];
+			ImVec2 portPos = ImVec2(node_rect_min.x - NODE_SLOT_RADIUS, node_rect_min.y + node->mySize.y * ((float)slot_idx + 1) / ((float)node->myInputs.size() + 1));
+			ImGui::SetCursorScreenPos(portPos);
+			ImGui::Button("##input", ImVec2(2.0f * NODE_SLOT_RADIUS, 2.0f * NODE_SLOT_RADIUS));
+			ImVec2 buttonCenter = portPos + ImVec2(NODE_SLOT_RADIUS, NODE_SLOT_RADIUS);
+			if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(0) && g_draggedOutput != nullptr)
+			{
+				port->myConnectedPort = g_draggedOutput;
+			}
+			else if (ImGui::IsItemActive())
+			{
+				g_draggedOutput = port->myConnectedPort;
+				port->myConnectedPort = nullptr;
+			}
+			port->myPosition = buttonCenter;
+
+			if (port->myConnectedPort != nullptr)
+			{
+				draw_list->AddBezierCurve(port->myConnectedPort->myPosition, port->myConnectedPort->myPosition + ImVec2(+50, 0), port->myPosition + ImVec2(-50, 0), port->myPosition, IM_COL32(100, 100, 100, 255), 3.0f);
+			}
+		}
 
         ImGui::PopID();
     }
+	if (ImGui::IsMouseReleased(0))
+	{
+		g_draggedOutput = nullptr;
+	}
+	if (g_draggedOutput != nullptr)
+	{
+		draw_list->AddBezierCurve(g_draggedOutput->myPosition, g_draggedOutput->myPosition + ImVec2(+50, 0), ImGui::GetIO().MousePos + ImVec2(-50, 0), ImGui::GetIO().MousePos, IM_COL32(100, 100, 100, 255), 3.0f);//draw_list->AddCircleFilled(offset + portPos, NODE_SLOT_RADIUS, IM_COL32(150, 150, 150, 150));
+	}
     draw_list->ChannelsMerge();
 
     // Open context menu
