@@ -99,13 +99,13 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 	static f32 freq = 2.0f;
 	ImGui::Columns(3);
     {
+        ImGui::BeginChild("Properties", ImVec2(300, 0));
         if (ImGui::CollapsingHeader("Texture Properties", ImGuiTreeNodeFlags_DefaultOpen))
         {
 
         }
         if (ImGui::CollapsingHeader("Noise Properties", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            ImGui::BeginChild("Properties");
             ImGui::Columns(2);
             ImGui::PushItemWidth(100.0f);
             ImGui::Text("Name");
@@ -124,8 +124,8 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
             ImGui::SliderFloat("frequency##4", &zoom, zoom_min, zoom_max);
             ImGui::SliderFloat("frequency##5", &zoom, zoom_min, zoom_max);
             ImGui::Columns(1);
-            ImGui::EndChild();
         }
+        ImGui::EndChild();
     }
     ImGui::NextColumn();
     {
@@ -161,10 +161,8 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
     }
     ImGui::NextColumn();
     {
-        ImGui::BeginChild("NodeGraph", ImVec2(ImGui::GetWindowContentRegionWidth(), (ImGui::GetWindowContentRegionMax().y - ImGui::GetWindowContentRegionMin().y) * 0.5f));
         bool t = true;
         ShowExampleAppCustomNodeGraph(&t);
-        ImGui::EndChild();
     }
 
 	{
@@ -247,7 +245,7 @@ static void app_init_resources()
 i32 CALLBACK wWinMain(HINSTANCE /*inst*/, HINSTANCE /*prev*/, LPWSTR /*cmd*/, int /*show*/)
 {
 	imgui_window_init(4, 3);
-	imgui_window_create(L"GLFastNoise", 1200, 1200, app_main_loop, NULL);
+	imgui_window_create(L"GLFastNoise", 1920, 1000, app_main_loop, NULL);
 
 	app_init_resources();
 

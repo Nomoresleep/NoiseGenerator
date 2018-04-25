@@ -13,18 +13,20 @@
 static inline ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y); }
 static inline ImVec2 operator-(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x - rhs.x, lhs.y - rhs.y); }
 
-const float NODE_SLOT_RADIUS = 6.0f;
-const ImVec2 NODE_WINDOW_PADDING(8.0f, 8.0f);
+static const float NODE_SLOT_RADIUS = 6.0f;
 static const ImVec2 NODE_PORT_SIZE = ImVec2(2.0f * NODE_SLOT_RADIUS, 2.0f * NODE_SLOT_RADIUS);
+static const ImVec2 NODE_WINDOW_PADDING = NODE_PORT_SIZE;// (8.0f, 8.0f);
 
 enum PortType
 {
     FloatPort,
+    IntPort,
 };
 
 union PortData
 {
     float myFloatData;
+    int myIntPortData;
 };
 
 struct OutputPort
@@ -82,9 +84,10 @@ class Property : public PropertyBase
 public:
     Property(T aMin, T aMax)
         : myMin(aMin)
-        , myMax(aMax) {}
+        , myMax(aMax)
+        , myValue(aMin){}
 
-    void Render() override { ImGui::SliderFloat("##aoinfw", &myValue, myMin, myMax); }
+    void Render() override;
 
     void Set(T aValue) { myValue = min(myMax, max(myMin, aValue)); }
     const T& Get() const { return myValue; }
@@ -92,11 +95,32 @@ public:
     T myMin, myMax;
 };
 
+template <typename T>
+void locRenderSlider(Property<T>* aProperty);
+
+template <>
+void locRenderSlider<f32>(Property<f32>* aProperty)
+{
+    ImGui::SliderFloat("##awinqwfpi", &aProperty->myValue, aProperty->myMin, aProperty->myMax);
+}
+
+template <>
+void locRenderSlider<i32>(Property<i32>* aProperty)
+{
+    ImGui::SliderInt("##knawlfn", &aProperty->myValue, aProperty->myMin, aProperty->myMax);
+}
+
+template <typename T>
+void Property<T>::Render() { locRenderSlider(this); }
+
 template <typename Type>
 PortType GetPortType();
 
 template<>
 PortType GetPortType<f32>() { return FloatPort; }
+
+template<>
+PortType GetPortType<i32>() { return IntPort; }
 
 ImU32 GetColorFromPortType(PortType aType)
 {
@@ -104,6 +128,8 @@ ImU32 GetColorFromPortType(PortType aType)
     {
     case FloatPort:
         return IM_COL32(0, 95, 0, 255);
+    case IntPort:
+        return IM_COL32(66, 150, 250, 255);
     }
     return IM_COL32(255, 255, 255, 255);
 }
@@ -127,7 +153,7 @@ public:
 		: Node(id, name, pos)
 	{
 		myProperties.push_back(aProperty);
-		myInputs.push_back(new InputPort(FloatPort));
+		myInputs.push_back(new InputPort(GetPortType<Type>()));
 	}
 };
 
@@ -155,15 +181,14 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
     static int node_selected = -1;
     if (!inited)
     {
-        nodes.push_back(new Node(0, "MainTex", ImVec2(40, 50)));
-        nodes.push_back(new Node(1, "BumpMap", ImVec2(40, 150)));
-        nodes.push_back(new Node(2, "Combine", ImVec2(270, 80)));
 		Property<f32>* floatProperty1 = new Property<f32>(0.0f, 1.0f);
 		nodes.push_back(new ConstantNode<f32>(3, "ConstantNode1", ImVec2(40, 250), floatProperty1));
 		Property<f32>* floatProperty2 = new Property<f32>(0.0f, 1.0f);
 		nodes.push_back(new ConstantNode<f32>(4, "ConstantNode2", ImVec2(40, 170), floatProperty2));
-		Property<f32>* otherFloatProperty = new Property<f32>(0.0f, 1.0f);
-		nodes.push_back(new ReadNode<f32>(5, "ReadNode", ImVec2(200, 250), otherFloatProperty));
+        Property<f32>* otherFloatProperty = new Property<f32>(0.0f, 1.0f);
+        nodes.push_back(new ReadNode<f32>(5, "ReadNode", ImVec2(200, 250), otherFloatProperty));
+        Property<i32>* intProperty = new Property<i32>(0, 42);
+        nodes.push_back(new ReadNode<i32>(6, "ReadNode", ImVec2(200, 400), intProperty));
         inited = true;
     }
 
@@ -177,7 +202,7 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, IM_COL32(60, 60, 70, 200));
-    ImGui::BeginChild("scrolling_region", ImVec2(0, 0), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
+    ImGui::BeginChild("scrolling_region", ImGui::GetWindowContentRegionMax() - ImGui::GetWindowContentRegionMin(), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
     ImGui::PushItemWidth(120.0f);
 
     ImVec2 offset = ImGui::GetCursorScreenPos() + scrolling;
@@ -205,6 +230,8 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
     //    draw_list->AddBezierCurve(p1, p1 + ImVec2(+50, 0), p2 + ImVec2(-50, 0), p2, IM_COL32(200, 200, 100, 255), 3.0f);
     //}
 
+    bool connection_port_mismatch = false;
+    bool connection_port_match = false;
     // Display nodes
     for (int node_idx = 0; node_idx < nodes.Size; node_idx++)
     {
@@ -274,15 +301,22 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
                 ImGui::InvisibleButton("##input", NODE_PORT_SIZE);
             }
 			ImVec2 buttonCenter = portPos + ImVec2(NODE_SLOT_RADIUS, NODE_SLOT_RADIUS);
-			if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(0) && g_draggedOutput != nullptr)
-			{
-				port->myConnectedPort = g_draggedOutput;
-			}
-			else if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0))
-			{
-				g_draggedOutput = port->myConnectedPort;
-				port->myConnectedPort = nullptr;
-			}
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly))
+            {
+                if (g_draggedOutput != nullptr)
+                {
+                    connection_port_mismatch = port->myType != g_draggedOutput->myType;
+                    connection_port_match = port->myType == g_draggedOutput->myType;
+
+                    if (ImGui::IsMouseReleased(0) && connection_port_match)
+                        port->myConnectedPort = g_draggedOutput;
+                }
+                else if (ImGui::IsMouseClicked(0))
+                {
+                    g_draggedOutput = port->myConnectedPort;
+                    port->myConnectedPort = nullptr;
+                }
+            }
 			port->myPosition = buttonCenter;
 
 			if (port->myConnectedPort != nullptr)
@@ -299,7 +333,8 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
 	}
 	if (g_draggedOutput != nullptr)
 	{
-        locDrawBezierCurve(draw_list, g_draggedOutput->myPosition, ImGui::GetIO().MousePos, IM_COL32(100, 100, 100, 255), 3.0f);
+        ImU32 color = connection_port_mismatch ? IM_COL32(200, 100, 100, 255) : (connection_port_match ? IM_COL32(100, 200, 100, 255) : IM_COL32(100, 100, 100, 255));
+        locDrawBezierCurve(draw_list, g_draggedOutput->myPosition, ImGui::GetIO().MousePos, color, 3.0f);
 	}
     draw_list->ChannelsMerge();
 
