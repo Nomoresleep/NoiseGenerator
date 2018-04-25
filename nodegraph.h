@@ -119,6 +119,11 @@ public:
 
 static OutputPortBase* g_draggedOutput = nullptr;
 
+static void locDrawBezierCurve(ImDrawList* aDrawList, ImVec2 aP0, ImVec2 aP1, ImU32 aColor, float aThickness)
+{
+    float xdist = min(50.0f, aP1.x - aP0.x);
+    aDrawList->AddBezierCurve(aP0, aP0 + ImVec2(xdist, 0), aP1 + ImVec2(-xdist, 0), aP1, aColor, aThickness);
+}
 // Really dumb data structure provided for the example.
 // Note that we storing links are INDICES (not ID) to make example code shorter, obviously a bad idea for any general purpose code.
 static void ShowExampleAppCustomNodeGraph(bool* opened)
@@ -282,7 +287,7 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
 
 			if (port->myConnectedPort != nullptr)
 			{
-				draw_list->AddBezierCurve(port->myConnectedPort->myPosition, port->myConnectedPort->myPosition + ImVec2(+50, 0), port->myPosition + ImVec2(-50, 0), port->myPosition, IM_COL32(100, 100, 100, 255), 3.0f);
+                locDrawBezierCurve(draw_list, port->myConnectedPort->myPosition, port->myPosition, IM_COL32(100, 100, 100, 255), 3.0f);
 			}
 		}
 
@@ -294,7 +299,7 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
 	}
 	if (g_draggedOutput != nullptr)
 	{
-		draw_list->AddBezierCurve(g_draggedOutput->myPosition, g_draggedOutput->myPosition + ImVec2(+50, 0), ImGui::GetIO().MousePos + ImVec2(-50, 0), ImGui::GetIO().MousePos, IM_COL32(100, 100, 100, 255), 3.0f);//draw_list->AddCircleFilled(offset + portPos, NODE_SLOT_RADIUS, IM_COL32(150, 150, 150, 150));
+        locDrawBezierCurve(draw_list, g_draggedOutput->myPosition, ImGui::GetIO().MousePos, IM_COL32(100, 100, 100, 255), 3.0f);
 	}
     draw_list->ChannelsMerge();
 
