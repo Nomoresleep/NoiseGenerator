@@ -97,37 +97,7 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 #if 1
 
 	static f32 freq = 2.0f;
-	ImGui::Columns(3);
-    {
-        ImGui::BeginChild("Properties", ImVec2(300, 0));
-        if (ImGui::CollapsingHeader("Texture Properties", ImGuiTreeNodeFlags_DefaultOpen))
-        {
-
-        }
-        if (ImGui::CollapsingHeader("Noise Properties", ImGuiTreeNodeFlags_DefaultOpen))
-        {
-            ImGui::Columns(2);
-            ImGui::PushItemWidth(100.0f);
-            ImGui::Text("Name");
-            ImGui::NextColumn();
-            ImGui::Text("Value");
-            ImGui::Columns(1);
-            ImGui::Separator();
-            ImGui::Columns(2);
-            ImGui::PushItemWidth(100.0f);
-            ImGui::Text("frequency##0");
-            ImGui::Text("frequency##1");
-            ImGui::Text("frequency##2");
-            ImGui::NextColumn();
-            ImGui::PushItemWidth(-1.0f);
-            ImGui::SliderFloat("frequency##3", &zoom, zoom_min, zoom_max);
-            ImGui::SliderFloat("frequency##4", &zoom, zoom_min, zoom_max);
-            ImGui::SliderFloat("frequency##5", &zoom, zoom_min, zoom_max);
-            ImGui::Columns(1);
-        }
-        ImGui::EndChild();
-    }
-    ImGui::NextColumn();
+	ImGui::Columns(2);
     {
         if (ImGui::Button("-", ImVec2(ImGui::GetTextLineHeightWithSpacing(), ImGui::GetTextLineHeightWithSpacing()))) zoom = min(zoom_max, max(zoom_min, zoom - 0.1f));
         ImGui::SameLine();
@@ -136,7 +106,7 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
         if (ImGui::Button("+")) zoom = min(zoom_max, max(zoom_min, zoom + 0.1f));
         ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, ImVec4(0, 0, 0, 1));
         ImGui::BeginChild("2", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-        if (ImGui::IsItemHovered())
+        if (ImGui::IsWindowHovered())
         {
             zoom = min(zoom_max, max(zoom_min, zoom + ImGui::GetIO().MouseWheel * 0.1f));
         }

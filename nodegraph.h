@@ -145,16 +145,18 @@ public:
     };
 };
 
-template <typename Type>
-class ReadNode : public Node
+class PerlinNoise2DNode : public Node
 {
 public:
-	ReadNode(int id, const char* name, const ImVec2& pos, Property<Type>* aProperty)
-		: Node(id, name, pos)
+	PerlinNoise2DNode(int anID, const char* aName, const ImVec2& aPosition)
+		: Node(anID, aName, aPosition)
 	{
-		myProperties.push_back(aProperty);
-		myInputs.push_back(new InputPort(GetPortType<Type>()));
-	}
+		myInputs.push_back(new InputPort(FloatPort));
+		myInputs.push_back(new InputPort(FloatPort));
+		myInputs.push_back(new InputPort(FloatPort));
+		myOutputs.push_back(new OutputPort(FloatPort));
+	};
+
 };
 
 static OutputPort* g_draggedOutput = nullptr;
@@ -190,10 +192,7 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
         nodes.push_back(new ConstantNode<f32>(1, "ConstantNode2", ImVec2(40, 170), floatProperty2));
         Property<i32>* intProperty1 = new Property<i32>(0, 1337);
         nodes.push_back(new ConstantNode<i32>(2, "ConstantNode3", ImVec2(200, 170), intProperty1));
-        Property<f32>* otherFloatProperty = new Property<f32>(0.0f, 1.0f);
-        nodes.push_back(new ReadNode<f32>(3, "ReadNode", ImVec2(200, 250), otherFloatProperty));
-        Property<i32>* intProperty2 = new Property<i32>(0, 42);
-        nodes.push_back(new ReadNode<i32>(4, "ReadNode", ImVec2(200, 400), intProperty2));
+		nodes.push_back(new PerlinNoise2DNode(3, "Perlin Noise 2D", ImVec2(40, 300)));
         inited = true;
     }
 
@@ -253,18 +252,18 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
         if(node->myProperties.size())
             node->myProperties[0]->Render();
         //ImGui::ColorEdit3("##color", &node->Color.x);
-        ImGui::EndGroup();
 
-        // Save the size of what we have emitted and whether any of the widgets are being used
-        bool node_widgets_active = (!old_any_active && ImGui::IsAnyItemActive());
-        node->mySize = ImGui::GetItemRectSize() + NODE_WINDOW_PADDING + NODE_WINDOW_PADDING;
-        ImVec2 node_rect_max = node_rect_min + node->mySize;
+		ImGui::EndGroup();
 
-
+		// Save the size of what we have emitted and whether any of the widgets are being used
+		bool node_widgets_active = (!old_any_active && ImGui::IsAnyItemActive());
+		node->mySize = ImGui::GetItemRectSize() + NODE_WINDOW_PADDING + NODE_WINDOW_PADDING + ImVec2(0, ImGui::GetItemsLineHeightWithSpacing() * max(node->myInputs.size(), node->myOutputs.size()));
+		ImVec2 node_rect_max = node_rect_min + node->mySize;
+		
 		for (int slot_idx = 0; slot_idx < node->myOutputs.size(); slot_idx++)
 		{
 			OutputPort* port = node->myOutputs[slot_idx];
-			ImVec2 portPos = ImVec2(node_rect_min.x + node->mySize.x - NODE_SLOT_RADIUS, node_rect_min.y + node->mySize.y * ((float)slot_idx + 1) / ((float)node->myOutputs.size() + 1));
+			ImVec2 portPos = ImVec2(node_rect_min.x + node->mySize.x - NODE_SLOT_RADIUS, node_rect_min.y + NODE_WINDOW_PADDING.y * 2.0f + ImGui::GetTextLineHeight() + ImGui::GetItemsLineHeightWithSpacing() * (f32)slot_idx);
 			ImGui::SetCursorScreenPos(portPos);
 			{
 				locDrawPort(draw_list, portPos, GetColorFromPortType(port->myType));
@@ -282,7 +281,7 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
 		for (int slot_idx = 0; slot_idx < node->myInputs.size(); slot_idx++)
 		{
 			InputPort* port = node->myInputs[slot_idx];
-			ImVec2 portPos = ImVec2(node_rect_min.x - NODE_SLOT_RADIUS, node_rect_min.y + node->mySize.y * ((float)slot_idx + 1) / ((float)node->myInputs.size() + 1));
+			ImVec2 portPos = ImVec2(node_rect_min.x - NODE_SLOT_RADIUS, node_rect_min.y + NODE_WINDOW_PADDING.y * 2.0f + ImGui::GetTextLineHeight() + ImGui::GetItemsLineHeightWithSpacing() * (f32)slot_idx);
 			ImGui::SetCursorScreenPos(portPos);
 			{
 				locDrawPort(draw_list, portPos, GetColorFromPortType(port->myType));
@@ -313,11 +312,10 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
 			}
 		}
 
-
         // Display node box
         draw_list->ChannelsSetCurrent(0); // Background
         ImGui::SetCursorScreenPos(node_rect_min);
-        ImGui::InvisibleButton("node", ImVec2(node->mySize.x, NODE_WINDOW_PADDING.y + ImGui::GetTextLineHeight()));
+        ImGui::InvisibleButton("node", node->mySize);
         if (ImGui::IsItemHovered())
         {
             node_hovered_in_scene = node->myID;
@@ -335,7 +333,7 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
 
         ImGui::PopID();
     }
-	if (ImGui::IsMouseReleased(0))
+	if (!ImGui::IsMouseDown(0) && !ImGui::GetIO().KeyShift)
 	{
 		g_draggedOutput = nullptr;
 	}
