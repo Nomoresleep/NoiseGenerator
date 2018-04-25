@@ -182,13 +182,15 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
     if (!inited)
     {
 		Property<f32>* floatProperty1 = new Property<f32>(0.0f, 1.0f);
-		nodes.push_back(new ConstantNode<f32>(3, "ConstantNode1", ImVec2(40, 250), floatProperty1));
-		Property<f32>* floatProperty2 = new Property<f32>(0.0f, 1.0f);
-		nodes.push_back(new ConstantNode<f32>(4, "ConstantNode2", ImVec2(40, 170), floatProperty2));
+		nodes.push_back(new ConstantNode<f32>(0, "ConstantNode1", ImVec2(40, 250), floatProperty1));
+        Property<f32>* floatProperty2 = new Property<f32>(0.0f, 1.0f);
+        nodes.push_back(new ConstantNode<f32>(1, "ConstantNode2", ImVec2(40, 170), floatProperty2));
+        Property<i32>* intProperty1 = new Property<i32>(0, 1337);
+        nodes.push_back(new ConstantNode<i32>(2, "ConstantNode3", ImVec2(200, 170), intProperty1));
         Property<f32>* otherFloatProperty = new Property<f32>(0.0f, 1.0f);
-        nodes.push_back(new ReadNode<f32>(5, "ReadNode", ImVec2(200, 250), otherFloatProperty));
-        Property<i32>* intProperty = new Property<i32>(0, 42);
-        nodes.push_back(new ReadNode<i32>(6, "ReadNode", ImVec2(200, 400), intProperty));
+        nodes.push_back(new ReadNode<f32>(3, "ReadNode", ImVec2(200, 250), otherFloatProperty));
+        Property<i32>* intProperty2 = new Property<i32>(0, 42);
+        nodes.push_back(new ReadNode<i32>(4, "ReadNode", ImVec2(200, 400), intProperty2));
         inited = true;
     }
 
