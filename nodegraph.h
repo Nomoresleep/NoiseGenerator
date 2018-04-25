@@ -161,8 +161,11 @@ static OutputPort* g_draggedOutput = nullptr;
 
 static void locDrawBezierCurve(ImDrawList* aDrawList, ImVec2 aP0, ImVec2 aP1, ImU32 aColor, float aThickness)
 {
+	//NOTE:[Nomoresleep] performance impact?
+	aDrawList->ChannelsSetCurrent(0);
     float xdist = min(50.0f, aP1.x - aP0.x);
     aDrawList->AddBezierCurve(aP0, aP0 + ImVec2(xdist, 0), aP1 + ImVec2(-xdist, 0), aP1, aColor, aThickness);
+	aDrawList->ChannelsSetCurrent(1);
 }
 
 static void locDrawPort(ImDrawList* aDrawList, ImVec2 aPortPos, ImU32 aColor)
@@ -257,10 +260,64 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
         node->mySize = ImGui::GetItemRectSize() + NODE_WINDOW_PADDING + NODE_WINDOW_PADDING;
         ImVec2 node_rect_max = node_rect_min + node->mySize;
 
+
+		for (int slot_idx = 0; slot_idx < node->myOutputs.size(); slot_idx++)
+		{
+			OutputPort* port = node->myOutputs[slot_idx];
+			ImVec2 portPos = ImVec2(node_rect_min.x + node->mySize.x - NODE_SLOT_RADIUS, node_rect_min.y + node->mySize.y * ((float)slot_idx + 1) / ((float)node->myOutputs.size() + 1));
+			ImGui::SetCursorScreenPos(portPos);
+			{
+				locDrawPort(draw_list, portPos, GetColorFromPortType(port->myType));
+				ImGui::InvisibleButton("##output", NODE_PORT_SIZE);
+			}
+			ImVec2 buttonCenter = portPos + ImVec2(NODE_SLOT_RADIUS, NODE_SLOT_RADIUS);
+			port->myPosition = buttonCenter;
+
+			if (ImGui::IsItemActive())
+			{
+				g_draggedOutput = port;
+			}
+		}
+
+		for (int slot_idx = 0; slot_idx < node->myInputs.size(); slot_idx++)
+		{
+			InputPort* port = node->myInputs[slot_idx];
+			ImVec2 portPos = ImVec2(node_rect_min.x - NODE_SLOT_RADIUS, node_rect_min.y + node->mySize.y * ((float)slot_idx + 1) / ((float)node->myInputs.size() + 1));
+			ImGui::SetCursorScreenPos(portPos);
+			{
+				locDrawPort(draw_list, portPos, GetColorFromPortType(port->myType));
+				ImGui::InvisibleButton("##input", NODE_PORT_SIZE);
+			}
+			ImVec2 buttonCenter = portPos + ImVec2(NODE_SLOT_RADIUS, NODE_SLOT_RADIUS);
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly))
+			{
+				if (g_draggedOutput != nullptr)
+				{
+					connection_port_mismatch = port->myType != g_draggedOutput->myType;
+					connection_port_match = port->myType == g_draggedOutput->myType;
+
+					if (ImGui::IsMouseReleased(0) && connection_port_match)
+						port->myConnectedPort = g_draggedOutput;
+				}
+				else if (ImGui::IsMouseClicked(0))
+				{
+					g_draggedOutput = port->myConnectedPort;
+					port->myConnectedPort = nullptr;
+				}
+			}
+			port->myPosition = buttonCenter;
+
+			if (port->myConnectedPort != nullptr)
+			{
+				locDrawBezierCurve(draw_list, port->myConnectedPort->myPosition, port->myPosition, IM_COL32(100, 100, 100, 255), 3.0f);
+			}
+		}
+
+
         // Display node box
         draw_list->ChannelsSetCurrent(0); // Background
         ImGui::SetCursorScreenPos(node_rect_min);
-        ImGui::InvisibleButton("node", node->mySize);
+        ImGui::InvisibleButton("node", ImVec2(node->mySize.x, NODE_WINDOW_PADDING.y + ImGui::GetTextLineHeight()));
         if (ImGui::IsItemHovered())
         {
             node_hovered_in_scene = node->myID;
@@ -275,57 +332,6 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
         ImU32 node_bg_color = (node_hovered_in_list == node->myID || node_hovered_in_scene == node->myID || (node_hovered_in_list == -1 && node_selected == node->myID)) ? IM_COL32(75, 75, 75, 255) : IM_COL32(60, 60, 60, 255);
         draw_list->AddRectFilled(node_rect_min, node_rect_max, node_bg_color);
         draw_list->AddRect(node_rect_min, node_rect_max, IM_COL32(100, 100, 100, 255));
-		for (int slot_idx = 0; slot_idx < node->myOutputs.size(); slot_idx++)
-		{
-			OutputPort* port = node->myOutputs[slot_idx];
-			ImVec2 portPos = ImVec2(node_rect_min.x + node->mySize.x - NODE_SLOT_RADIUS, node_rect_min.y + node->mySize.y * ((float)slot_idx + 1) / ((float)node->myOutputs.size() + 1));
-			ImGui::SetCursorScreenPos(portPos);
-            {
-                locDrawPort(draw_list, portPos, GetColorFromPortType(port->myType));
-                ImGui::InvisibleButton("##output", NODE_PORT_SIZE);
-            }
-			ImVec2 buttonCenter = portPos + ImVec2(NODE_SLOT_RADIUS, NODE_SLOT_RADIUS);
-            port->myPosition = buttonCenter;
-
-			if (ImGui::IsItemActive())
-			{
-				g_draggedOutput = port;
-			}
-		}
-
-		for (int slot_idx = 0; slot_idx < node->myInputs.size(); slot_idx++)
-		{
-			InputPort* port = node->myInputs[slot_idx];
-			ImVec2 portPos = ImVec2(node_rect_min.x - NODE_SLOT_RADIUS, node_rect_min.y + node->mySize.y * ((float)slot_idx + 1) / ((float)node->myInputs.size() + 1));
-			ImGui::SetCursorScreenPos(portPos);
-            {
-                locDrawPort(draw_list, portPos, GetColorFromPortType(port->myType));
-                ImGui::InvisibleButton("##input", NODE_PORT_SIZE);
-            }
-			ImVec2 buttonCenter = portPos + ImVec2(NODE_SLOT_RADIUS, NODE_SLOT_RADIUS);
-			if (ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly))
-            {
-                if (g_draggedOutput != nullptr)
-                {
-                    connection_port_mismatch = port->myType != g_draggedOutput->myType;
-                    connection_port_match = port->myType == g_draggedOutput->myType;
-
-                    if (ImGui::IsMouseReleased(0) && connection_port_match)
-                        port->myConnectedPort = g_draggedOutput;
-                }
-                else if (ImGui::IsMouseClicked(0))
-                {
-                    g_draggedOutput = port->myConnectedPort;
-                    port->myConnectedPort = nullptr;
-                }
-            }
-			port->myPosition = buttonCenter;
-
-			if (port->myConnectedPort != nullptr)
-			{
-                locDrawBezierCurve(draw_list, port->myConnectedPort->myPosition, port->myPosition, IM_COL32(100, 100, 100, 255), 3.0f);
-			}
-		}
 
         ImGui::PopID();
     }
