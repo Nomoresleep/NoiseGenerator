@@ -13,6 +13,10 @@
 static inline ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y); }
 static inline ImVec2 operator-(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x - rhs.x, lhs.y - rhs.y); }
 
+const float NODE_SLOT_RADIUS = 6.0f;
+const ImVec2 NODE_WINDOW_PADDING(8.0f, 8.0f);
+static const ImVec2 NODE_PORT_SIZE = ImVec2(2.0f * NODE_SLOT_RADIUS, 2.0f * NODE_SLOT_RADIUS);
+
 enum PortType
 {
     FloatPort,
@@ -94,7 +98,7 @@ PortType GetPortType();
 template<>
 PortType GetPortType<f32>() { return FloatPort; }
 
-ImU32 GetColorFromPort(PortType aType)
+ImU32 GetColorFromPortType(PortType aType)
 {
     switch (aType)
     {
@@ -135,6 +139,12 @@ static void locDrawBezierCurve(ImDrawList* aDrawList, ImVec2 aP0, ImVec2 aP1, Im
     aDrawList->AddBezierCurve(aP0, aP0 + ImVec2(xdist, 0), aP1 + ImVec2(-xdist, 0), aP1, aColor, aThickness);
 }
 
+static void locDrawPort(ImDrawList* aDrawList, ImVec2 aPortPos, ImU32 aColor)
+{
+    aDrawList->AddRectFilled(aPortPos, aPortPos + NODE_PORT_SIZE, aColor);
+    aDrawList->AddRect(aPortPos, aPortPos + NODE_PORT_SIZE, IM_COL32(200, 200, 200, 255), 0.0f, ImDrawCornerFlags_All, 1.0f);
+}
+
 static void ShowExampleAppCustomNodeGraph(bool* opened)
 {
     static ImVector<Node*> nodes;
@@ -163,9 +173,6 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
     int node_hovered_in_scene = -1;
 
     ImGui::BeginGroup();
-
-    const float NODE_SLOT_RADIUS = 4.0f;
-    const ImVec2 NODE_WINDOW_PADDING(8.0f, 8.0f);
 
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
@@ -245,9 +252,8 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
 			ImVec2 portPos = ImVec2(node_rect_min.x + node->mySize.x - NODE_SLOT_RADIUS, node_rect_min.y + node->mySize.y * ((float)slot_idx + 1) / ((float)node->myOutputs.size() + 1));
 			ImGui::SetCursorScreenPos(portPos);
             {
-                ImGui::PushStyleColor(ImGuiCol_Button, GetColorFromPort(port->myType));
-                ImGui::Button("##output", ImVec2(2.0f * NODE_SLOT_RADIUS, 2.0f * NODE_SLOT_RADIUS));
-                ImGui::PopStyleColor();
+                locDrawPort(draw_list, portPos, GetColorFromPortType(port->myType));
+                ImGui::InvisibleButton("##output", NODE_PORT_SIZE);
             }
 			ImVec2 buttonCenter = portPos + ImVec2(NODE_SLOT_RADIUS, NODE_SLOT_RADIUS);
             port->myPosition = buttonCenter;
@@ -264,16 +270,15 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
 			ImVec2 portPos = ImVec2(node_rect_min.x - NODE_SLOT_RADIUS, node_rect_min.y + node->mySize.y * ((float)slot_idx + 1) / ((float)node->myInputs.size() + 1));
 			ImGui::SetCursorScreenPos(portPos);
             {
-                ImGui::PushStyleColor(ImGuiCol_Button, GetColorFromPort(port->myType));
-                ImGui::Button("##input", ImVec2(2.0f * NODE_SLOT_RADIUS, 2.0f * NODE_SLOT_RADIUS));
-                ImGui::PopStyleColor();
+                locDrawPort(draw_list, portPos, GetColorFromPortType(port->myType));
+                ImGui::InvisibleButton("##input", NODE_PORT_SIZE);
             }
 			ImVec2 buttonCenter = portPos + ImVec2(NODE_SLOT_RADIUS, NODE_SLOT_RADIUS);
 			if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(0) && g_draggedOutput != nullptr)
 			{
 				port->myConnectedPort = g_draggedOutput;
 			}
-			else if (ImGui::IsItemActive())
+			else if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0))
 			{
 				g_draggedOutput = port->myConnectedPort;
 				port->myConnectedPort = nullptr;
