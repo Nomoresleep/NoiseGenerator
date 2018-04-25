@@ -13,38 +13,37 @@
 static inline ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y); }
 static inline ImVec2 operator-(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x - rhs.x, lhs.y - rhs.y); }
 
-class OutputPortBase
+enum PortType
 {
-public:
+    FloatPort,
+};
+
+union PortData
+{
+    float myFloatData;
+};
+
+struct OutputPort
+{
+    OutputPort(PortType aPortType)
+        : myType(aPortType)
+    {};
+
+    PortData myData;
+    const PortType myType;
 	ImVec2 myPosition;
 };
 
-template <typename Type>
-class OutputPort : public OutputPortBase
+struct InputPort
 {
-public:
-    Type myData;
-};
+    InputPort(PortType aPortType)
+        : myType(aPortType)
+        , myConnectedPort(nullptr)
+    {}
 
-class InputPortBase
-{
-public:
-	InputPortBase(OutputPortBase* anOutputPort)
-		: myConnectedPort(anOutputPort)
-	{}
-
-	OutputPortBase* myConnectedPort;
+	OutputPort* myConnectedPort;
+    const PortType myType;
 	ImVec2 myPosition;
-};
-
-template <typename Type>
-class InputPort : public InputPortBase
-{
-public:
-	InputPort(OutputPort<Type>* anOutputPort)
-		: InputPortBase(anOutputPort)
-	{}
-
 };
 
 class PropertyBase
@@ -68,8 +67,8 @@ public:
     ImVec2 mySize;
 
     ImVector<PropertyBase*> myProperties;
-    ImVector<OutputPortBase*> myOutputs;
-	ImVector<InputPortBase*> myInputs;
+    ImVector<OutputPort*> myOutputs;
+	ImVector<InputPort*> myInputs;
 };
 
 
@@ -89,10 +88,21 @@ public:
     T myMin, myMax;
 };
 
-void RenderSlider(Property<f32>* aProperty)
-{
-}
+template <typename Type>
+PortType GetPortType();
 
+template<>
+PortType GetPortType<f32>() { return FloatPort; }
+
+ImU32 GetColorFromPort(PortType aType)
+{
+    switch (aType)
+    {
+    case FloatPort:
+        return IM_COL32(0, 95, 0, 255);
+    }
+    return IM_COL32(255, 255, 255, 255);
+}
 
 template <typename Type>
 class ConstantNode : public Node
@@ -101,7 +111,7 @@ public:
     ConstantNode(int id, const char* name, const ImVec2& pos, Property<Type>* aProperty)
         : Node(id, name, pos) {
         myProperties.push_back(aProperty);
-        myOutputs.push_back(new OutputPort<Type>());
+        myOutputs.push_back(new OutputPort(GetPortType<Type>()));
     };
 };
 
@@ -113,43 +123,20 @@ public:
 		: Node(id, name, pos)
 	{
 		myProperties.push_back(aProperty);
-		myInputs.push_back(new InputPort<Type>(nullptr));
+		myInputs.push_back(new InputPort(FloatPort));
 	}
 };
 
-static OutputPortBase* g_draggedOutput = nullptr;
+static OutputPort* g_draggedOutput = nullptr;
 
 static void locDrawBezierCurve(ImDrawList* aDrawList, ImVec2 aP0, ImVec2 aP1, ImU32 aColor, float aThickness)
 {
     float xdist = min(50.0f, aP1.x - aP0.x);
     aDrawList->AddBezierCurve(aP0, aP0 + ImVec2(xdist, 0), aP1 + ImVec2(-xdist, 0), aP1, aColor, aThickness);
 }
-// Really dumb data structure provided for the example.
-// Note that we storing links are INDICES (not ID) to make example code shorter, obviously a bad idea for any general purpose code.
+
 static void ShowExampleAppCustomNodeGraph(bool* opened)
 {
-    // Dummy
-    /*struct Node
-    {
-        int     ID;
-        char    Name[32];
-        ImVec2  Pos, Size;
-        float   Value;
-        ImVec4  Color;
-        int     InputsCount, OutputsCount;
-
-        Node(int id, const char* name, const ImVec2& pos, float value, const ImVec4& color, int inputs_count, int outputs_count) { ID = id; strncpy_s(Name, name, 31); Name[31] = 0; Pos = pos; Value = value; Color = color; InputsCount = inputs_count; OutputsCount = outputs_count; }
-
-        ImVec2 GetInputSlotPos(int slot_no) const { return ImVec2(Pos.x, Pos.y + Size.y * ((float)slot_no + 1) / ((float)InputsCount + 1)); }
-        ImVec2 GetOutputSlotPos(int slot_no) const { return ImVec2(Pos.x + Size.x, Pos.y + Size.y * ((float)slot_no + 1) / ((float)OutputsCount + 1)); }
-    };
-    struct NodeLink
-    {
-        int     InputIdx, InputSlot, OutputIdx, OutputSlot;
-
-        NodeLink(int input_idx, int input_slot, int output_idx, int output_slot) { InputIdx = input_idx; InputSlot = input_slot; OutputIdx = output_idx; OutputSlot = output_slot; }
-    };*/
-
     static ImVector<Node*> nodes;
     //static ImVector<NodeLink> links;
     static bool inited = false;
@@ -162,9 +149,9 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
         nodes.push_back(new Node(1, "BumpMap", ImVec2(40, 150)));
         nodes.push_back(new Node(2, "Combine", ImVec2(270, 80)));
 		Property<f32>* floatProperty1 = new Property<f32>(0.0f, 1.0f);
-		nodes.push_back(new ConstantNode<float>(3, "ConstantNode1", ImVec2(40, 250), floatProperty1));
+		nodes.push_back(new ConstantNode<f32>(3, "ConstantNode1", ImVec2(40, 250), floatProperty1));
 		Property<f32>* floatProperty2 = new Property<f32>(0.0f, 1.0f);
-		nodes.push_back(new ConstantNode<float>(4, "ConstantNode2", ImVec2(40, 170), floatProperty2));
+		nodes.push_back(new ConstantNode<f32>(4, "ConstantNode2", ImVec2(40, 170), floatProperty2));
 		Property<f32>* otherFloatProperty = new Property<f32>(0.0f, 1.0f);
 		nodes.push_back(new ReadNode<f32>(5, "ReadNode", ImVec2(200, 250), otherFloatProperty));
         inited = true;
@@ -254,25 +241,33 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
         draw_list->AddRect(node_rect_min, node_rect_max, IM_COL32(100, 100, 100, 255));
 		for (int slot_idx = 0; slot_idx < node->myOutputs.size(); slot_idx++)
 		{
-			OutputPortBase* port = node->myOutputs[slot_idx];
+			OutputPort* port = node->myOutputs[slot_idx];
 			ImVec2 portPos = ImVec2(node_rect_min.x + node->mySize.x - NODE_SLOT_RADIUS, node_rect_min.y + node->mySize.y * ((float)slot_idx + 1) / ((float)node->myOutputs.size() + 1));
 			ImGui::SetCursorScreenPos(portPos);
-			ImGui::Button("##output", ImVec2(2.0f * NODE_SLOT_RADIUS, 2.0f * NODE_SLOT_RADIUS));
+            {
+                ImGui::PushStyleColor(ImGuiCol_Button, GetColorFromPort(port->myType));
+                ImGui::Button("##output", ImVec2(2.0f * NODE_SLOT_RADIUS, 2.0f * NODE_SLOT_RADIUS));
+                ImGui::PopStyleColor();
+            }
 			ImVec2 buttonCenter = portPos + ImVec2(NODE_SLOT_RADIUS, NODE_SLOT_RADIUS);
+            port->myPosition = buttonCenter;
 
 			if (ImGui::IsItemActive())
 			{
 				g_draggedOutput = port;
 			}
-			port->myPosition = buttonCenter;
 		}
 
 		for (int slot_idx = 0; slot_idx < node->myInputs.size(); slot_idx++)
 		{
-			InputPortBase* port = node->myInputs[slot_idx];
+			InputPort* port = node->myInputs[slot_idx];
 			ImVec2 portPos = ImVec2(node_rect_min.x - NODE_SLOT_RADIUS, node_rect_min.y + node->mySize.y * ((float)slot_idx + 1) / ((float)node->myInputs.size() + 1));
 			ImGui::SetCursorScreenPos(portPos);
-			ImGui::Button("##input", ImVec2(2.0f * NODE_SLOT_RADIUS, 2.0f * NODE_SLOT_RADIUS));
+            {
+                ImGui::PushStyleColor(ImGuiCol_Button, GetColorFromPort(port->myType));
+                ImGui::Button("##input", ImVec2(2.0f * NODE_SLOT_RADIUS, 2.0f * NODE_SLOT_RADIUS));
+                ImGui::PopStyleColor();
+            }
 			ImVec2 buttonCenter = portPos + ImVec2(NODE_SLOT_RADIUS, NODE_SLOT_RADIUS);
 			if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(0) && g_draggedOutput != nullptr)
 			{
