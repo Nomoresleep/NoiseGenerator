@@ -1,15 +1,6 @@
-// Creating a node graph editor for ImGui
-// Quick demo, not production code! This is more of a demo of how to use ImGui to create custom stuff.
-// Better version by @daniel_collin here https://gist.github.com/emoon/b8ff4b4ce4f1b43e79f2
-// See https://github.com/ocornut/imgui/issues/306
-// v0.03: fixed grid offset issue, inverted sign of 'scrolling'
-// Animated gif: https://cloud.githubusercontent.com/assets/8225057/9472357/c0263c04-4b4c-11e5-9fdf-2cd4f33f6582.gif
-
 #include <math.h> // fmodf
 #include "imgui.h"
 
-// NB: You can use math functions/operators on ImVec2 if you #define IMGUI_DEFINE_MATH_OPERATORS and #include "imgui_internal.h"
-// Here we only declare simple +/- operators so others don't leak into the demo code.
 static inline ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y); }
 static inline ImVec2 operator-(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x - rhs.x, lhs.y - rhs.y); }
 
@@ -159,6 +150,16 @@ public:
 
 };
 
+class ResultNode : public Node
+{
+public:
+    ResultNode()
+        : Node(0, "Result", ImVec2(100, 100))
+    {
+        myInputs.push_back(new InputPort(FloatPort));
+    };
+};
+
 static OutputPort* g_draggedOutput = nullptr;
 
 static void locDrawBezierCurve(ImDrawList* aDrawList, ImVec2 aP0, ImVec2 aP1, ImU32 aColor, float aThickness)
@@ -186,13 +187,14 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
     static int node_selected = -1;
     if (!inited)
     {
+        nodes.push_back(new ResultNode());
 		Property<f32>* floatProperty1 = new Property<f32>(0.0f, 1.0f);
-		nodes.push_back(new ConstantNode<f32>(0, "ConstantNode1", ImVec2(40, 250), floatProperty1));
+		nodes.push_back(new ConstantNode<f32>(1, "GetUV.x", ImVec2(100, 170), floatProperty1));
         Property<f32>* floatProperty2 = new Property<f32>(0.0f, 1.0f);
-        nodes.push_back(new ConstantNode<f32>(1, "ConstantNode2", ImVec2(40, 170), floatProperty2));
-        Property<i32>* intProperty1 = new Property<i32>(0, 1337);
-        nodes.push_back(new ConstantNode<i32>(2, "ConstantNode3", ImVec2(200, 170), intProperty1));
-		nodes.push_back(new PerlinNoise2DNode(3, "Perlin Noise 2D", ImVec2(40, 300)));
+        nodes.push_back(new ConstantNode<f32>(2, "GetUV.y", ImVec2(100, 270), floatProperty2));
+        Property<f32>* floatProperty3 = new Property<f32>(0.0f, 20.0f);
+        nodes.push_back(new ConstantNode<f32>(3, "Frequency", ImVec2(100, 370), floatProperty3));
+		nodes.push_back(new PerlinNoise2DNode(4, "Perlin Noise 2D", ImVec2(300, 270)));
         inited = true;
     }
 
@@ -205,7 +207,7 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
 
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-    ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, IM_COL32(60, 60, 70, 200));
+    ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, IM_COL32(60, 60, 70, 255));
     ImGui::BeginChild("scrolling_region", ImGui::GetWindowContentRegionMax() - ImGui::GetWindowContentRegionMin(), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
     ImGui::PushItemWidth(120.0f);
 
