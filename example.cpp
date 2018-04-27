@@ -18,7 +18,7 @@ const i32 height = 1024;
 static const char* computeShaderString =
 "#version 430\n"
 "layout(local_size_x = 8, local_size_y = 8) in;\n"
-"layout(rg32f, binding = 0) uniform image2D img_output;\n"
+"layout(rgba32f, binding = 0) uniform image2D img_output;\n"
 "layout(std430, binding = 0) buffer permutationBuffer\n"
 "{\n"
 "int myData[512];\n"
@@ -49,6 +49,7 @@ static const char* computeShaderString =
 "int lutPos = permBuffer12.myData[(x & 0xff) + permBuffer.myData[(y & 0xff)]];\n"
 "return xd*GRAD_X[lutPos] + yd*GRAD_Y[lutPos];\n"
 "}\n"
+"float interp(float t) { return t*t*t*(t*(t * 6 - 15) + 10); }\n"
 "void main(){\n"
 "ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);\n"
 "float x = (pixel_coords.x / 1024.0) * 16.0;\n"
@@ -57,16 +58,16 @@ static const char* computeShaderString =
 "int y0 = int(floor(y));\n"
 "int x1 = x0 + 1;\n"
 "int y1 = y0 + 1;\n"
-"float xs = fract(x);\n"
-"float ys = fract(y);\n"
-"float xd0 = xs;\n"
-"float yd0 = ys;\n"
+"float xs = interp(fract(x));\n"
+"float ys = interp(fract(y));\n"
+"float xd0 = fract(x);\n"
+"float yd0 = fract(y);\n"
 "float xd1 = xd0 - 1.0;\n"
 "float yd1 = yd0 - 1.0;\n"
 "float xf0 = mix(GradCoord2D(x0, y0, xd0, yd0), GradCoord2D(x1, y0, xd1, yd0), xs);\n"
 "float xf1 = mix(GradCoord2D(x0, y1, xd0, yd1), GradCoord2D(x1, y1, xd1, yd1), xs);\n"
-"float perlin = mix(xf0, xf1, ys);\n"
-"vec4 pixel_value = vec4(perlin, 0.0, 0.0, 1.0);\n"
+"float perlin = mix(xf0, xf1, ys) * 0.5 + 0.5;\n"
+"vec4 pixel_value = vec4(perlin, perlin, perlin, 1.0);\n"
 "imageStore(img_output, pixel_coords, pixel_value);\n"
 "}";
 
@@ -160,8 +161,8 @@ static void app_init_resources()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, width, height, 0, GL_RG, GL_FLOAT, 0);
-	glBindImageTexture(0, textureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, 0);
+	glBindImageTexture(0, textureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
 	GLuint computeShader = glCreateShader(GL_COMPUTE_SHADER);
 	glShaderSource(computeShader, 1, &computeShaderString, 0);
