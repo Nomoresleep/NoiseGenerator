@@ -1,4 +1,6 @@
 #include <math.h> // fmodf
+#include "MCommon/MC_GrowingArray.h"
+#include "MCommon/MC_ScopedPtr.h"
 #include "imgui.h"
 
 static inline ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y); }
@@ -55,7 +57,10 @@ public:
     Node(int id, const char* name, const ImVec2& pos)
         : myID(id)
         , myLabel(name)
-        , myPosition(pos) {};
+        , myPosition(pos)
+        , myProperties(8, 8)
+        , myOutputs(8, 8)
+        , myInputs(8, 8){};
 
     const char* myLabel;
     int myID;
@@ -63,9 +68,9 @@ public:
     ImVec2 myPosition;
     ImVec2 mySize;
 
-    ImVector<PropertyBase*> myProperties;
-    ImVector<OutputPort*> myOutputs;
-	ImVector<InputPort*> myInputs;
+    MC_GrowingArray<MC_ScopedPtr<PropertyBase>> myProperties;
+    MC_GrowingArray<MC_ScopedPtr<OutputPort>> myOutputs;
+    MC_GrowingArray<MC_ScopedPtr<InputPort>> myInputs;
 };
 
 
@@ -131,8 +136,8 @@ class ConstantNode : public Node
 public:
     ConstantNode(int id, const char* name, const ImVec2& pos, Property<Type>* aProperty)
         : Node(id, name, pos) {
-        myProperties.push_back(aProperty);
-        myOutputs.push_back(new OutputPort(GetPortType<Type>()));
+        myProperties.Add(aProperty);
+        myOutputs.Add(new OutputPort(GetPortType<Type>()));
     };
 };
 
@@ -142,10 +147,10 @@ public:
 	PerlinNoise2DNode(int anID, const char* aName, const ImVec2& aPosition)
 		: Node(anID, aName, aPosition)
 	{
-		myInputs.push_back(new InputPort(FloatPort));
-		myInputs.push_back(new InputPort(FloatPort));
-		myInputs.push_back(new InputPort(FloatPort));
-		myOutputs.push_back(new OutputPort(FloatPort));
+		myInputs.Add(new InputPort(FloatPort));
+		myInputs.Add(new InputPort(FloatPort));
+		myInputs.Add(new InputPort(FloatPort));
+		myOutputs.Add(new OutputPort(FloatPort));
 	};
 
 };
@@ -156,7 +161,7 @@ public:
     ResultNode()
         : Node(0, "Result", ImVec2(100, 100))
     {
-        myInputs.push_back(new InputPort(FloatPort));
+        myInputs.Add(new InputPort(FloatPort));
     };
 };
 
@@ -179,7 +184,7 @@ static void locDrawPort(ImDrawList* aDrawList, ImVec2 aPortPos, ImU32 aColor)
 
 static void ShowExampleAppCustomNodeGraph(bool* opened)
 {
-    static ImVector<Node*> nodes;
+    static MC_GrowingArray<MC_ScopedPtr<Node>> nodes(32, 32);
     //static ImVector<NodeLink> links;
     static bool inited = false;
     static ImVec2 scrolling = ImVec2(0.0f, 0.0f);
@@ -187,14 +192,14 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
     static int node_selected = -1;
     if (!inited)
     {
-        nodes.push_back(new ResultNode());
+        nodes.Add(new ResultNode());
 		Property<f32>* floatProperty1 = new Property<f32>(0.0f, 1.0f);
-		nodes.push_back(new ConstantNode<f32>(1, "GetUV.x", ImVec2(100, 170), floatProperty1));
+		nodes.Add(new ConstantNode<f32>(1, "GetUV.x", ImVec2(100, 170), floatProperty1));
         Property<f32>* floatProperty2 = new Property<f32>(0.0f, 1.0f);
-        nodes.push_back(new ConstantNode<f32>(2, "GetUV.y", ImVec2(100, 270), floatProperty2));
+        nodes.Add(new ConstantNode<f32>(2, "GetUV.y", ImVec2(100, 270), floatProperty2));
         Property<f32>* floatProperty3 = new Property<f32>(0.0f, 20.0f);
-        nodes.push_back(new ConstantNode<f32>(3, "Frequency", ImVec2(100, 370), floatProperty3));
-		nodes.push_back(new PerlinNoise2DNode(4, "Perlin Noise 2D", ImVec2(300, 270)));
+        nodes.Add(new ConstantNode<f32>(3, "Frequency", ImVec2(100, 370), floatProperty3));
+		nodes.Add(new PerlinNoise2DNode(4, "Perlin Noise 2D", ImVec2(300, 270)));
         inited = true;
     }
 
@@ -239,7 +244,7 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
     bool connection_port_mismatch = false;
     bool connection_port_match = false;
     // Display nodes
-    for (int node_idx = 0; node_idx < nodes.Size; node_idx++)
+    for (int node_idx = 0; node_idx < nodes.Count(); node_idx++)
     {
         Node* node = nodes[node_idx];
         ImGui::PushID(node->myID);
@@ -251,7 +256,7 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
         ImGui::SetCursorScreenPos(node_rect_min + NODE_WINDOW_PADDING);
         ImGui::BeginGroup(); // Lock horizontal position
         ImGui::Text("%s", node->myLabel);
-        if(node->myProperties.size())
+        if(node->myProperties.Count())
             node->myProperties[0]->Render();
         //ImGui::ColorEdit3("##color", &node->Color.x);
 
@@ -259,10 +264,10 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
 
 		// Save the size of what we have emitted and whether any of the widgets are being used
 		bool node_widgets_active = (!old_any_active && ImGui::IsAnyItemActive());
-		node->mySize = ImGui::GetItemRectSize() + NODE_WINDOW_PADDING + NODE_WINDOW_PADDING + ImVec2(0, ImGui::GetItemsLineHeightWithSpacing() * max(node->myInputs.size(), node->myOutputs.size()));
+		node->mySize = ImGui::GetItemRectSize() + NODE_WINDOW_PADDING + NODE_WINDOW_PADDING + ImVec2(0, ImGui::GetItemsLineHeightWithSpacing() * max(node->myInputs.Count(), node->myOutputs.Count()));
 		ImVec2 node_rect_max = node_rect_min + node->mySize;
 		
-		for (int slot_idx = 0; slot_idx < node->myOutputs.size(); slot_idx++)
+		for (int slot_idx = 0; slot_idx < node->myOutputs.Count(); slot_idx++)
 		{
 			OutputPort* port = node->myOutputs[slot_idx];
 			ImVec2 portPos = ImVec2(node_rect_min.x + node->mySize.x - NODE_SLOT_RADIUS, node_rect_min.y + NODE_WINDOW_PADDING.y * 2.0f + ImGui::GetTextLineHeight() + ImGui::GetItemsLineHeightWithSpacing() * (f32)slot_idx);
@@ -280,7 +285,7 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
 			}
 		}
 
-		for (int slot_idx = 0; slot_idx < node->myInputs.size(); slot_idx++)
+		for (int slot_idx = 0; slot_idx < node->myInputs.Count(); slot_idx++)
 		{
 			InputPort* port = node->myInputs[slot_idx];
 			ImVec2 portPos = ImVec2(node_rect_min.x - NODE_SLOT_RADIUS, node_rect_min.y + NODE_WINDOW_PADDING.y * 2.0f + ImGui::GetTextLineHeight() + ImGui::GetItemsLineHeightWithSpacing() * (f32)slot_idx);
@@ -377,7 +382,7 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
         }
         else
         {
-            if (ImGui::MenuItem("Add")) { nodes.push_back(new Node(nodes.Size, "New node", scene_pos)); }
+            if (ImGui::MenuItem("Add")) { nodes.Add(new Node(nodes.Count(), "New node", scene_pos)); }
             if (ImGui::MenuItem("Paste", NULL, false, false)) {}
         }
         ImGui::EndPopup();
