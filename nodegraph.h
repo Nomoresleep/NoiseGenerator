@@ -1,14 +1,19 @@
 #include <math.h> // fmodf
 #include "MCommon/MC_GrowingArray.h"
 #include "MCommon/MC_ScopedPtr.h"
+#include "MCommon/MC_Vector.h"
 #include "imgui.h"
+
+#define MC_TO_IM(mcvec) ImVec2(mcvec.x, mcvec.z)
+#define IM_TO_MC(imvec) MC_Vector2f(imvec.x, imvec.y)
 
 static inline ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y); }
 static inline ImVec2 operator-(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x - rhs.x, lhs.y - rhs.y); }
 
-static const float NODE_SLOT_RADIUS = 6.0f;
+static const f32 NODE_SLOT_RADIUS = 6.0f;
 static const ImVec2 NODE_PORT_SIZE = ImVec2(2.0f * NODE_SLOT_RADIUS, 2.0f * NODE_SLOT_RADIUS);
 static const ImVec2 NODE_WINDOW_PADDING = NODE_PORT_SIZE;// (8.0f, 8.0f);
+static const f32 NODE_PROPERTY_WIDTH = 120.0f;
 
 enum PortType
 {
@@ -65,8 +70,8 @@ public:
     const char* myLabel;
     int myID;
 
-    ImVec2 myPosition;
-    ImVec2 mySize;
+    MC_Vector2f myPosition;
+    MC_Vector2f mySize;
 
     MC_GrowingArray<MC_ScopedPtr<PropertyBase>> myProperties;
     MC_GrowingArray<MC_ScopedPtr<OutputPort>> myOutputs;
@@ -85,7 +90,7 @@ public:
 
     void Render() override;
 
-    void Set(T aValue) { myValue = min(myMax, max(myMin, aValue)); }
+    void Set(T aValue) { myValue = MC_Min(myMax, MC_Max(myMin, aValue)); }
     const T& Get() const { return myValue; }
     T myValue;
     T myMin, myMax;
@@ -167,12 +172,13 @@ public:
 
 static OutputPort* g_draggedOutput = nullptr;
 
-static void locDrawBezierCurve(ImDrawList* aDrawList, ImVec2 aP0, ImVec2 aP1, ImU32 aColor, float aThickness)
+static void locDrawBezierCurve(ImDrawList* aDrawList, ImVec2 aP0, ImVec2 aP1, ImU32 aColor)
 {
-	//NOTE:[Nomoresleep] performance impact?
+    static const f32 CURVE_THICKNESS = 2.0f;
 	aDrawList->ChannelsSetCurrent(0);
-    float xdist = min(50.0f, aP1.x - aP0.x);
-    aDrawList->AddBezierCurve(aP0, aP0 + ImVec2(xdist, 0), aP1 + ImVec2(-xdist, 0), aP1, aColor, aThickness);
+    float xdist = MC_Min(50.0f, aP1.x - aP0.x);
+    aDrawList->AddBezierCurve(aP0, aP0 + ImVec2(xdist, 0), aP1 + ImVec2(-xdist, 0), aP1, IM_COL32(100, 100, 100, 255), CURVE_THICKNESS + 1.5f);
+    aDrawList->AddBezierCurve(aP0, aP0 + ImVec2(xdist, 0), aP1 + ImVec2(-xdist, 0), aP1, aColor, CURVE_THICKNESS);
 	aDrawList->ChannelsSetCurrent(1);
 }
 
@@ -180,6 +186,17 @@ static void locDrawPort(ImDrawList* aDrawList, ImVec2 aPortPos, ImU32 aColor)
 {
     aDrawList->AddRectFilled(aPortPos, aPortPos + NODE_PORT_SIZE, aColor);
     aDrawList->AddRect(aPortPos, aPortPos + NODE_PORT_SIZE, IM_COL32(200, 200, 200, 255), 0.0f, ImDrawCornerFlags_All, 1.0f);
+}
+
+static void locRenderNodeBody(ImDrawList* aDrawList, Node* aNode, MC_Vector2f anOffset)
+{
+    ImVec2 textSize = ImGui::CalcTextSize(aNode->myLabel);
+    aNode->mySize = MC_Vector2f(MC_Max(textSize.x, NODE_PROPERTY_WIDTH) + 2.0f * NODE_WINDOW_PADDING.x, textSize.y + 2.0f * NODE_WINDOW_PADDING.y);
+    aNode->mySize.y += MC_Max(aNode->myProperties.Count(), aNode->myInputs.Count(), aNode->myOutputs.Count()) * ImGui::GetItemsLineHeightWithSpacing() + ImGui::GetStyle().ItemSpacing.y;
+    MC_Vector2f rect_min = anOffset + aNode->myPosition;
+    MC_Vector2f rect_max = rect_min + aNode->mySize;
+    aDrawList->AddRectFilled(rect_min, rect_max, IM_COL32(60, 60, 60, 255));
+    aDrawList->AddRect(rect_min, rect_max, IM_COL32(100, 100, 100, 255));
 }
 
 static void ShowExampleAppCustomNodeGraph(bool* opened)
@@ -193,12 +210,9 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
     if (!inited)
     {
         nodes.Add(new ResultNode());
-		Property<f32>* floatProperty1 = new Property<f32>(0.0f, 1.0f);
-		nodes.Add(new ConstantNode<f32>(1, "GetUV.x", ImVec2(100, 170), floatProperty1));
-        Property<f32>* floatProperty2 = new Property<f32>(0.0f, 1.0f);
-        nodes.Add(new ConstantNode<f32>(2, "GetUV.y", ImVec2(100, 270), floatProperty2));
-        Property<f32>* floatProperty3 = new Property<f32>(0.0f, 20.0f);
-        nodes.Add(new ConstantNode<f32>(3, "Frequency", ImVec2(100, 370), floatProperty3));
+		nodes.Add(new ConstantNode<f32>(1, "GetUV.x", ImVec2(100, 170), new Property<f32>(0.0f, 1.0f)));
+        nodes.Add(new ConstantNode<f32>(2, "GetUV.y", ImVec2(100, 270), new Property<f32>(0.0f, 1.0f)));
+        nodes.Add(new ConstantNode<f32>(3, "Frequency", ImVec2(100, 370), new Property<f32>(0.0f, 20.0f)));
 		nodes.Add(new PerlinNoise2DNode(4, "Perlin Noise 2D", ImVec2(300, 270)));
         inited = true;
     }
@@ -214,7 +228,7 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, IM_COL32(60, 60, 70, 255));
     ImGui::BeginChild("scrolling_region", ImGui::GetWindowContentRegionMax() - ImGui::GetWindowContentRegionMin(), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
-    ImGui::PushItemWidth(120.0f);
+    ImGui::PushItemWidth(NODE_PROPERTY_WIDTH);
 
     ImVec2 offset = ImGui::GetCursorScreenPos() + scrolling;
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -231,15 +245,6 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
     // Display links
     draw_list->ChannelsSplit(2);
     draw_list->ChannelsSetCurrent(0); // Background
-    //for (int link_idx = 0; link_idx < links.Size; link_idx++)
-    //{
-    //    NodeLink* link = &links[link_idx];
-    //    Node* node_inp = &nodes[link->InputIdx];
-    //    Node* node_out = &nodes[link->OutputIdx];
-    //    ImVec2 p1 = offset + node_inp->GetOutputSlotPos(link->InputSlot);
-    //    ImVec2 p2 = offset + node_out->GetInputSlotPos(link->OutputSlot);
-    //    draw_list->AddBezierCurve(p1, p1 + ImVec2(+50, 0), p2 + ImVec2(-50, 0), p2, IM_COL32(200, 200, 100, 255), 3.0f);
-    //}
 
     bool connection_port_mismatch = false;
     bool connection_port_match = false;
@@ -250,6 +255,7 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
         ImGui::PushID(node->myID);
         ImVec2 node_rect_min = offset + node->myPosition;
 
+        locRenderNodeBody(draw_list, node, offset);
         // Display node contents first
         draw_list->ChannelsSetCurrent(1); // Foreground
         bool old_any_active = ImGui::IsAnyItemActive();
@@ -263,9 +269,9 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
 		ImGui::EndGroup();
 
 		// Save the size of what we have emitted and whether any of the widgets are being used
-		bool node_widgets_active = (!old_any_active && ImGui::IsAnyItemActive());
-		node->mySize = ImGui::GetItemRectSize() + NODE_WINDOW_PADDING + NODE_WINDOW_PADDING + ImVec2(0, ImGui::GetItemsLineHeightWithSpacing() * max(node->myInputs.Count(), node->myOutputs.Count()));
-		ImVec2 node_rect_max = node_rect_min + node->mySize;
+		//bool node_widgets_active = (!old_any_active && ImGui::IsAnyItemActive());
+		//node->mySize = ImGui::GetItemRectSize() + NODE_WINDOW_PADDING + NODE_WINDOW_PADDING + ImVec2(0, ImGui::GetItemsLineHeightWithSpacing() * max(node->myInputs.Count(), node->myOutputs.Count()));
+		//ImVec2 node_rect_max = node_rect_min + node->mySize;
 		
 		for (int slot_idx = 0; slot_idx < node->myOutputs.Count(); slot_idx++)
 		{
@@ -315,13 +321,13 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
 
 			if (port->myConnectedPort != nullptr)
 			{
-				locDrawBezierCurve(draw_list, port->myConnectedPort->myPosition, port->myPosition, IM_COL32(100, 100, 100, 255), 3.0f);
+				locDrawBezierCurve(draw_list, port->myConnectedPort->myPosition, port->myPosition, IM_COL32(100, 100, 100, 255));
 			}
 		}
 
         // Display node box
         draw_list->ChannelsSetCurrent(0); // Background
-        ImGui::SetCursorScreenPos(node_rect_min);
+        /*ImGui::SetCursorScreenPos(node_rect_min);
         ImGui::InvisibleButton("node", node->mySize);
         if (ImGui::IsItemHovered())
         {
@@ -337,7 +343,7 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
         ImU32 node_bg_color = (node_hovered_in_list == node->myID || node_hovered_in_scene == node->myID || (node_hovered_in_list == -1 && node_selected == node->myID)) ? IM_COL32(75, 75, 75, 255) : IM_COL32(60, 60, 60, 255);
         draw_list->AddRectFilled(node_rect_min, node_rect_max, node_bg_color);
         draw_list->AddRect(node_rect_min, node_rect_max, IM_COL32(100, 100, 100, 255));
-
+        */
         ImGui::PopID();
     }
 	if (!ImGui::IsMouseDown(0) && !ImGui::GetIO().KeyShift)
@@ -347,7 +353,7 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
 	if (g_draggedOutput != nullptr)
 	{
         ImU32 color = connection_port_mismatch ? IM_COL32(200, 100, 100, 255) : (connection_port_match ? IM_COL32(100, 200, 100, 255) : IM_COL32(100, 100, 100, 255));
-        locDrawBezierCurve(draw_list, g_draggedOutput->myPosition, ImGui::GetIO().MousePos, color, 3.0f);
+        locDrawBezierCurve(draw_list, g_draggedOutput->myPosition, ImGui::GetIO().MousePos, color);
 	}
     draw_list->ChannelsMerge();
 
