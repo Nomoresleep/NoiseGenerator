@@ -191,17 +191,6 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
     bool connection_port_match = false;
 
 	draw_list->ChannelsSplit(2);
-	draw_list->ChannelsSetCurrent(1);
-
-    // Display nodes
-	for (i32 node_idx = 0; node_idx < aNodeGraph->myNodes.Count(); node_idx++)
-	{
-		Node* node = aNodeGraph->myNodes[node_idx];
-
-		ImGui::PushID(node->myID);
-		locDrawNode(draw_list, node, offset);
-		ImGui::PopID();
-	}
 
 	draw_list->ChannelsSetCurrent(0);
 	for(i32 node_idx = aNodeGraph->myNodes.Count() - 1; node_idx >= 0; node_idx--)
@@ -277,6 +266,19 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
 
         ImGui::PopID();
     }
+
+	draw_list->ChannelsSetCurrent(1);
+
+	// Display nodes
+	for (i32 node_idx = 0; node_idx < aNodeGraph->myNodes.Count(); node_idx++)
+	{
+		Node* node = aNodeGraph->myNodes[node_idx];
+
+		ImGui::PushID(node->myID);
+		locDrawNode(draw_list, node, offset);
+		ImGui::PopID();
+	}
+
 	draw_list->ChannelsSetCurrent(0);
 	if (!ImGui::IsMouseDown(0) && !ImGui::GetIO().KeyShift)
 	{
