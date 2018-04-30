@@ -10,6 +10,9 @@
 
 #include "nodegraph.h"
 
+#pragma comment(lib, "MCommon.lib")
+#pragma comment(lib, "Dbghelp.lib")
+
 GLuint computeProgram;
 GLuint textureID;
 const i32 width = 1024;
