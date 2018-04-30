@@ -39,6 +39,7 @@ static f32 frequency = 1.0f;
 static const f32 frequency_min = 0.01f;
 static const f32 frequency_max = 20.0f;
 
+
 static void locShowTexturePreview()
 {
 	if (ImGui::Button("-", ImVec2(ImGui::GetTextLineHeightWithSpacing(), ImGui::GetTextLineHeightWithSpacing()))) zoom = min(zoom_max, max(zoom_min, zoom - 0.1f));

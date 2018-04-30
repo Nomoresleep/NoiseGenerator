@@ -22,8 +22,8 @@ public:
 class ResultNode : public Node
 {
 public:
-    ResultNode()
-        : Node(0, "Result", MC_Vector2f(100, 100))
+    ResultNode(int anID, const char* aLabel, const MC_Vector2f& aPosition)
+        : Node(anID, aLabel, aPosition)
     {
         AddInputPort(new InputPort(FloatPort, nullptr));
     };
@@ -96,17 +96,12 @@ class NodeGraph
 {
 public:
 	NodeGraph()
-		: myNodes(32, 32)
-	{
-		myResultNode = new ResultNode;
-		myNodes.Add(myResultNode);
-	};
+		: myNodes(32, 32){}
 
-	Node* myResultNode;
 	MC_GrowingArray<MC_ScopedPtr<Node>> myNodes;
 };
 
-static NodeGraph* theNodeGraph;
+extern NodeGraph* theNodeGraph;
 
 static void locRegisterNodeTypes()
 {
@@ -114,6 +109,7 @@ static void locRegisterNodeTypes()
 	RegisterNodeType<ConstantNode<i32>>("Constants/IntConstantNode");
 	RegisterNodeType<ConstantNode<u32>>("Constants/UIntConstantNode");
 	RegisterNodeType<PerlinNoise2D>("PerlinNoise2D");
+	RegisterNodeType<ResultNode>("ResultNode", true);
 }
 
 static void ShowNodeGraph(NodeGraph* aNodeGraph)
@@ -217,7 +213,9 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
 			{
 				ImGui::SetCursorScreenPos(rect_min + MC_Vector2f(NODE_WINDOW_PADDING.x, headerHeight + NODE_WINDOW_PADDING.y + ImGui::GetItemsLineHeightWithSpacing() * (f32)slot_idx));
 				draw_list->ChannelsSetCurrent(2);
+				ImGui::PushID(slot_idx);
 				port->myProperty->Render();
+				ImGui::PopID();
 				draw_list->ChannelsSetCurrent(0);
 			}
 		}
@@ -270,7 +268,12 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
 		MC_Vector2f scene_pos = MC_Vector2f(ImGui::GetMousePosOnOpeningCurrentPopup()) - offset;
 		for(const char* str : NodesModule::ourRegisteredNodesNames)
 		{
-			if (ImGui::MenuItem(str)) 
+			NodesModule::NodeCreationData* data = NodesModule::ourRegisteredNodes.GetIfExists(str);
+			if (!data)
+				continue;
+
+			bool enabled = !data->myIsSingleton || theNodeGraph->myNodes.Find2<NodeComparer, const char*>(str, 0) == -1;
+			if (ImGui::MenuItem(str, 0, false, enabled)) 
 			{ 
 				NodesModule::Create(str, scene_pos); 
 			}

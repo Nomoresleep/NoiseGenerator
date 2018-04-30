@@ -22,6 +22,7 @@
 // that object is not gurantted to be in the same slot over the lifetiem of the list.
 
 #include <new>
+#include <assert.h>
 #include "mc_globaldefines.h"
 #include "MC_Algorithm.h"
 

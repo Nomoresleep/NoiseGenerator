@@ -2,37 +2,41 @@
 #include "MCommon/MC_HashMap.h"
 #include "MCommon/MC_GrowingArray.h"
 #include "MCommon/MC_Vector.h"
+#include <assert.h>
 class Node;
+
+struct NodeComparer
+{
+	static bool Equals(Node* aNode, const char* nodeName);
+};
 
 struct NodesModule
 {
 	typedef Node*(*NodeCreationFunction)(const char* aNodeName, const MC_Vector2f& aPosition);
-
-	static Node* Create(const char* aNodeName, const MC_Vector2f& aPosition)
+	struct NodeCreationData
 	{
-		NodesModule::NodeCreationFunction* func = ourRegisteredNodes.GetIfExists(aNodeName);
-		assert(func != nullptr);
-		return (*func)(aNodeName, aPosition);
-	}
-	static MC_HashMap<const char*, NodeCreationFunction> ourRegisteredNodes;
+		NodeCreationFunction myCreationFunction;
+		bool myIsSingleton;
+	};
+
+	static Node* Create(const char* aNodeName, const MC_Vector2f& aPosition);
+	static MC_HashMap<const char*, NodeCreationData> ourRegisteredNodes;
 	static MC_GrowingArray<const char*> ourRegisteredNodesNames;
 };
-
-MC_HashMap<const char*, NodesModule::NodeCreationFunction> NodesModule::ourRegisteredNodes;
-MC_GrowingArray<const char*> NodesModule::ourRegisteredNodesNames(32, 32);
 
 template <typename Type>
 struct RegisterNodeType
 {
-	RegisterNodeType(const char* aNodeName)
+	RegisterNodeType(const char* aNodeName, bool isSingleton = false)
 	{
-		NodesModule::NodeCreationFunction* func = NodesModule::ourRegisteredNodes.GetIfExists(aNodeName);
+		NodesModule::NodeCreationData* func = NodesModule::ourRegisteredNodes.GetIfExists(aNodeName);
 		assert(func == nullptr);
-		NodesModule::ourRegisteredNodes[aNodeName] = Create;
+		NodesModule::ourRegisteredNodes[aNodeName] = { Create, isSingleton };
 		assert(NodesModule::ourRegisteredNodes.GetIfExists(aNodeName));
 		NodesModule::ourRegisteredNodesNames.Add(aNodeName);
 	}
 
+private:
 	//avoid ugly lamdas!
 	static Node* Create(const char* nodeName, const MC_Vector2f& aPosition) {
 		Type* newNode = new Type(theNodeGraph->myNodes.Count(), nodeName, aPosition);
