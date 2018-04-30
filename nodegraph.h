@@ -154,7 +154,7 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
     bool connection_port_mismatch = false;
     bool connection_port_match = false;
 
-	draw_list->ChannelsSplit(2);
+	draw_list->ChannelsSplit(3);
 
 	draw_list->ChannelsSetCurrent(0);
 	for(i32 node_idx = aNodeGraph->myNodes.Count() - 1; node_idx >= 0; node_idx--)
@@ -216,7 +216,7 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
 			else if(port->myProperty != nullptr)
 			{
 				ImGui::SetCursorScreenPos(rect_min + MC_Vector2f(NODE_WINDOW_PADDING.x, headerHeight + NODE_WINDOW_PADDING.y + ImGui::GetItemsLineHeightWithSpacing() * (f32)slot_idx));
-				draw_list->ChannelsSetCurrent(1);
+				draw_list->ChannelsSetCurrent(2);
 				port->myProperty->Render();
 				draw_list->ChannelsSetCurrent(0);
 			}
