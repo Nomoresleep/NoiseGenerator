@@ -53,7 +53,7 @@ HGLRC opengl_create_context(HDC hdc, i32 version_major, i32 version_minor)
     ocd.EnableDoubleBuffering = 1;
 	ocd.EnableVSync = 1;
     ocd.EnforceRequestedVersion = 1;
-    ocd.EnableVSync = false;
+    ocd.EnableVSync = true;
 
     return zlgl_create_context(ZLGL_MAKE_VERSION(version_major, version_minor), hdc, &glVersion, &ocd);
 }
