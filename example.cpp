@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <random>
+#include "MCommon/mf_file.h"
 #include "borderless-window.h"
 #include "opengl_context.h"
 
@@ -19,57 +20,13 @@ const i32 width = 1024;
 const i32 height = 1024;
 
 static const char* computeShaderString =
-"#version 430\n"
 "layout(local_size_x = 8, local_size_y = 8) in;\n"
 "layout(rgba32f, binding = 0) uniform image2D img_output;\n"
-"layout(std430, binding = 0) buffer permutationBuffer\n"
-"{\n"
-"int myData[512];\n"
-"}permBuffer;\n"
-"layout(std430, binding = 1) buffer permutationBuffer12\n"
-"{\n"
-"int myData[512];\n"
-"}permBuffer12;\n"
-"const float GRAD_X[] = \n"
-"{\n"
-"	1.0, -1.0, 1.0, -1.0,\n"
-"	1.0, -1.0, 1.0, -1.0,\n"
-"	0.0, 0.0, 0.0, 0.0\n"
-"};\n"
-"const float GRAD_Y[] = \n"
-"{\n"
-"	1.0, 1.0, -1.0, -1.0,\n"
-"	0.0, 0.0, 0.0, 0.0,\n"
-"	1.0, -1.0, 1.0, -1.0\n"
-"};\n"
-"const float GRAD_Z[] = \n"
-"{\n"
-"	0.0, 0.0, 0.0, 0.0,\n"
-"	1.0, 1.0, -1.0, -1.0,\n"
-"	1.0, 1.0, -1.0, -1.0\n"
-"};\n"
-"float GradCoord2D(int x, int y, float xd, float yd){\n"
-"int lutPos = permBuffer12.myData[(x & 0xff) + permBuffer.myData[(y & 0xff)]];\n"
-"return xd*GRAD_X[lutPos] + yd*GRAD_Y[lutPos];\n"
-"}\n"
-"float interp(float t) { return t*t*t*(t*(t * 6 - 15) + 10); }\n"
 "void main(){\n"
 "ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);\n"
 "float x = (pixel_coords.x / 1024.0) * 16.0;\n"
 "float y = (pixel_coords.y / 1024.0) * 16.0;\n"
-"int x0 = int(floor(x));\n"
-"int y0 = int(floor(y));\n"
-"int x1 = x0 + 1;\n"
-"int y1 = y0 + 1;\n"
-"float xs = interp(fract(x));\n"
-"float ys = interp(fract(y));\n"
-"float xd0 = fract(x);\n"
-"float yd0 = fract(y);\n"
-"float xd1 = xd0 - 1.0;\n"
-"float yd1 = yd0 - 1.0;\n"
-"float xf0 = mix(GradCoord2D(x0, y0, xd0, yd0), GradCoord2D(x1, y0, xd1, yd0), xs);\n"
-"float xf1 = mix(GradCoord2D(x0, y1, xd0, yd1), GradCoord2D(x1, y1, xd1, yd1), xs);\n"
-"float perlin = mix(xf0, xf1, ys) * 0.5 + 0.5;\n"
+"float perlin = PerlinNoise2D(x,y);\n"
 "vec4 pixel_value = vec4(perlin, perlin, perlin, 1.0);\n"
 "imageStore(img_output, pixel_coords, pixel_value);\n"
 "}";
@@ -82,6 +39,39 @@ static f32 frequency = 1.0f;
 static const f32 frequency_min = 0.01f;
 static const f32 frequency_max = 20.0f;
 
+static void locShowTexturePreview()
+{
+	if (ImGui::Button("-", ImVec2(ImGui::GetTextLineHeightWithSpacing(), ImGui::GetTextLineHeightWithSpacing()))) zoom = min(zoom_max, max(zoom_min, zoom - 0.1f));
+	ImGui::SameLine();
+	ImGui::SliderFloat("zoom_slider", &zoom, zoom_min, zoom_max);
+	ImGui::SameLine();
+	if (ImGui::Button("+")) zoom = min(zoom_max, max(zoom_min, zoom + 0.1f));
+	ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, ImVec4(0, 0, 0, 1));
+	ImGui::BeginChild("2", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+	if (ImGui::IsWindowHovered())
+	{
+		zoom = min(zoom_max, max(zoom_min, zoom + ImGui::GetIO().MouseWheel * 0.1f));
+	}
+	ImVec2 imageSize = { zoom * (f32)width, zoom * (f32)height };
+
+	//NOTE:[NoMoreSleep] Button necessary for Item activiation query
+	ImGui::ImageButton((void*)textureID, imageSize, ImVec2(0, 0), ImVec2(1, 1), 0);
+
+	if (ImGui::IsItemActive())
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		ImVec2 mouseDelta = ImVec2(io.MousePos.x - io.MouseClickedPos[0].x, io.MousePos.y - io.MouseClickedPos[0].y);
+		if (mouseDelta.x != 0)
+		{
+			ImGui::SetScrollX(ImGui::GetScrollX() - mouseDelta.x);
+			ImGui::SetScrollY(ImGui::GetScrollY() - mouseDelta.y);
+			ImGui::ResetMouseDragDelta();
+		}
+	}
+	ImGui::EndChild();
+	ImGui::PopStyleColor();
+}
+
 static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 {
     if (!window->initialized)
@@ -93,51 +83,16 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 		borderless_window_close_all(window);
 		PostQuitMessage(0);
 	}
-
 	imgui_window_menu_bar(window);
-
 	imgui_window_context_menu(window, openContextMenu);
+	
+	if(!theNodeGraph)
+		theNodeGraph = new NodeGraph();
 
-#if 1
-
-	static f32 freq = 2.0f;
 	ImGui::Columns(2);
-    {
-        if (ImGui::Button("-", ImVec2(ImGui::GetTextLineHeightWithSpacing(), ImGui::GetTextLineHeightWithSpacing()))) zoom = min(zoom_max, max(zoom_min, zoom - 0.1f));
-        ImGui::SameLine();
-        ImGui::SliderFloat("zoom_slider", &zoom, zoom_min, zoom_max);
-        ImGui::SameLine();
-        if (ImGui::Button("+")) zoom = min(zoom_max, max(zoom_min, zoom + 0.1f));
-        ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, ImVec4(0, 0, 0, 1));
-        ImGui::BeginChild("2", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-        if (ImGui::IsWindowHovered())
-        {
-            zoom = min(zoom_max, max(zoom_min, zoom + ImGui::GetIO().MouseWheel * 0.1f));
-        }
-        ImVec2 imageSize = { zoom * (f32)width, zoom * (f32)height };
-
-        //NOTE:[NoMoreSleep] Button necessary for Item activiation query
-        ImGui::ImageButton((void*)textureID, imageSize, ImVec2(0, 0), ImVec2(1, 1), 0);
-
-        if (ImGui::IsItemActive())
-        {
-            ImGuiIO& io = ImGui::GetIO();
-            ImVec2 mouseDelta = ImVec2(io.MousePos.x - io.MouseClickedPos[0].x, io.MousePos.y - io.MouseClickedPos[0].y);
-            if (mouseDelta.x != 0)
-            {
-                ImGui::SetScrollX(ImGui::GetScrollX() - mouseDelta.x);
-                ImGui::SetScrollY(ImGui::GetScrollY() - mouseDelta.y);
-                ImGui::ResetMouseDragDelta();
-            }
-        }
-        ImGui::EndChild();
-        ImGui::PopStyleColor();
-    }
+	locShowTexturePreview();
     ImGui::NextColumn();
-    {
-        bool t = true;
-        ShowExampleAppCustomNodeGraph(&t);
-    }
+	ShowNodeGraph(theNodeGraph);
 
 	{
 		glUseProgram(computeProgram);
@@ -145,18 +100,16 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 	}
 
-#else
-    ImGui::Begin("Style Editor");
-    ImGui::ShowStyleEditor();
-    ImGui::End();
-
-	ImGui::ShowDemoWindow();
-#endif
 	imgui_window_end();
 }
 
 static void app_init_resources()
 {
+	MF_File perlinNoiseFile(locPerlinNoise2DSource);
+	MC_ScopedArray<char> perlinSource = new char[perlinNoiseFile.GetSize() + 1];
+	perlinNoiseFile.Read(perlinSource.Data(), perlinNoiseFile.GetSize());
+	perlinSource[perlinNoiseFile.GetSize()] = '\0';
+
 	glGenTextures(1, &textureID);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textureID);
@@ -167,8 +120,10 @@ static void app_init_resources()
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, 0);
 	glBindImageTexture(0, textureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
+	const char* strs[] = { perlinSource.Data(), computeShaderString };
+
 	GLuint computeShader = glCreateShader(GL_COMPUTE_SHADER);
-	glShaderSource(computeShader, 1, &computeShaderString, 0);
+	glShaderSource(computeShader, 2, strs, 0);
 	glCompileShader(computeShader);
 	GLint logLength = 0;
 	glGetShaderiv(computeShader, GL_INFO_LOG_LENGTH, &logLength);

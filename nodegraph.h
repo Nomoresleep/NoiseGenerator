@@ -2,174 +2,20 @@
 #include "MCommon/MC_GrowingArray.h"
 #include "MCommon/MC_ScopedPtr.h"
 #include "MCommon/MC_Vector.h"
+#include "MCommon/MC_HashMap.h"
 #include "MCommon/MC_Pair.h"
 #include "imgui.h"
-
-static const f32 NODE_SLOT_RADIUS = 6.0f;
-static const MC_Vector2f NODE_PORT_SIZE = MC_Vector2f(2.0f * NODE_SLOT_RADIUS, 2.0f * NODE_SLOT_RADIUS);
-static const MC_Vector2f NODE_WINDOW_PADDING = MC_Vector2f(8.0f, 4.0f);
-static const f32 NODE_PROPERTY_WIDTH = 120.0f;
-
-enum PortType
-{
-    FloatPort,
-    IntPort,
-};
-
-union PortData
-{
-    float myFloatData;
-    int myIntPortData;
-};
-
-struct OutputPort
-{
-    OutputPort(PortType aPortType)
-        : myType(aPortType)
-    {};
-
-    PortData myData;
-    const PortType myType;
-	MC_Vector2f myPosition;
-};
-
-struct InputPort
-{
-    InputPort(PortType aPortType)
-        : myType(aPortType)
-        , myConnectedPort(nullptr)
-    {}
-
-	OutputPort* myConnectedPort;
-    const PortType myType;
-	MC_Vector2f myPosition;
-};
-
-class PropertyBase
-{
-public:
-    virtual void Render() = 0;
-};
-
-class Node
-{
-public:
-    Node(int id, const char* name, const MC_Vector2f& pos)
-        : myID(id)
-        , myLabel(name)
-        , myPosition(pos)
-        , myProperties(8, 8)
-        , myOutputs(8, 8)
-        , myInputs(8, 8){};
-
-    const char* myLabel;
-    int myID;
-
-    MC_Vector2f myPosition;
-    MC_Vector2f mySize;
-
-	MC_GrowingArray<MC_ScopedPtr<PropertyBase>> myProperties;
-	MC_GrowingArray<MC_ScopedPtr<OutputPort>> myOutputs;
-	MC_GrowingArray<MC_ScopedPtr<InputPort>> myInputs;
-protected:
-	void AddInputPort(InputPort* anInputPort)
-	{
-		myInputs.Add(anInputPort);
-		CalculateSize();
-	}
-	void AddOutputPort(OutputPort* anOutputPort)
-	{
-		myOutputs.Add(anOutputPort);
-		CalculateSize();
-	}
-	void CalculateSize()
-	{
-		MC_Vector2f textSize = ImGui::CalcTextSize(myLabel);
-		mySize = MC_Vector2f(MC_Max(textSize.x, NODE_PROPERTY_WIDTH) + 2.0f * NODE_WINDOW_PADDING.x, textSize.y + 2.0f * NODE_WINDOW_PADDING.y);
-		mySize.y += MC_Max(myProperties.Count(), myInputs.Count(), myOutputs.Count()) * ImGui::GetItemsLineHeightWithSpacing() + ImGui::GetStyle().ItemSpacing.y;
-	}
-};
-
-
-template <typename T>
-class Property : public PropertyBase
-{
-public:
-    Property(T aMin, T aMax)
-        : myMin(aMin)
-        , myMax(aMax)
-        , myValue(aMin){}
-
-    void Render() override;
-
-    void Set(T aValue) { myValue = MC_Min(myMax, MC_Max(myMin, aValue)); }
-    const T& Get() const { return myValue; }
-    T myValue;
-    T myMin, myMax;
-};
-
-template <typename T>
-void locRenderDrag(Property<T>* aProperty);
-
-template <>
-void locRenderDrag<f32>(Property<f32>* aProperty)
-{
-    ImGui::DragFloat("##awinqwfpi", &aProperty->myValue, 0.001f, aProperty->myMin, aProperty->myMax);
-}
-
-template <>
-void locRenderDrag<i32>(Property<i32>* aProperty)
-{
-    ImGui::DragInt("##knawlfn", &aProperty->myValue, 1.0f, aProperty->myMin, aProperty->myMax);
-}
-
-template <typename T>
-void Property<T>::Render() { locRenderDrag(this); }
-
-template <typename Type>
-PortType GetPortType();
-
-template<>
-PortType GetPortType<f32>() { return FloatPort; }
-
-template<>
-PortType GetPortType<i32>() { return IntPort; }
-
-ImU32 GetColorFromPortType(PortType aType)
-{
-    switch (aType)
-    {
-    case FloatPort:
-        return IM_COL32(0, 95, 0, 255);
-    case IntPort:
-        return IM_COL32(66, 150, 250, 255);
-    }
-    return IM_COL32(255, 255, 255, 255);
-}
+#include "node.h"
+#include "image_subpass.h"
 
 template <typename Type>
 class ConstantNode : public Node
 {
 public:
-    ConstantNode(int id, const char* name, const MC_Vector2f& pos, Property<Type>* aProperty)
+    ConstantNode(int id, const char* name, const MC_Vector2f& pos)
         : Node(id, name, pos) {
-        myProperties.Add(aProperty);
         AddOutputPort(new OutputPort(GetPortType<Type>()));
     };
-};
-
-class PerlinNoise2DNode : public Node
-{
-public:
-	PerlinNoise2DNode(int anID, const char* aName, const MC_Vector2f& aPosition)
-		: Node(anID, aName, aPosition)
-	{
-		AddInputPort(new InputPort(FloatPort));
-		AddInputPort(new InputPort(FloatPort));
-		AddInputPort(new InputPort(FloatPort));
-		AddOutputPort(new OutputPort(FloatPort));
-	};
-
 };
 
 class ResultNode : public Node
@@ -178,7 +24,7 @@ public:
     ResultNode()
         : Node(0, "Result", MC_Vector2f(100, 100))
     {
-        AddInputPort(new InputPort(FloatPort));
+        AddInputPort(new InputPort(FloatPort, nullptr));
     };
 };
 
@@ -244,21 +90,77 @@ static void locDrawNode(ImDrawList* aDrawList, Node* aNode, MC_Vector2f anOffset
 	}
 }
 
-static void ShowExampleAppCustomNodeGraph(bool* opened)
-{
-    static MC_GrowingArray<MC_ScopedPtr<Node>> nodes(32, 32);
-    static bool inited = false;
-    static MC_Vector2f scrolling = MC_Vector2f(0.0f, 0.0f);
-    if (!inited)
-    {
-        nodes.Add(new ResultNode());
-		nodes.Add(new ConstantNode<f32>(1, "GetUV.x", MC_Vector2f(100, 170), new Property<f32>(0.0f, 1.0f)));
-        nodes.Add(new ConstantNode<f32>(2, "GetUV.y", MC_Vector2f(100, 270), new Property<f32>(0.0f, 1.0f)));
-        nodes.Add(new ConstantNode<f32>(3, "Frequency", MC_Vector2f(100, 370), new Property<f32>(0.0f, 20.0f)));
-		nodes.Add(new PerlinNoise2DNode(4, "Perlin Noise 2D", MC_Vector2f(300, 270)));
-        inited = true;
-    }
 
+class NodeGraph
+{
+public:
+	NodeGraph()
+		: myNodes(32, 32)
+	{
+		myResultNode = new ResultNode;
+		myNodes.Add(myResultNode);
+	};
+
+	Node* myResultNode;
+	MC_GrowingArray<MC_ScopedPtr<Node>> myNodes;
+};
+
+static NodeGraph* theNodeGraph;
+
+struct NodesModule
+{
+	typedef Node*(*NodeCreationFunction)(const char* aNodeName, const MC_Vector2f& aPosition);
+
+	static Node* Create(const char* aNodeName, const MC_Vector2f& aPosition)
+	{
+		NodesModule::NodeCreationFunction* func = ourRegisteredNodes.GetIfExists(aNodeName);
+		assert(func != nullptr);
+		return (*func)(aNodeName, aPosition);
+	}
+	static MC_HashMap<const char*, NodeCreationFunction> ourRegisteredNodes;
+	static MC_GrowingArray<const char*> ourRegisteredNodesNames;
+};
+
+MC_HashMap<const char*, NodesModule::NodeCreationFunction> NodesModule::ourRegisteredNodes;
+MC_GrowingArray<const char*> NodesModule::ourRegisteredNodesNames(32, 32);
+
+template <typename Type>
+struct RegisterNodeType
+{
+	RegisterNodeType(const char* aNodeName)
+	{
+		NodesModule::NodeCreationFunction* func = NodesModule::ourRegisteredNodes.GetIfExists(aNodeName);
+		assert(func == nullptr);
+		NodesModule::ourRegisteredNodes[aNodeName] = Create;
+		assert(NodesModule::ourRegisteredNodes.GetIfExists(aNodeName));
+		NodesModule::ourRegisteredNodesNames.Add(aNodeName);
+	}
+
+	//avoid ugly lamdas!
+	static Node* Create(const char* nodeName, const MC_Vector2f& aPosition) { 
+		Type* newNode = new Type(theNodeGraph->myNodes.Count(), nodeName, aPosition); 
+		theNodeGraph->myNodes.Add(newNode);
+		return newNode;
+	}
+};
+
+static void locRegisterNodeTypes()
+{
+	RegisterNodeType<ConstantNode<f32>>("FloatConstantNode");
+	RegisterNodeType<ConstantNode<i32>>("IntConstantNode");
+	RegisterNodeType<ConstantNode<u32>>("UIntConstantNode");
+	RegisterNodeType<PerlinNoise2D>("PerlinNoise2D");
+}
+
+static void ShowNodeGraph(NodeGraph* aNodeGraph)
+{
+    static MC_Vector2f scrolling = MC_Vector2f(0.0f, 0.0f);
+	static bool inited = false;
+	if (!inited)
+	{
+		locRegisterNodeTypes();
+		inited = true;
+	}
     // Draw a list of nodes on the left side
     bool open_context_menu = false;
     int node_hovered_in_list = -1;
@@ -292,9 +194,9 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
 	draw_list->ChannelsSetCurrent(1);
 
     // Display nodes
-	for (i32 node_idx = 0; node_idx < nodes.Count(); node_idx++)
+	for (i32 node_idx = 0; node_idx < aNodeGraph->myNodes.Count(); node_idx++)
 	{
-		Node* node = nodes[node_idx];
+		Node* node = aNodeGraph->myNodes[node_idx];
 
 		ImGui::PushID(node->myID);
 		locDrawNode(draw_list, node, offset);
@@ -302,19 +204,15 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
 	}
 
 	draw_list->ChannelsSetCurrent(0);
-	for(i32 node_idx = nodes.Count() - 1; node_idx >= 0; node_idx--)
+	for(i32 node_idx = aNodeGraph->myNodes.Count() - 1; node_idx >= 0; node_idx--)
 	{
-		Node* node = nodes[node_idx];
+		Node* node = aNodeGraph->myNodes[node_idx];
 		MC_Vector2f rect_min = offset + node->myPosition;
 		ImGui::PushID(node->myID);
 		
 		//Draw Node properties
 		const f32 headerHeight = ImGui::GetTextLineHeight() + NODE_WINDOW_PADDING.y * 2.0f;
 		ImGui::SetCursorScreenPos(rect_min + MC_Vector2f(NODE_WINDOW_PADDING.x, headerHeight + NODE_WINDOW_PADDING.y));
-		draw_list->ChannelsSetCurrent(1);
-		for (i32 i = 0; i < node->myProperties.Count(); ++i)
-			node->myProperties[i]->Render();
-		draw_list->ChannelsSetCurrent(0);
 
 		for (i32 slot_idx = 0; slot_idx < node->myOutputs.Count(); slot_idx++)
 		{
@@ -362,6 +260,13 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
 			{
 				locDrawBezierCurve(draw_list, port->myConnectedPort->myPosition, port->myPosition, IM_COL32(100, 100, 100, 255));
 			}
+			else if(port->myProperty != nullptr)
+			{
+				ImGui::SetCursorScreenPos(rect_min + MC_Vector2f(NODE_WINDOW_PADDING.x, headerHeight + NODE_WINDOW_PADDING.y + ImGui::GetItemsLineHeightWithSpacing() * (f32)slot_idx));
+				draw_list->ChannelsSetCurrent(1);
+				port->myProperty->Render();
+				draw_list->ChannelsSetCurrent(0);
+			}
 		}
 
 		ImGui::SetCursorScreenPos(rect_min);
@@ -387,6 +292,26 @@ static void ShowExampleAppCustomNodeGraph(bool* opened)
     // Scrolling
     if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive() && ImGui::IsMouseDragging(2, 0.0f))
         scrolling = scrolling + ImGui::GetIO().MouseDelta;
+
+	if(!ImGui::IsAnyItemHovered() && ImGui::IsMouseHoveringWindow() && ImGui::IsMouseClicked(1))
+	{
+		ImGui::OpenPopup("context_menu");
+	}
+
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
+	if (ImGui::BeginPopup("context_menu"))
+	{
+		MC_Vector2f scene_pos = MC_Vector2f(ImGui::GetMousePosOnOpeningCurrentPopup()) - offset;
+		for(const char* str : NodesModule::ourRegisteredNodesNames)
+		{
+			if (ImGui::MenuItem(str)) 
+			{ 
+				NodesModule::Create(str, scene_pos); 
+			}
+		}
+		ImGui::EndPopup();
+	}
+	ImGui::PopStyleVar();
 
     ImGui::PopItemWidth();
     ImGui::EndChild();

@@ -93,8 +93,8 @@ public:
 
 	Iterator begin() { if (myUsedNrOfItems > 0) return myItemList; else return NULL; }
 	ConstIterator begin() const { if (myUsedNrOfItems > 0) return myItemList; else return NULL; }
-	Iterator end() { if (myUsedNrOfItems > 0) return myItemList + (myUsedNrOfItems - 1); else return NULL; }
-	ConstIterator end() const { if (myUsedNrOfItems > 0) return myItemList + (myUsedNrOfItems - 1); else return NULL; }
+	Iterator end() { if (myUsedNrOfItems > 0) return myItemList + (myUsedNrOfItems); else return NULL; }
+	ConstIterator end() const { if (myUsedNrOfItems > 0) return myItemList + (myUsedNrOfItems); else return NULL; }
 
 	// gets a refeerence to the item at the selected slot
 	__forceinline Type& operator[] (const int anIndex) const
