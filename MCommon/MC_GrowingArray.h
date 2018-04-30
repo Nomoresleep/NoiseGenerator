@@ -47,6 +47,9 @@ void MC_TempFree(void* aPointer);
 template <class Type>
 class MC_GrowingArray
 {
+	typedef Type* Iterator;
+	typedef const Type* ConstIterator;
+
 	Type* New(size_t aCount)
 	{
 #ifndef MC_TEMP_MEMORY_HANDLER_ENABLED
@@ -87,6 +90,11 @@ public:
 	bool Init(int aNrOfRecommendedItems, int anItemIncreaseSize, bool aSafemodeFlag = true);
 	bool ReInit(int aNrOfRecommendedItems, int anItemIncreaseSize, bool aSafemodeFlag = true);
 	bool IsInited();
+
+	Iterator begin() { if (myUsedNrOfItems > 0) return myItemList; else return NULL; }
+	ConstIterator begin() const { if (myUsedNrOfItems > 0) return myItemList; else return NULL; }
+	Iterator end() { if (myUsedNrOfItems > 0) return myItemList + (myUsedNrOfItems - 1); else return NULL; }
+	ConstIterator end() const { if (myUsedNrOfItems > 0) return myItemList + (myUsedNrOfItems - 1); else return NULL; }
 
 	// gets a refeerence to the item at the selected slot
 	__forceinline Type& operator[] (const int anIndex) const
