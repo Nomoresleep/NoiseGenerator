@@ -277,7 +277,7 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
 			if (!data)
 				continue;
 
-			bool enabled = !data->myIsSingleton || !theNodeGraph->ContainsNodeOfName(str);
+			bool enabled = !data->myIsSingleton || !aNodeGraph->ContainsNodeOfName(str);
 			if (ImGui::MenuItem(str, 0, false, enabled)) 
 			{ 
 				NodesModule::Create(str, scene_pos); 
