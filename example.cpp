@@ -11,6 +11,9 @@
 
 #include "nodegraph.h"
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 #pragma comment(lib, "MCommon.lib")
 #pragma comment(lib, "Dbghelp.lib")
 
@@ -99,6 +102,14 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 		glUseProgram(computeProgram);
 		glDispatchCompute((GLuint)width / 8, (GLuint)height / 8, 1);
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+	}
+
+	if (ImGui::GetIO().KeyCtrl && ImGui::GetIO().KeysDown['S'])
+	{
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		MC_ScopedArray<char> img = new char[width * height * 4 * sizeof(u8)];
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, img.Data());
+		stbi_write_png("test.png", width, height, 4, img.Data(), 0);
 	}
 
 	imgui_window_end();

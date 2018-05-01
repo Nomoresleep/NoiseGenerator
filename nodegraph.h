@@ -98,6 +98,11 @@ public:
 	NodeGraph()
 		: myNodes(32, 32){}
 
+	bool ContainsNodeOfName(const char* aNodeName)
+	{
+		return myNodes.Find2<NodeComparer, const char*>(aNodeName, 0) != -1;
+	}
+
 	MC_GrowingArray<MC_ScopedPtr<Node>> myNodes;
 };
 
@@ -272,7 +277,7 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
 			if (!data)
 				continue;
 
-			bool enabled = !data->myIsSingleton || theNodeGraph->myNodes.Find2<NodeComparer, const char*>(str, 0) == -1;
+			bool enabled = !data->myIsSingleton || !theNodeGraph->ContainsNodeOfName(str);
 			if (ImGui::MenuItem(str, 0, false, enabled)) 
 			{ 
 				NodesModule::Create(str, scene_pos); 
