@@ -47,6 +47,12 @@ Workspace::Workspace(i32 anImageWidth, i32 anImageHeight)
     glDeleteShader(computeShader);
 
     myNodegraph = new NodeGraph();
+
+    {
+        glUseProgram(myComputeProgram);
+        glDispatchCompute((GLuint)myImageSize.x / 8, (GLuint)myImageSize.y / 8, 1);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    }
 }
 
 Workspace::~Workspace()

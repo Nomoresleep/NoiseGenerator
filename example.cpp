@@ -78,14 +78,14 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
         return;
 
 	static bool openContextMenu = false;
-	if (!imgui_window_begin(window, "GLFastNoise", &openContextMenu))
+	if (!imgui_window_begin(window, "NoiseGenerator", &openContextMenu))
 	{
 		borderless_window_close_all(window);
 		PostQuitMessage(0);
 	}
 	imgui_window_menu_bar(window);
 
-    if (ImGui::BeginPopupModal("New File Dialog", 0, ImGuiWindowFlags_NoResize))
+    if (ImGui::BeginPopupModal("New File Dialog", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize))
     {
         locShowNewFileDialog();
         ImGui::EndPopup();
@@ -99,12 +99,6 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
         locShowTexturePreview();
         ImGui::NextColumn();
         ShowNodeGraph(theWorkspace->myNodegraph);
-
-        {
-            glUseProgram(theWorkspace->myComputeProgram);
-            glDispatchCompute((GLuint)theWorkspace->myImageSize.x / 8, (GLuint)theWorkspace->myImageSize.y / 8, 1);
-            glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-        }
     }
 	imgui_window_end();
 }
