@@ -2,8 +2,9 @@
 #include "MCommon/MC_HashMap.h"
 #include "MCommon/MC_GrowingArray.h"
 #include "MCommon/MC_Vector.h"
-#include <assert.h>
+#include "types.h"
 class Node;
+class NodeGraph;
 
 struct NodeComparer
 {
@@ -12,14 +13,14 @@ struct NodeComparer
 
 struct NodesModule
 {
-	typedef Node*(*NodeCreationFunction)(const char* aNodeName, const MC_Vector2f& aPosition);
+	typedef Node*(*NodeCreationFunction)(i32 aNodeID, const char* aNodeName, const MC_Vector2f& aPosition);
 	struct NodeCreationData
 	{
 		NodeCreationFunction myCreationFunction;
 		bool myIsSingleton;
 	};
 
-	static Node* Create(const char* aNodeName, const MC_Vector2f& aPosition);
+	static Node* Create(NodeGraph* aNodegraph, const char* aNodeName, const MC_Vector2f& aPosition);
 	static MC_HashMap<const char*, NodeCreationData> ourRegisteredNodes;
 	static MC_GrowingArray<const char*> ourRegisteredNodesNames;
 };
@@ -38,9 +39,8 @@ struct RegisterNodeType
 
 private:
 	//avoid ugly lamdas!
-	static Node* Create(const char* nodeName, const MC_Vector2f& aPosition) {
-		Type* newNode = new Type(theNodeGraph->myNodes.Count(), nodeName, aPosition);
-		theNodeGraph->myNodes.Add(newNode);
+    static Node* Create(i32 aNodeID, const char* nodeName, const MC_Vector2f& aPosition) {
+		Type* newNode = new Type(aNodeID, nodeName, aPosition);
 		return newNode;
 	}
 };

@@ -106,8 +106,6 @@ public:
 	MC_GrowingArray<MC_ScopedPtr<Node>> myNodes;
 };
 
-extern NodeGraph* theNodeGraph;
-
 static void locRegisterNodeTypes()
 {
 	RegisterNodeType<ConstantNode<f32>>("Constants/FloatConstantNode");
@@ -280,7 +278,7 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
 			bool enabled = !data->myIsSingleton || !aNodeGraph->ContainsNodeOfName(str);
 			if (ImGui::MenuItem(str, 0, false, enabled)) 
 			{ 
-				NodesModule::Create(str, scene_pos); 
+				NodesModule::Create(aNodeGraph, str, scene_pos); 
 			}
 		}
 		ImGui::EndPopup();

@@ -17,10 +17,6 @@ struct PerlinNoiseConstants
 	u32 mySeed;
 };
 
-#define DEPENDENCY_FILE(text) text
-
-static const char* locPerlinNoise2DSource = DEPENDENCY_FILE("shaders/noise/perlin2d.glsl");
-
 class PerlinNoise2D : public ImageSubPass, public Node
 {
 public:

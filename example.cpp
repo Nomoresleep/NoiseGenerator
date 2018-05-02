@@ -8,6 +8,7 @@
 #include "imgui.h"
 #include "imgui_impl_gl3.h"
 #include "imgui_window.cpp"
+#include "workspace.h"
 
 #include "nodegraph.h"
 
@@ -17,23 +18,6 @@
 #pragma comment(lib, "MCommon.lib")
 #pragma comment(lib, "Dbghelp.lib")
 
-GLuint computeProgram;
-GLuint textureID;
-const i32 width = 1024;
-const i32 height = 1024;
-
-static const char* computeShaderString =
-"layout(local_size_x = 8, local_size_y = 8) in;\n"
-"layout(rgba32f, binding = 0) uniform image2D img_output;\n"
-"void main(){\n"
-"ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);\n"
-"float x = (pixel_coords.x / 1024.0) * 16.0;\n"
-"float y = (pixel_coords.y / 1024.0) * 16.0;\n"
-"float perlin = PerlinNoise2D(x,y);\n"
-"vec4 pixel_value = vec4(perlin, perlin, perlin, 1.0);\n"
-"imageStore(img_output, pixel_coords, pixel_value);\n"
-"}";
-
 static f32 zoom = 1.0f;
 static const f32 zoom_min = 0.2f;
 static const f32 zoom_max = 20.0f;
@@ -42,6 +26,7 @@ static f32 frequency = 1.0f;
 static const f32 frequency_min = 0.01f;
 static const f32 frequency_max = 20.0f;
 
+Workspace* theWorkspace = nullptr;
 
 static void locShowTexturePreview()
 {
@@ -56,10 +41,10 @@ static void locShowTexturePreview()
 	{
 		zoom = min(zoom_max, max(zoom_min, zoom + ImGui::GetIO().MouseWheel * 0.1f));
 	}
-	ImVec2 imageSize = { zoom * (f32)width, zoom * (f32)height };
+	ImVec2 imageSize = { zoom * (f32)theWorkspace->myImageSize.x, zoom * (f32)theWorkspace->myImageSize.y };
 
 	//NOTE:[NoMoreSleep] Button necessary for Item activiation query
-	ImGui::ImageButton((void*)textureID, imageSize, ImVec2(0, 0), ImVec2(1, 1), 0);
+	ImGui::ImageButton((void*)theWorkspace->myImageTextureID, imageSize, ImVec2(0, 0), ImVec2(1, 1), 0);
 
 	if (ImGui::IsItemActive())
 	{
@@ -89,68 +74,34 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 	}
 	imgui_window_menu_bar(window);
 	imgui_window_context_menu(window, openContextMenu);
-	
-	if(!theNodeGraph)
-		theNodeGraph = new NodeGraph();
 
-	ImGui::Columns(2);
-	locShowTexturePreview();
-    ImGui::NextColumn();
-	ShowNodeGraph(theNodeGraph);
+    if (theWorkspace)
+    {
+        ImGui::Columns(2);
+        locShowTexturePreview();
+        ImGui::NextColumn();
+        ShowNodeGraph(theWorkspace->myNodegraph);
 
-	{
-		glUseProgram(computeProgram);
-		glDispatchCompute((GLuint)width / 8, (GLuint)height / 8, 1);
-		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-	}
+        {
+            glUseProgram(theWorkspace->myComputeProgram);
+            glDispatchCompute((GLuint)theWorkspace->myImageSize.x / 8, (GLuint)theWorkspace->myImageSize.y / 8, 1);
+            glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+        }
 
-	if (ImGui::GetIO().KeyCtrl && ImGui::GetIO().KeysDown['S'])
-	{
-		glBindTexture(GL_TEXTURE_2D, textureID);
-		MC_ScopedArray<char> img = new char[width * height * 4 * sizeof(u8)];
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, img.Data());
-		stbi_write_png("test.png", width, height, 4, img.Data(), 0);
-	}
-
+        if (ImGui::GetIO().KeyCtrl && ImGui::GetIO().KeysDown['S'])
+        {
+            glBindTexture(GL_TEXTURE_2D, theWorkspace->myImageTextureID);
+            MC_ScopedArray<char> img = new char[theWorkspace->myImageSize.x * theWorkspace->myImageSize.y * 4 * sizeof(u8)];
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, img.Data());
+            stbi_write_png("test.png", theWorkspace->myImageSize.x, theWorkspace->myImageSize.y, 4, img.Data(), 0);
+        }
+    }
 	imgui_window_end();
 }
 
 static void app_init_resources()
 {
-	MF_File perlinNoiseFile(locPerlinNoise2DSource);
-	MC_ScopedArray<char> perlinSource = new char[perlinNoiseFile.GetSize() + 1];
-	perlinNoiseFile.Read(perlinSource.Data(), perlinNoiseFile.GetSize());
-	perlinSource[perlinNoiseFile.GetSize()] = '\0';
-
-	glGenTextures(1, &textureID);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, textureID);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, 0);
-	glBindImageTexture(0, textureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-
-	const char* strs[] = { perlinSource.Data(), computeShaderString };
-
-	GLuint computeShader = glCreateShader(GL_COMPUTE_SHADER);
-	glShaderSource(computeShader, 2, strs, 0);
-	glCompileShader(computeShader);
-	GLint logLength = 0;
-	glGetShaderiv(computeShader, GL_INFO_LOG_LENGTH, &logLength);
-	if (logLength > 1)
-	{
-		char* log = new char[logLength];
-		GLsizei length;
-		glGetShaderInfoLog(computeShader, logLength, &length, log);
-		OutputDebugStringA(log);
-		delete[] log;
-		return;
-	}
-	computeProgram = glCreateProgram();
-	glAttachShader(computeProgram, computeShader);
-	glLinkProgram(computeProgram);
+    theWorkspace = new Workspace(1024, 1024);
 
 	i32 permutationBuffer12[512];
 	i32 permutationBuffer[512];
