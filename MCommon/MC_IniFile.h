@@ -46,6 +46,15 @@ public:
 
 	bool HasKey(const char*	aKey);
 
+	bool SetFloat(const char* aKey, f32 aValue);
+
+	bool SetInt(const char* aKey, s32 aValue);
+
+	bool SetUInt(const char* aKey, u32 aValue);
+
+	bool SetBool(const char* aKey, bool aValue);
+
+	bool SetString(const char* aKey, const char* aValue);
 private:
 	u8* myFileBuffer;
 	s32	mySize;

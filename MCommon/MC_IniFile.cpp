@@ -222,6 +222,42 @@ MC_IniFile::HasKey(
 //
 //////////////////////////////////////////////////////////////////////////////////
 
+
+bool MC_IniFile::SetFloat(const char* aKey, f32 aValue)
+{
+	bool collision = myValues.Find(aKey) != 0;
+	myValues.Insert(aKey, MC_Strfmt<32>("%f", aValue).myBuffer);
+	return !collision;
+}
+
+bool MC_IniFile::SetInt(const char* aKey, s32 aValue)
+{
+	bool collision = myValues.Find(aKey) != 0;
+	myValues.Insert(aKey, MC_Strfmt<32>("%d", aValue).myBuffer);
+	return !collision;
+}
+
+bool MC_IniFile::SetUInt(const char* aKey, u32 aValue)
+{
+	bool collision = myValues.Find(aKey) != 0;
+	myValues.Insert(aKey, MC_Strfmt<32>("%d", aValue).myBuffer);
+	return !collision;
+}
+
+bool MC_IniFile::SetBool(const char* aKey, bool aValue)
+{
+	bool collision = myValues.Find(aKey) != 0;
+	myValues.Insert(aKey, aValue ? "true" : "false");
+	return !collision;
+}
+
+bool MC_IniFile::SetString(const char* aKey, const char* aValue)
+{
+	bool collision = myValues.Find(aKey) != 0;
+	myValues.Insert(aKey, aValue);
+	return !collision;
+}
+
 bool
 MC_IniFile::Process()
 {
