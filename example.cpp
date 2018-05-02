@@ -111,8 +111,6 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 
 static void app_init_resources()
 {
-    theWorkspace = new Workspace(1024, 1024);
-
 	i32 permutationBuffer12[512];
 	i32 permutationBuffer[512];
 
