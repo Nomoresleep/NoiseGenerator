@@ -27,9 +27,12 @@ class Workspace
 public:
     Workspace(i32 anImageWidth, i32 anImageHeight);
 
+    void Export() const;
     GLuint myComputeProgram;
     GLuint myImageTextureID;
     MC_Vector3i myImageSize;
 
     NodeGraph* myNodegraph;
 };
+
+extern Workspace* theWorkspace;

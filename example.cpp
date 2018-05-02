@@ -12,9 +12,6 @@
 
 #include "nodegraph.h"
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
-
 #pragma comment(lib, "MCommon.lib")
 #pragma comment(lib, "Dbghelp.lib")
 
@@ -25,8 +22,6 @@ static const f32 zoom_max = 20.0f;
 static f32 frequency = 1.0f;
 static const f32 frequency_min = 0.01f;
 static const f32 frequency_max = 20.0f;
-
-Workspace* theWorkspace = nullptr;
 
 static void locShowTexturePreview()
 {
@@ -87,14 +82,6 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
             glDispatchCompute((GLuint)theWorkspace->myImageSize.x / 8, (GLuint)theWorkspace->myImageSize.y / 8, 1);
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         }
-
-        if (ImGui::GetIO().KeyCtrl && ImGui::GetIO().KeysDown['S'])
-        {
-            glBindTexture(GL_TEXTURE_2D, theWorkspace->myImageTextureID);
-            MC_ScopedArray<char> img = new char[theWorkspace->myImageSize.x * theWorkspace->myImageSize.y * 4 * sizeof(u8)];
-            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, img.Data());
-            stbi_write_png("test.png", theWorkspace->myImageSize.x, theWorkspace->myImageSize.y, 4, img.Data(), 0);
-        }
     }
 	imgui_window_end();
 }
@@ -137,7 +124,7 @@ static void app_init_resources()
 i32 CALLBACK wWinMain(HINSTANCE /*inst*/, HINSTANCE /*prev*/, LPWSTR /*cmd*/, int /*show*/)
 {
 	imgui_window_init(4, 3);
-	imgui_window_create(L"GLFastNoise", 1920, 1000, app_main_loop, NULL);
+	imgui_window_create(L"NoiseGenerator", 1920, 1000, app_main_loop, NULL);
 
 	app_init_resources();
 

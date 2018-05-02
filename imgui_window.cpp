@@ -1,3 +1,5 @@
+#include "workspace.h"
+
 static int g_openglMajorVersion;
 static int g_openglMinorVersion;
 static HGLRC g_hglrc; // Global, shared between windows
@@ -82,8 +84,9 @@ static void imgui_window_menu_bar(borderless_window_t* window)
 				ImGui::EndMenu();
 			}
 			if (ImGui::MenuItem(TR("Save"), KM("Ctrl+S"))) {}
-			if (ImGui::MenuItem(TR("Save As.."))) {}
+            if (ImGui::MenuItem(TR("Save As.."))) {}
 			ImGui::Separator();
+            if (ImGui::MenuItem(TR("Export"))) { theWorkspace->Export(); }
 			if (ImGui::MenuItem(TR("Quit"), KM("Alt+F4"))) { PostMessageW(window->hwnd, WM_QUIT, 0, 0); }
 			ImGui::EndMenu();
 		}

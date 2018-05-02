@@ -2,6 +2,11 @@
 #include "nodegraph.h"
 #include "MCommon/mf_file.h"
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
+Workspace* theWorkspace = nullptr;
+
 Workspace::Workspace(i32 anImageWidth, i32 anImageHeight)
     : myImageSize(anImageWidth, anImageHeight, 0)
 {
@@ -43,4 +48,12 @@ Workspace::Workspace(i32 anImageWidth, i32 anImageHeight)
     glDeleteShader(computeShader);
 
     myNodegraph = new NodeGraph();
+}
+
+void Workspace::Export() const
+{
+    glBindTexture(GL_TEXTURE_2D, theWorkspace->myImageTextureID);
+    MC_ScopedArray<char> img = new char[theWorkspace->myImageSize.x * theWorkspace->myImageSize.y * 4 * sizeof(u8)];
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, img.Data());
+    stbi_write_png("test.png", theWorkspace->myImageSize.x, theWorkspace->myImageSize.y, 4, img.Data(), 0);
 }
