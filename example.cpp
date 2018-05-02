@@ -56,6 +56,22 @@ static void locShowTexturePreview()
 	ImGui::PopStyleColor();
 }
 
+static void locShowNewFileDialog()
+{
+    static i32 width = 1024;
+    static i32 height = 1024;
+    ImGui::DragInt("Width", &width);
+    ImGui::DragInt("Height", &height);
+    if (ImGui::Button("Create"))
+    {
+        if (theWorkspace)
+            delete theWorkspace;
+
+        theWorkspace = new Workspace(width, height);
+        ImGui::CloseCurrentPopup();
+    }
+}
+
 static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 {
     if (!window->initialized)
@@ -68,6 +84,13 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 		PostQuitMessage(0);
 	}
 	imgui_window_menu_bar(window);
+
+    if (ImGui::BeginPopupModal("New File Dialog", 0, ImGuiWindowFlags_NoResize))
+    {
+        locShowNewFileDialog();
+        ImGui::EndPopup();
+    }
+
 	imgui_window_context_menu(window, openContextMenu);
 
     if (theWorkspace)

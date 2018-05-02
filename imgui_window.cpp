@@ -73,11 +73,14 @@ static void imgui_window_context_menu(borderless_window_t* window, bool openCont
 
 static void imgui_window_menu_bar(borderless_window_t* window)
 {
+    bool openNewFileDialog = false;
 	if (ImGui::BeginMenuBar())
 	{
 		if (ImGui::BeginMenu(TR("File")))
 		{
-			if (ImGui::MenuItem(TR("New"))) {}
+			if (ImGui::MenuItem(TR("New"))) {
+                openNewFileDialog = true;
+            }
 			if (ImGui::MenuItem(TR("Open"), KM("Ctrl+O"))) {}
 			if (ImGui::BeginMenu(TR("Open Recent")))
 			{
@@ -92,6 +95,11 @@ static void imgui_window_menu_bar(borderless_window_t* window)
 		}
 		ImGui::EndMenuBar();
 	}
+
+    if (openNewFileDialog)
+    {
+        ImGui::OpenPopup("New File Dialog");
+    }
 }
 
 static bool imgui_message(borderless_window_t *window, UINT msg, WPARAM wparam, LPARAM lparam)
