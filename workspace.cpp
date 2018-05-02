@@ -34,11 +34,10 @@ Workspace::Workspace(i32 anImageWidth, i32 anImageHeight)
     glGetShaderiv(computeShader, GL_INFO_LOG_LENGTH, &logLength);
     if (logLength > 1)
     {
-        char* log = new char[logLength];
+        MC_ScopedPtr<char> log = new char[logLength];
         GLsizei length;
         glGetShaderInfoLog(computeShader, logLength, &length, log);
         OutputDebugStringA(log);
-        delete[] log;
         return;
     }
     myComputeProgram = glCreateProgram();
@@ -48,6 +47,12 @@ Workspace::Workspace(i32 anImageWidth, i32 anImageHeight)
     glDeleteShader(computeShader);
 
     myNodegraph = new NodeGraph();
+}
+
+Workspace::~Workspace()
+{
+    glDeleteTextures(1, &myImageTextureID);
+    glDeleteProgram(myComputeProgram);
 }
 
 void Workspace::Export() const
