@@ -61,10 +61,34 @@ Workspace::~Workspace()
     glDeleteProgram(myComputeProgram);
 }
 
-void Workspace::Export() const
+void Workspace::Export(ExportExtension anExtension) const
 {
     glBindTexture(GL_TEXTURE_2D, theWorkspace->myImageTextureID);
-    MC_ScopedArray<char> img = new char[theWorkspace->myImageSize.x * theWorkspace->myImageSize.y * 4 * sizeof(u8)];
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, img.Data());
-    stbi_write_png("test.png", theWorkspace->myImageSize.x, theWorkspace->myImageSize.y, 4, img.Data(), 0);
+    if (anExtension != ExportHDR)
+    {
+        MC_ScopedArray<char> img = new char[theWorkspace->myImageSize.x * theWorkspace->myImageSize.y * 4];
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, img.Data());
+        switch (anExtension)
+        {
+        case ExportPNG:
+            stbi_write_png("test.png", theWorkspace->myImageSize.x, theWorkspace->myImageSize.y, 4, img.Data(), 0);
+            break;
+        case ExportBMP:
+            stbi_write_bmp("test.bmp", theWorkspace->myImageSize.x, theWorkspace->myImageSize.y, 4, img.Data());
+            break;
+        case ExportTGA:
+            stbi_write_tga("test.tga", theWorkspace->myImageSize.x, theWorkspace->myImageSize.y, 4, img.Data());
+            break;
+        case ExportJPG:
+            stbi_write_jpg("test.jpg", theWorkspace->myImageSize.x, theWorkspace->myImageSize.y, 4, img.Data(), 100);
+            break;
+        }
+    }
+    else
+    {
+        assert(false);
+        MC_ScopedArray<f32> img = new f32[theWorkspace->myImageSize.x * theWorkspace->myImageSize.y * 4];
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, img.Data());
+        stbi_write_hdr("test.hdr", theWorkspace->myImageSize.x, theWorkspace->myImageSize.y, 4, img.Data());
+    }
 }

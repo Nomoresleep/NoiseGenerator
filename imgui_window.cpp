@@ -74,13 +74,12 @@ static void imgui_window_context_menu(borderless_window_t* window, bool openCont
 static void imgui_window_menu_bar(borderless_window_t* window)
 {
     bool openNewFileDialog = false;
+    bool openExportDialog = false;
 	if (ImGui::BeginMenuBar())
 	{
 		if (ImGui::BeginMenu(TR("File")))
 		{
-			if (ImGui::MenuItem(TR("New"))) {
-                openNewFileDialog = true;
-            }
+            openNewFileDialog = ImGui::MenuItem(TR("New"));
 			if (ImGui::MenuItem(TR("Open"), KM("Ctrl+O"))) {}
 			if (ImGui::BeginMenu(TR("Open Recent")))
 			{
@@ -89,7 +88,7 @@ static void imgui_window_menu_bar(borderless_window_t* window)
 			if (ImGui::MenuItem(TR("Save"), KM("Ctrl+S"))) {}
             if (ImGui::MenuItem(TR("Save As.."))) {}
 			ImGui::Separator();
-            if (ImGui::MenuItem(TR("Export"))) { theWorkspace->Export(); }
+            openExportDialog = ImGui::MenuItem(TR("Export"));
 			if (ImGui::MenuItem(TR("Quit"), KM("Alt+F4"))) { PostMessageW(window->hwnd, WM_QUIT, 0, 0); }
 			ImGui::EndMenu();
 		}
@@ -99,6 +98,10 @@ static void imgui_window_menu_bar(borderless_window_t* window)
     if (openNewFileDialog)
     {
         ImGui::OpenPopup("New File Dialog");
+    }
+    else if (openExportDialog)
+    {
+        ImGui::OpenPopup("Export");
     }
 }
 

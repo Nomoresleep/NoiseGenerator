@@ -72,6 +72,24 @@ static void locShowNewFileDialog()
     }
 }
 
+static void locShowExportDialog()
+{
+    const char* extensions[ExportExtensionCount] = {
+        "png",
+        "bmp",
+        "tga",
+        "jpg",
+        "hdr",
+    };
+    static i32 currentExtension = 0;
+    ImGui::Combo("Extension", &currentExtension, extensions, ExportExtensionCount);
+    if (ImGui::Button("Export"))
+    {
+        theWorkspace->Export((ExportExtension)currentExtension);
+        ImGui::CloseCurrentPopup();
+    }
+}
+
 static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 {
     if (!window->initialized)
@@ -89,6 +107,20 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
     {
         locShowNewFileDialog();
         ImGui::EndPopup();
+    }
+    
+    if (ImGui::BeginPopupModal("Export", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        if (theWorkspace)
+        {
+            locShowExportDialog();
+            ImGui::EndPopup();
+        }
+        else
+        {
+            ImGui::CloseCurrentPopup();
+            ImGui::EndPopup();
+        }
     }
 
 	imgui_window_context_menu(window, openContextMenu);

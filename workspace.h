@@ -22,13 +22,22 @@ static const char* locComputeShaderString =
 
 static const char* locPerlinNoise2DSource = DEPENDENCY_FILE("shaders/noise/perlin2d.glsl");
 
+enum ExportExtension
+{
+    ExportPNG = 0,
+    ExportBMP,
+    ExportTGA,
+    ExportJPG,
+    ExportHDR,
+    ExportExtensionCount
+};
 class Workspace
 {
 public:
     Workspace(i32 anImageWidth, i32 anImageHeight);
     ~Workspace();
 
-    void Export() const;
+    void Export(ExportExtension anExtension) const;
     GLuint myComputeProgram;
     GLuint myImageTextureID;
     MC_Vector3i myImageSize;
