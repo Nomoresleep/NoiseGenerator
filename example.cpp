@@ -61,14 +61,14 @@ static void HandleDialogs()
 {
 	static const ImGuiWindowFlags modalFlags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize;
 
-	static bool newFileOpen = false;
+	bool newFileOpen = true;
 	if (ImGui::BeginPopupModal(theNewFileDialogID, &newFileOpen, modalFlags))
 	{
 		ShowNewFileDialog();
 		ImGui::EndPopup();
 	}
 
-	static bool exportOpen = false;
+	bool exportOpen = true;
 	if (ImGui::BeginPopupModal(theExportDialogID, &exportOpen, modalFlags))
 	{
 		if (theWorkspace)
@@ -83,14 +83,14 @@ static void HandleDialogs()
 		}
 	}
 
-	static bool gpuCapsOpen = false;
+	bool gpuCapsOpen = true;
 	if (ImGui::BeginPopupModal(theGPUCapabilitiesDialogID, &gpuCapsOpen, modalFlags))
 	{
 		ShowGPUCapabilitiesDialog();
 		ImGui::EndPopup();
 	}
 
-	static bool aboutOpen = false;
+	bool aboutOpen = true;
 	if (ImGui::BeginPopupModal(theAboutDialogID, &aboutOpen, modalFlags))
 	{
 		ShowAboutDialog();
