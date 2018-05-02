@@ -9,6 +9,7 @@
 #include "imgui_impl_gl3.h"
 #include "imgui_window.cpp"
 #include "workspace.h"
+#include "dialogs.h"
 
 #include "nodegraph.h"
 
@@ -56,38 +57,45 @@ static void locShowTexturePreview()
 	ImGui::PopStyleColor();
 }
 
-static void locShowNewFileDialog()
+static void HandleDialogs()
 {
-    static i32 width = 1024;
-    static i32 height = 1024;
-    ImGui::DragInt("Width", &width);
-    ImGui::DragInt("Height", &height);
-    if (ImGui::Button("Create"))
-    {
-        if (theWorkspace)
-            delete theWorkspace;
+	static const ImGuiWindowFlags modalFlags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize;
 
-        theWorkspace = new Workspace(width, height);
-        ImGui::CloseCurrentPopup();
-    }
-}
+	static bool newFileOpen = false;
+	if (ImGui::BeginPopupModal(theNewFileDialogID, &newFileOpen, modalFlags))
+	{
+		ShowNewFileDialog();
+		ImGui::EndPopup();
+	}
 
-static void locShowExportDialog()
-{
-    const char* extensions[ExportExtensionCount] = {
-        "png",
-        "bmp",
-        "tga",
-        "jpg",
-        "hdr",
-    };
-    static i32 currentExtension = 0;
-    ImGui::Combo("Extension", &currentExtension, extensions, ExportExtensionCount);
-    if (ImGui::Button("Export"))
-    {
-        theWorkspace->Export((ExportExtension)currentExtension);
-        ImGui::CloseCurrentPopup();
-    }
+	static bool exportOpen = false;
+	if (ImGui::BeginPopupModal(theExportDialogID, &exportOpen, modalFlags))
+	{
+		if (theWorkspace)
+		{
+			ShowExportDialog();
+			ImGui::EndPopup();
+		}
+		else
+		{
+			ImGui::CloseCurrentPopup();
+			ImGui::EndPopup();
+		}
+	}
+
+	static bool gpuCapsOpen = false;
+	if (ImGui::BeginPopupModal(theGPUCapabilitiesDialogID, &gpuCapsOpen, modalFlags))
+	{
+		ShowGPUCapabilitiesDialog();
+		ImGui::EndPopup();
+	}
+
+	static bool aboutOpen = false;
+	if (ImGui::BeginPopupModal(theAboutDialogID, &aboutOpen, modalFlags))
+	{
+		ShowAboutDialog();
+		ImGui::EndPopup();
+	}
 }
 
 static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
@@ -103,25 +111,7 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 	}
 	imgui_window_menu_bar(window);
 
-    if (ImGui::BeginPopupModal("New File Dialog", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize))
-    {
-        locShowNewFileDialog();
-        ImGui::EndPopup();
-    }
-    
-    if (ImGui::BeginPopupModal("Export", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize))
-    {
-        if (theWorkspace)
-        {
-            locShowExportDialog();
-            ImGui::EndPopup();
-        }
-        else
-        {
-            ImGui::CloseCurrentPopup();
-            ImGui::EndPopup();
-        }
-    }
+	HandleDialogs();
 
 	imgui_window_context_menu(window, openContextMenu);
 

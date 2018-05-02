@@ -1,4 +1,5 @@
 #include "workspace.h"
+#include "dialogs.h"
 
 static int g_openglMajorVersion;
 static int g_openglMinorVersion;
@@ -75,6 +76,9 @@ static void imgui_window_menu_bar(borderless_window_t* window)
 {
     bool openNewFileDialog = false;
     bool openExportDialog = false;
+	bool openGPUCapabilitiesDialog = false;
+	bool openAboutDialog = false;
+
 	if (ImGui::BeginMenuBar())
 	{
 		if (ImGui::BeginMenu(TR("File")))
@@ -92,17 +96,33 @@ static void imgui_window_menu_bar(borderless_window_t* window)
 			if (ImGui::MenuItem(TR("Quit"), KM("Alt+F4"))) { PostMessageW(window->hwnd, WM_QUIT, 0, 0); }
 			ImGui::EndMenu();
 		}
+
+		if (ImGui::BeginMenu(TR("Help")))
+		{
+			openGPUCapabilitiesDialog = ImGui::MenuItem(TR("GPU Capabilities"));
+			openAboutDialog = ImGui::MenuItem(TR("About"));
+			ImGui::EndMenu();
+		}
+
 		ImGui::EndMenuBar();
 	}
 
     if (openNewFileDialog)
     {
-        ImGui::OpenPopup("New File Dialog");
+        ImGui::OpenPopup(theNewFileDialogID);
     }
-    else if (openExportDialog)
+    if (openExportDialog)
     {
-        ImGui::OpenPopup("Export");
+        ImGui::OpenPopup(theExportDialogID);
     }
+	if (openGPUCapabilitiesDialog)
+	{
+		ImGui::OpenPopup(theGPUCapabilitiesDialogID);
+	}
+	if (openAboutDialog)
+	{
+		ImGui::OpenPopup(theAboutDialogID);
+	}
 }
 
 static bool imgui_message(borderless_window_t *window, UINT msg, WPARAM wparam, LPARAM lparam)
