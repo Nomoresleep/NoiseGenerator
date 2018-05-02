@@ -17,6 +17,7 @@
 #ifndef MC_SCOPEDPTR_H_
 #define MC_SCOPEDPTR_H_
 
+#include "MC_Mem.h"
 // very simple type of smart pointer (non-shared)
 //
 // Note! Transfers ownership on copy!
