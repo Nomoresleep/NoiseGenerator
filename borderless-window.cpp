@@ -146,6 +146,7 @@ static void handle_snap_right(borderless_window_t *window, LPRECT clientRect, LP
 static void handle_compositionchanged(borderless_window_t *window)
 {
 	BOOL enabled = FALSE;
+#if 0
 	DwmIsCompositionEnabled(&enabled);
 	window->composition_enabled = enabled == TRUE;
 
@@ -157,6 +158,7 @@ static void handle_compositionchanged(borderless_window_t *window)
 		DWORD state = DWMNCRP_ENABLED;
 		DwmSetWindowAttribute(window->hwnd, DWMWA_NCRENDERING_POLICY, &state, sizeof(DWORD));
 	}
+#endif
 }
 
 static LRESULT handle_nchittest(borderless_window_t *window, i32 x, i32 y)
