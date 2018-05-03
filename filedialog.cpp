@@ -28,8 +28,9 @@ void ShowFileDialog()
 		ImGuiSelectableFlags selectableFlags = ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_DontClosePopups | ImGuiSelectableFlags_AllowDoubleClick;
 		if (ImGui::Selectable("D##-1", selected == index, selectableFlags) && ImGui::IsMouseDoubleClicked(0))
         {
-            if (dirEntry->myIsDirectoryFlag)
-                dir += "../";
+			if (dirEntry->myIsDirectoryFlag)
+			{
+			}
         }
         bool hovered = ImGui::IsItemHovered();
         ImGui::NextColumn();
@@ -48,7 +49,12 @@ void ShowFileDialog()
             ImGui::NextColumn();
             ImGui::Text(dirEntry->myName); ImGui::NextColumn();
             ImGui::Text("%d", dirEntry->myFileSize); ImGui::NextColumn();
-            ImGui::Text("%d", dirEntry->myFileDateTime); ImGui::NextColumn();
+
+			MF_FileDatTime dateTime;
+			MF_File::ConvertCompressedDateTimeToExtendedForm(dirEntry->myFileDateTime, dateTime);
+			ImGui::Text("%d-%d-%d", dateTime.myYear, dateTime.myMonth, dateTime.myDay);
+			ImGui::SameLine(ImGui::CalcTextSize("0000-00-00").x, 8.0f);
+			ImGui::Text("%d:%d:%d", dateTime.myHour, dateTime.myMinute, dateTime.mySecond); ImGui::NextColumn();
             
             dirEntry = dirEntry->myNextPtr;
             index++;
