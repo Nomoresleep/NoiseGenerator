@@ -25,8 +25,8 @@ void ShowFileDialog()
         static s32 selected = -1;
         s32 index = 0;
 
-
-        if (ImGui::Selectable("D##-1", selected == index, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_DontClosePopups) && ImGui::IsMouseDoubleClicked(0))
+		ImGuiSelectableFlags selectableFlags = ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_DontClosePopups | ImGuiSelectableFlags_AllowDoubleClick;
+		if (ImGui::Selectable("D##-1", selected == index, selectableFlags) && ImGui::IsMouseDoubleClicked(0))
         {
             if (dirEntry->myIsDirectoryFlag)
                 dir += "../";
@@ -39,7 +39,7 @@ void ShowFileDialog()
 
         while(dirEntry)
         {
-            if (ImGui::Selectable(dirEntry->myIsDirectoryFlag ? MC_Strfmt<16>("D##%d", index) : MC_Strfmt<16>("F##%d", index), selected == index, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_DontClosePopups) && ImGui::IsMouseDoubleClicked(0))
+            if (ImGui::Selectable(dirEntry->myIsDirectoryFlag ? MC_Strfmt<16>("D##%d", index) : MC_Strfmt<16>("F##%d", index), selected == index, selectableFlags) && ImGui::IsMouseDoubleClicked(0))
             {
                 if(dirEntry->myIsDirectoryFlag)
                     dir += dirEntry->myName + MC_String("/");

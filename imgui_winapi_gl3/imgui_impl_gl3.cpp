@@ -406,7 +406,6 @@ bool ImGui_Impl_WinAPI_GL3_Handle_Message(HWND hwnd, UINT msg, WPARAM wparam, LP
 			if (msg == WM_RBUTTONDBLCLK) button = 1;
 			if (msg == WM_MBUTTONDBLCLK) button = 2;
 			
-			// Force a f64 click:
 			io.MouseDown[button] = true;
 			io.MouseClickedTime[button] = ImGui::GetTime();
 			return true;
