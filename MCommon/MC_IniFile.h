@@ -21,6 +21,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "MC_ArrayMap.h"
+#include "MC_String.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // INIFILE utility class...
@@ -55,9 +56,12 @@ public:
 	bool SetBool(const char* aKey, bool aValue);
 
 	bool SetString(const char* aKey, const char* aValue);
+
+    void WriteToFile() const;
 private:
 	u8* myFileBuffer;
 	s32	mySize;
+    MC_String myFilename;
 
 	MC_ArrayMap<MC_String, MC_String> myValues;
 

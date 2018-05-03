@@ -1,2 +1,4 @@
 build/*
 Data/imgui.ini
+Data/NoiseGen.ini
+Data/test.*

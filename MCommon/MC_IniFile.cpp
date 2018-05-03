@@ -38,7 +38,8 @@
 
 MC_IniFile::MC_IniFile(
 	const char* aFilename)
-	: myFileBuffer(NULL)
+	: myFilename(aFilename)
+    , myFileBuffer(NULL)
 	, mySize(0)
 {
 	// load .INI file
@@ -256,6 +257,21 @@ bool MC_IniFile::SetString(const char* aKey, const char* aValue)
 	bool collision = myValues.Find(aKey) != 0;
 	myValues.Insert(aKey, aValue);
 	return !collision;
+}
+
+void MC_IniFile::WriteToFile() const
+{
+    MF_File file(myFilename, MF_File::OPEN_WRITE);
+    for (s32 valueIndex = 0; valueIndex < myValues.Count(); valueIndex++)
+    {
+        const MC_String& key = myValues.Key(valueIndex);
+        const MC_String& value = myValues.Value(valueIndex);
+        file.Write(key.GetBuffer(), key.GetLength());
+        file.Write(" = ", 3);
+        file.Write(value.GetBuffer(), value.GetLength());
+        file.Write("\n", 1);
+    }
+    file.Close();
 }
 
 bool

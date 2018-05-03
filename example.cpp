@@ -1,6 +1,6 @@
 #include <windows.h>
 #include <random>
-#include "MCommon/mf_file.h"
+#include "MCommon/MC_IniFile.h"
 #include "borderless-window.h"
 #include "opengl_context.h"
 
@@ -20,9 +20,7 @@ static f32 zoom = 1.0f;
 static const f32 zoom_min = 0.2f;
 static const f32 zoom_max = 20.0f;
 
-static f32 frequency = 1.0f;
-static const f32 frequency_min = 0.01f;
-static const f32 frequency_max = 20.0f;
+static const char* thePathToIni = "NoiseGen.ini";
 
 static void locShowTexturePreview()
 {
@@ -103,6 +101,11 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
     if (!window->initialized)
         return;
 
+    MC_IniFile iniFile(thePathToIni);
+    iniFile.SetUInt("WindowWidth", window->width);
+    iniFile.SetUInt("WindowHeight", window->height);
+    iniFile.WriteToFile();
+
 	static bool openContextMenu = false;
 	if (!imgui_window_begin(window, "NoiseGenerator", &openContextMenu))
 	{
@@ -160,8 +163,13 @@ static void app_init_resources()
 
 i32 CALLBACK wWinMain(HINSTANCE /*inst*/, HINSTANCE /*prev*/, LPWSTR /*cmd*/, int /*show*/)
 {
+    MC_IniFile iniFile(thePathToIni);
+    iniFile.Process();
+    u32 width = iniFile.GetUInt("WindowWidth", 1920);
+    u32 height = iniFile.GetUInt("WindowHeight", 1000);
+
 	imgui_window_init(4, 3);
-	imgui_window_create(L"NoiseGenerator", 1920, 1000, app_main_loop, NULL);
+	imgui_window_create(L"NoiseGenerator", width, height, app_main_loop, NULL);
 
 	app_init_resources();
 
