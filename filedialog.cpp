@@ -15,7 +15,7 @@ void ShowFileDialog()
 
         MF_GetDirEntryData* dirEntry = dirData.myFirstEntry; 
         
-        ImGui::Columns(4, "mycolumns"); // 4-ways, with border
+        ImGui::Columns(4); // 4-ways, with border
         ImGui::Separator();
         ImGui::Text(""); ImGui::NextColumn();
         ImGui::Text("Name"); ImGui::NextColumn();
@@ -24,10 +24,26 @@ void ShowFileDialog()
         ImGui::Separator();
         static s32 selected = -1;
         s32 index = 0;
+
+
+        if (ImGui::Selectable("D##-1", selected == index, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_DontClosePopups) && ImGui::IsMouseDoubleClicked(0))
+        {
+            if (dirEntry->myIsDirectoryFlag)
+                dir += "../";
+        }
+        bool hovered = ImGui::IsItemHovered();
+        ImGui::NextColumn();
+        ImGui::Text(".."); ImGui::NextColumn();
+        ImGui::Text(".."); ImGui::NextColumn();
+        ImGui::Text(".."); ImGui::NextColumn();
+
         while(dirEntry)
         {
-            if (ImGui::Selectable(dirEntry->myIsDirectoryFlag ? "D" : "F", selected == index, ImGuiSelectableFlags_SpanAllColumns))
-                selected = index;
+            if (ImGui::Selectable(dirEntry->myIsDirectoryFlag ? MC_Strfmt<16>("D##%d", index) : MC_Strfmt<16>("F##%d", index), selected == index, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_DontClosePopups) && ImGui::IsMouseDoubleClicked(0))
+            {
+                if(dirEntry->myIsDirectoryFlag)
+                    dir += dirEntry->myName + MC_String("/");
+            }
             bool hovered = ImGui::IsItemHovered();
             ImGui::NextColumn();
             ImGui::Text(dirEntry->myName); ImGui::NextColumn();
