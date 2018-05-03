@@ -39,7 +39,7 @@ static void locShowTexturePreview()
 	ImVec2 imageSize = { zoom * (f32)theWorkspace->myImageSize.x, zoom * (f32)theWorkspace->myImageSize.y };
 
 	//NOTE:[NoMoreSleep] Button necessary for Item activiation query
-	ImGui::ImageButton((void*)theWorkspace->myImageTextures[0], imageSize, ImVec2(0, 0), ImVec2(1, 1), 0);
+	ImGui::ImageButton((void*)theWorkspace->myImageTextureID, imageSize, ImVec2(0, 0), ImVec2(1, 1), 0);
 
 	if (ImGui::IsItemActive())
 	{
