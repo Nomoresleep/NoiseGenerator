@@ -137,6 +137,7 @@ static void imgui_window_menu_bar(borderless_window_t* window)
     bool openExportDialog = false;
 	bool openGPUCapabilitiesDialog = false;
 	bool openAboutDialog = false;
+    bool saveFileDialog = false;
 
 	if (ImGui::BeginMenuBar())
 	{
@@ -148,7 +149,7 @@ static void imgui_window_menu_bar(borderless_window_t* window)
 			{
 				ImGui::EndMenu();
 			}
-			if (ImGui::MenuItem(TR("Save"), KM("Ctrl+S"))) {}
+            saveFileDialog = ImGui::MenuItem(TR("Save"), KM("Ctrl+S"));
             if (ImGui::MenuItem(TR("Save As.."))) {}
 			ImGui::Separator();
             openExportDialog = ImGui::MenuItem(TR("Export"));
@@ -182,6 +183,10 @@ static void imgui_window_menu_bar(borderless_window_t* window)
 	{
 		ImGui::OpenPopup(theAboutDialogID);
 	}
+    if (saveFileDialog)
+    {
+        ImGui::OpenPopup(theSaveFileDialogID);
+    }
 }
 
 static bool imgui_message(borderless_window_t *window, UINT msg, WPARAM wparam, LPARAM lparam)

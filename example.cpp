@@ -10,6 +10,7 @@
 #include "imgui_window.cpp"
 #include "workspace.h"
 #include "dialogs.h"
+#include "filedialog.h"
 
 #include "nodegraph.h"
 
@@ -38,7 +39,7 @@ static void locShowTexturePreview()
 	ImVec2 imageSize = { zoom * (f32)theWorkspace->myImageSize.x, zoom * (f32)theWorkspace->myImageSize.y };
 
 	//NOTE:[NoMoreSleep] Button necessary for Item activiation query
-	ImGui::ImageButton((void*)theWorkspace->myImageTextureID, imageSize, ImVec2(0, 0), ImVec2(1, 1), 0);
+	ImGui::ImageButton((void*)theWorkspace->myImageTextures[0], imageSize, ImVec2(0, 0), ImVec2(1, 1), 0);
 
 	if (ImGui::IsItemActive())
 	{
@@ -94,6 +95,7 @@ static void HandleDialogs()
 		ShowAboutDialog();
 		ImGui::EndPopup();
 	}
+    ShowFileDialog();
 }
 
 static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
