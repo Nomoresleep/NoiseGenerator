@@ -1,6 +1,6 @@
 #pragma once
 
-#include "MCommon/MC_Base.h"
+#include "MC_Base.h"
 #include "glzl_core.hpp"
 
 extern s32 theOpenglMajorVersion;

@@ -1,6 +1,6 @@
 #include <windows.h>
 #include <random>
-#include "MCommon/MC_IniFile.h"
+#include "MC_IniFile.h"
 #include "borderless-window.h"
 
 #include "opengl_context.h"
