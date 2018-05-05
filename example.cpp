@@ -2,12 +2,12 @@
 #include <random>
 #include "MCommon/MC_IniFile.h"
 #include "borderless-window.h"
+
 #include "opengl_context.h"
+#include "imgui.h"
+#include "imgui_window.h"
 
 #include "glzl_core.hpp"
-#include "imgui.h"
-#include "imgui_impl_gl3.h"
-#include "imgui_window.cpp"
 #include "workspace.h"
 #include "dialogs.h"
 #include "filedialog.h"
