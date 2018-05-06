@@ -1517,7 +1517,7 @@ void MC_StackWalker::OnDbgHelpErr(LPCSTR szFuncName, DWORD gle, DWORD64 addr)
 	if ((int)addr != 0xcccccccc)
 	{
 		CHAR buffer[STACKWALK_MAX_NAMELEN];
-		_snprintf_s(buffer, STACKWALK_MAX_NAMELEN, "ERROR: %s, GetLastError: %d (Address: 0x%x)\n", szFuncName, gle, addr);
+		_snprintf_s(buffer, STACKWALK_MAX_NAMELEN, "ERROR: %s, GetLastError: %d (Address: 0x%I64x)\n", szFuncName, gle, addr);
 		OnOutput(buffer);
 	}
 #endif

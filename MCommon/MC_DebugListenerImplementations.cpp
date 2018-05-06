@@ -202,7 +202,7 @@ void MC_XMLFileListener::StartError( const char* aDescription )
 		fprintf( myFile, "%c", c );
 	}
 
-	fprintf( myFile, "\">", aDescription );
+	fprintf( myFile, "\">" );
 }
 
 void MC_XMLFileListener::CloseError( void )

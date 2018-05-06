@@ -29,7 +29,9 @@
 #include "MT_ThreadingTools.h"
 
 #if IS_PC_BUILD
+#pragma warning(disable:4091)
 	#include <dbghelp.h>
+#pragma warning(default:4091)
 	#include <shellapi.h>
 	#include <shlobj.h>
 	#include <errorrep.h>
@@ -670,7 +672,7 @@ LONG WINAPI RysExceptionFilter(struct _EXCEPTION_POINTERS* anExceptionPtr)
 		sprintf(st, "Unknown exception %x", anExceptionPtr->ExceptionRecord->ExceptionCode);
 	}
 
-	sprintf(st + strlen(st), " at 0x%08x\n\n", anExceptionPtr->ExceptionRecord->ExceptionAddress);
+	sprintf(st + strlen(st), " at 0x%p\n\n", anExceptionPtr->ExceptionRecord->ExceptionAddress);
 
 	char tmpstr[256];
 	MC_GetFreeMemoryDescription(tmpstr);
