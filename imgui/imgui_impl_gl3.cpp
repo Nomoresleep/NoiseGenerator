@@ -9,7 +9,6 @@
 #include "glzl_core.hpp"
 #include "imgui.h"
 #include "imgui_impl_gl3.h"
-#include "types.h"
 
 // TODO: Add cursor support
 
@@ -21,9 +20,9 @@ static f64        g_Time;
 // OpenGL data
 static char          g_GlslVersion[32] = "#version 330\n";
 static GLuint        g_FontTexture = 0;
-static i32           g_ShaderHandle = 0, g_VertHandle = 0, g_FragHandle = 0;
-static i32           g_AttribLocationTex = 0, g_AttribLocationProjMtx = 0;
-static i32           g_AttribLocationPosition = 0, g_AttribLocationUV = 0, g_AttribLocationColor = 0;
+static s32           g_ShaderHandle = 0, g_VertHandle = 0, g_FragHandle = 0;
+static s32           g_AttribLocationTex = 0, g_AttribLocationProjMtx = 0;
+static s32           g_AttribLocationPosition = 0, g_AttribLocationUV = 0, g_AttribLocationColor = 0;
 static u32  g_VboHandle = 0, g_ElementsHandle = 0;
 
 // OpenGL2 Render function.
@@ -414,7 +413,7 @@ bool ImGui_Impl_WinAPI_GL3_Handle_Message(HWND hwnd, UINT msg, WPARAM wparam, LP
 	return false;
 }
 
-void ImGui_Impl_WinAPI_GL3_NewFrame(HWND hwnd, i32 w, i32 h, i32 display_w, i32 display_h)
+void ImGui_Impl_WinAPI_GL3_NewFrame(HWND hwnd, s32 w, s32 h, s32 display_w, s32 display_h)
 {
 	ImGuiIO& io = ImGui::GetIO();
 	io.ImeWindowHandle = hwnd;

@@ -1,6 +1,5 @@
 #pragma once
 #include "glzl_core.hpp"
-#include "types.h"
 #include "MC_Vector.h"
 #include "MC_ScopedPtr.h"
 
@@ -34,7 +33,7 @@ enum ExportExtension
 class Workspace
 {
 public:
-    Workspace(i32 anImageWidth, i32 anImageHeight);
+    Workspace(s32 anImageWidth, s32 anImageHeight);
     ~Workspace();
 
     void Export(ExportExtension anExtension) const;
