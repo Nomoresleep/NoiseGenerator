@@ -197,13 +197,13 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
 					connection_port_mismatch = port->myType != g_draggedOutput->myType;
 					connection_port_match = port->myType == g_draggedOutput->myType;
 
-					if (ImGui::IsMouseReleased(0) && connection_port_match)
-						port->myConnectedPort = g_draggedOutput;
+                    if (ImGui::IsMouseReleased(0) && connection_port_match)
+                        port->Connect(g_draggedOutput);
 				}
 				else if (ImGui::IsMouseClicked(0))
 				{
 					g_draggedOutput = port->myConnectedPort;
-					port->myConnectedPort = nullptr;
+                    port->Connect(nullptr);
 				}
 			}
 			port->myPosition = buttonCenter;

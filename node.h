@@ -75,12 +75,17 @@ union PortData
     float myFloatData;
     int myIntPortData;
 };
+
+struct InputPort;
+
 struct OutputPort
 {
     OutputPort(PortType aPortType)
         : myType(aPortType)
+        , myConnectedInputs(32, 32)
     {};
 
+    MC_GrowingArray<InputPort*> myConnectedInputs;
     PortData myData;
     const PortType myType;
 	MC_Vector2f myPosition;
@@ -94,10 +99,23 @@ struct InputPort
 		, myProperty(aPortProperty)
     {}
 
-	OutputPort* myConnectedPort;
+    void Connect(OutputPort* aConnectedPort)
+    {
+        if (myConnectedPort)
+        {
+            myConnectedPort->myConnectedInputs.Remove(this);
+        }
+        myConnectedPort = aConnectedPort;
+        if (myConnectedPort)
+        {
+            myConnectedPort->myConnectedInputs.Add(this);
+        }
+    }
+
 	MC_ScopedPtr<PropertyBase> myProperty;
     const PortType myType;
 	MC_Vector2f myPosition;
+    OutputPort* myConnectedPort;
 };
 
 class Node
