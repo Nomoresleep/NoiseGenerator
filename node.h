@@ -5,7 +5,7 @@
 #include "MC_ScopedPtr.h"
 #include "MC_Vector.h"
 #include "MC_Pair.h"
-#include "imgui.h"
+#include "imgui_custom_widgets.h"
 
 static const f32 NODE_SLOT_RADIUS = 6.0f;
 static const MC_Vector2f NODE_PORT_SIZE = MC_Vector2f(2.0f * NODE_SLOT_RADIUS, 2.0f * NODE_SLOT_RADIUS);
@@ -42,7 +42,7 @@ static void locRenderDrag(Property<T>* aProperty);
 template <>
 static void locRenderDrag<f32>(Property<f32>* aProperty)
 {
-	ImGui::DragFloat("##awinqwfpi", aProperty->myValue, 0.001f, aProperty->myMin, aProperty->myMax);
+	ImGui::DragFloatProgress("Test Label##awinqwfpi", aProperty->myValue, 0.001f, aProperty->myMin, aProperty->myMax);
 }
 
 template <>
