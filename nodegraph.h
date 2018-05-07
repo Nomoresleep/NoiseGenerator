@@ -232,9 +232,27 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
 						}
 						else
 						{
+							ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(200, 170, 50, 255));
+							ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4, 4));
+							ImGui::BeginTooltip();
+							ImGui::Text("Error, Nodegraph must not be cyclic!");
+							ImGui::EndTooltip();
+							ImGui::PopStyleVar();
+							ImGui::PopStyleColor();
+
 							connection_port_mismatch = true;
 							connection_port_match = false;
 						}
+					}
+					else
+					{
+						ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(200, 170, 50, 255));
+						ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4, 4));
+						ImGui::BeginTooltip();
+						ImGui::Text("Error, Port type mismatch!");
+						ImGui::EndTooltip();
+						ImGui::PopStyleVar();
+						ImGui::PopStyleColor();
 					}
 				}
 				else if (ImGui::IsMouseClicked(0))
