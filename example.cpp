@@ -22,6 +22,7 @@ static const f32 zoom_min = 0.2f;
 static const f32 zoom_max = 20.0f;
 
 static const char* thePathToIni = "NoiseGen.ini";
+static FileDialog theFileDialog;
 
 static void locShowTexturePreview()
 {
@@ -95,7 +96,7 @@ static void HandleDialogs()
 		ShowAboutDialog();
 		ImGui::EndPopup();
 	}
-    ShowFileDialog();
+    theFileDialog.Show();
 }
 
 static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
