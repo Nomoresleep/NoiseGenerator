@@ -19,7 +19,7 @@
 #if IS_PC_BUILD
 
 #include "mF_file.h"
-#include "mf_file_platform.h"
+#include "mf_fileplatform.h"
 
 UINT PLATFORM::GetTempFileName(const char* aPathName, const char* aPrefixString, UINT aUniqueFlag, char* aDestName)
 {

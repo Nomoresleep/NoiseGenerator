@@ -1,85 +1,75 @@
-#include "workspace.h"
+#include "imgui_window.h"
+#include "imgui_impl_gl3.h"
+#include "borderless-window.h"
+#include "opengl_context.h"
 #include "dialogs.h"
-
-static int g_openglMajorVersion;
-static int g_openglMinorVersion;
-static HGLRC g_hglrc; // Global, shared between windows
-static int g_windowIdCounter = 0; // Helps during debugging
-
-struct imgui_window_t;
-
-typedef void (*imgui_window_func)(borderless_window_t *window, void *userdata);
-
-struct imgui_window_t
-{
-	ImGuiContext *context;
-	imgui_window_func func;
-	void *userdata;
-	int id;
-};
-
-namespace ImGui
-{
-    void StyleColorsNoiseGen(ImGuiStyle* dst)
-    {
-        ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
-        ImVec4* colors = style->Colors;
-
-        style->Alpha = 1.0f;
-
-        colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
-        colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-        colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
-        colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.06f, 0.06f, 1.00f);
-        colors[ImGuiCol_ChildBg] = ImVec4(1.00f, 1.00f, 1.00f, 0.00f);
-        colors[ImGuiCol_PopupBg] = ImVec4(0.08f, 0.08f, 0.08f, 1.00f);
-        colors[ImGuiCol_Border] = ImVec4(0.43f, 0.43f, 0.50f, 1.00f);
-        colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-        colors[ImGuiCol_FrameBg] = ImVec4(0.16f, 0.29f, 0.48f, 1.00f);
-        colors[ImGuiCol_FrameBgHovered] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-        colors[ImGuiCol_FrameBgActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-        colors[ImGuiCol_TitleBg] = ImVec4(0.04f, 0.04f, 0.04f, 1.00f);
-        colors[ImGuiCol_TitleBgActive] = ImVec4(0.16f, 0.29f, 0.48f, 1.00f);
-        colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
-        colors[ImGuiCol_MenuBarBg] = ImVec4(0.14f, 0.14f, 0.14f, 1.00f);
-        colors[ImGuiCol_ScrollbarBg] = ImVec4(0.02f, 0.02f, 0.02f, 1.00f);
-        colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.31f, 0.31f, 0.31f, 1.00f);
-        colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.41f, 0.41f, 0.41f, 1.00f);
-        colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.51f, 0.51f, 0.51f, 1.00f);
-        colors[ImGuiCol_CheckMark] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-        colors[ImGuiCol_SliderGrab] = ImVec4(0.24f, 0.52f, 0.88f, 1.00f);
-        colors[ImGuiCol_SliderGrabActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-        colors[ImGuiCol_Button] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-        colors[ImGuiCol_ButtonHovered] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-        colors[ImGuiCol_ButtonActive] = ImVec4(0.06f, 0.53f, 0.98f, 1.00f);
-        colors[ImGuiCol_Header] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-        colors[ImGuiCol_HeaderHovered] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-        colors[ImGuiCol_HeaderActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-        colors[ImGuiCol_Separator] = colors[ImGuiCol_Border];
-        colors[ImGuiCol_SeparatorHovered] = ImVec4(0.10f, 0.40f, 0.75f, 1.00f);
-        colors[ImGuiCol_SeparatorActive] = ImVec4(0.10f, 0.40f, 0.75f, 1.00f);
-        colors[ImGuiCol_ResizeGrip] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-        colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-        colors[ImGuiCol_ResizeGripActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-        colors[ImGuiCol_CloseButton] = ImVec4(0.41f, 0.41f, 0.41f, 1.00f);
-        colors[ImGuiCol_CloseButtonHovered] = ImVec4(0.98f, 0.39f, 0.36f, 1.00f);
-        colors[ImGuiCol_CloseButtonActive] = ImVec4(0.98f, 0.39f, 0.36f, 1.00f);
-        colors[ImGuiCol_PlotLines] = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
-        colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
-        colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
-        colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
-        colors[ImGuiCol_TextSelectedBg] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-        colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
-        colors[ImGuiCol_DragDropTarget] = ImVec4(1.00f, 1.00f, 0.00f, 1.00f);
-        colors[ImGuiCol_NavHighlight] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-        colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-    }
-}
+#include "imgui.h"
 
 //dummy translate macro for later maybe?
 #define TR(text) text
 //dummy keymap macro for later
 #define KM(text) text
+
+s32 theOpenglMajorVersion;
+s32 theOpenglMinorVersion;
+HGLRC theHGLRC; // Global, shared between windows
+s32 theWindowIdCounter = 0; // Helps during debugging
+
+
+void imgui_set_style_params()
+{
+    ImGuiStyle* style = &ImGui::GetStyle();
+    ImVec4* colors = style->Colors;
+
+    style->Alpha = 1.0f;
+
+    colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
+    colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+    colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
+    colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.06f, 0.06f, 1.00f);
+    colors[ImGuiCol_ChildBg] = ImVec4(1.00f, 1.00f, 1.00f, 0.00f);
+    colors[ImGuiCol_PopupBg] = ImVec4(0.08f, 0.08f, 0.08f, 1.00f);
+    colors[ImGuiCol_Border] = ImVec4(0.43f, 0.43f, 0.50f, 1.00f);
+    colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+    colors[ImGuiCol_FrameBg] = ImVec4(0.16f, 0.29f, 0.48f, 1.00f);
+    colors[ImGuiCol_FrameBgHovered] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    colors[ImGuiCol_FrameBgActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    colors[ImGuiCol_TitleBg] = ImVec4(0.04f, 0.04f, 0.04f, 1.00f);
+    colors[ImGuiCol_TitleBgActive] = ImVec4(0.16f, 0.29f, 0.48f, 1.00f);
+    colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
+    colors[ImGuiCol_MenuBarBg] = ImVec4(0.14f, 0.14f, 0.14f, 1.00f);
+    colors[ImGuiCol_ScrollbarBg] = ImVec4(0.02f, 0.02f, 0.02f, 1.00f);
+    colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.31f, 0.31f, 0.31f, 1.00f);
+    colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.41f, 0.41f, 0.41f, 1.00f);
+    colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.51f, 0.51f, 0.51f, 1.00f);
+    colors[ImGuiCol_CheckMark] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    colors[ImGuiCol_SliderGrab] = ImVec4(0.24f, 0.52f, 0.88f, 1.00f);
+    colors[ImGuiCol_SliderGrabActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    colors[ImGuiCol_Button] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    colors[ImGuiCol_ButtonHovered] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    colors[ImGuiCol_ButtonActive] = ImVec4(0.06f, 0.53f, 0.98f, 1.00f);
+    colors[ImGuiCol_Header] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    colors[ImGuiCol_HeaderHovered] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    colors[ImGuiCol_HeaderActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    colors[ImGuiCol_Separator] = colors[ImGuiCol_Border];
+    colors[ImGuiCol_SeparatorHovered] = ImVec4(0.10f, 0.40f, 0.75f, 1.00f);
+    colors[ImGuiCol_SeparatorActive] = ImVec4(0.10f, 0.40f, 0.75f, 1.00f);
+    colors[ImGuiCol_ResizeGrip] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    colors[ImGuiCol_ResizeGripActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    colors[ImGuiCol_CloseButton] = ImVec4(0.41f, 0.41f, 0.41f, 1.00f);
+    colors[ImGuiCol_CloseButtonHovered] = ImVec4(0.98f, 0.39f, 0.36f, 1.00f);
+    colors[ImGuiCol_CloseButtonActive] = ImVec4(0.98f, 0.39f, 0.36f, 1.00f);
+    colors[ImGuiCol_PlotLines] = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
+    colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
+    colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
+    colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
+    colors[ImGuiCol_TextSelectedBg] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
+    colors[ImGuiCol_DragDropTarget] = ImVec4(1.00f, 1.00f, 0.00f, 1.00f);
+    colors[ImGuiCol_NavHighlight] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+}
 
 void imgui_push_disabled_selected(bool disabled) {
 	if (disabled) { ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.25); }
@@ -91,7 +81,7 @@ void imgui_pop_disabled_selected(bool disabled) {
 bool imgui_window_begin(borderless_window_t* window, const char *title, bool* openContextMenu)
 {
 	bool show = true;
-    ImGui::StyleColorsNoiseGen(0);
+	imgui_set_style_params();
 	bool result = ImGui::Begin(title, &show, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_MenuBar) && show;
 	if (openContextMenu) *openContextMenu = ImGui::IsItemHovered() && ImGui::IsMouseClicked(1);
 	return result;
@@ -102,7 +92,7 @@ void imgui_window_end()
 	ImGui::End();
 }
 
-static void imgui_window_context_menu(borderless_window_t* window, bool openContextMenu)
+void imgui_window_context_menu(borderless_window_t* window, bool openContextMenu)
 {
 	static const char* menuName = "window_context_menu";
 	if (openContextMenu)
@@ -131,7 +121,7 @@ static void imgui_window_context_menu(borderless_window_t* window, bool openCont
 	}
 }
 
-static void imgui_window_menu_bar(borderless_window_t* window)
+void imgui_window_menu_bar(borderless_window_t* window)
 {
     bool openNewFileDialog = false;
     bool openExportDialog = false;
@@ -189,7 +179,7 @@ static void imgui_window_menu_bar(borderless_window_t* window)
     }
 }
 
-static bool imgui_message(borderless_window_t *window, UINT msg, WPARAM wparam, LPARAM lparam)
+bool imgui_message(borderless_window_t *window, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	imgui_window_t *imgui = (imgui_window_t*)window->userdata;
 	ImGui::SetCurrentContext(imgui->context);
@@ -201,7 +191,7 @@ static bool imgui_message(borderless_window_t *window, UINT msg, WPARAM wparam, 
 	}
 	if (msg == WM_PAINT)
 	{
-		wglMakeCurrent(window->hdc, g_hglrc);
+		wglMakeCurrent(window->hdc, theHGLRC);
 		ImGui_Impl_WinAPI_GL3_NewFrame(window->hwnd, window->width, window->height, window->width, window->height);
 		ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
 		ImGui::SetNextWindowSize(ImVec2((float)window->width, (float)window->height));
@@ -233,12 +223,12 @@ borderless_window_t * imgui_window_create(LPCWSTR title, int w, int h, imgui_win
 	imgui_window_t *imgui = (imgui_window_t*)calloc(1, sizeof(imgui_window_t));
 	imgui->func = func;
 	imgui->userdata = userdata;
-	imgui->id = g_windowIdCounter++;
+	imgui->id = theWindowIdCounter++;
 	borderless_window_t* window = borderless_window_create(title, w, h, imgui_message, imgui);
 
-	if (!g_hglrc)
+	if (!theHGLRC)
 	{
-		if (!(g_hglrc = opengl_create_context(window->hdc, g_openglMajorVersion, g_openglMinorVersion)))
+		if (!(theHGLRC = opengl_create_context(window->hdc, theOpenglMajorVersion, theOpenglMinorVersion)))
 			ExitProcess(ERROR_INVALID_HANDLE);
 	}
 	else
@@ -256,7 +246,7 @@ borderless_window_t * imgui_window_create(LPCWSTR title, int w, int h, imgui_win
 	UpdateWindow(window->hwnd);
 
 	if (previousDC)
-		wglMakeCurrent(previousDC, g_hglrc);
+		wglMakeCurrent(previousDC, theHGLRC);
 	ImGui::SetCurrentContext(previous);
 
     window->initialized = true;;
@@ -266,15 +256,15 @@ borderless_window_t * imgui_window_create(LPCWSTR title, int w, int h, imgui_win
 
 void imgui_window_init(int openglMajorVersion, int openglMinorVersion)
 {
-	g_openglMajorVersion = openglMajorVersion;
-	g_openglMinorVersion = openglMinorVersion;
+	theOpenglMajorVersion = openglMajorVersion;
+	theOpenglMinorVersion = openglMinorVersion;
 	borderless_window_register();
 }
 
 void imgui_window_shutdown()
 {
-	opengl_destroy_context(g_hglrc);
-	g_hglrc = NULL;
+	opengl_destroy_context(theHGLRC);
+	theHGLRC = NULL;
 	borderless_window_unregister();
 }
 

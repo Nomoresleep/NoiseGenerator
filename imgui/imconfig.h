@@ -10,7 +10,7 @@
 #pragma once
 
 //---- Define assertion handler. Defaults to calling assert().
-#include "MCommon/MC_Mem.h"
+#include "MC_Mem.h"
 #define IM_ASSERT(_EXPR)  assert(_EXPR)
 
 //---- Define attributes of all API symbols declarations, e.g. for DLL under Windows.
@@ -43,7 +43,7 @@
 //---- Define constructor and implicit cast operators to convert back<>forth from your math types and ImVec2/ImVec4.
 // This will be inlined as part of ImVec2 and ImVec4 class declarations.
 
-#include "MCommon/MC_Vector.h"
+#include "MC_Vector.h"
 
 #define IM_VEC2_CLASS_EXTRA                                                 \
         ImVec2(const MC_Vector2f& f) { x = f.x; y = f.y; }                       \

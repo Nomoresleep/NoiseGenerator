@@ -6,6 +6,7 @@
 // https://github.com/ocornut/imgui
 
 #include "types.h"
+#include "imgui.h"
 
 IMGUI_API bool        ImGui_Impl_WinAPI_GL3_Init();
 IMGUI_API void        ImGui_Impl_WinAPI_GL3_Shutdown();

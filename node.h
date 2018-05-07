@@ -1,10 +1,10 @@
 #pragma once
 
 #include <math.h> // fmodf
-#include "MCommon/MC_GrowingArray.h"
-#include "MCommon/MC_ScopedPtr.h"
-#include "MCommon/MC_Vector.h"
-#include "MCommon/MC_Pair.h"
+#include "MC_GrowingArray.h"
+#include "MC_ScopedPtr.h"
+#include "MC_Vector.h"
+#include "MC_Pair.h"
 #include "imgui.h"
 #include "types.h"
 

@@ -1,8 +1,8 @@
 #pragma once
 #include "glzl_core.hpp"
 #include "types.h"
-#include "MCommon/MC_Vector.h"
-#include "MCommon/MC_ScopedPtr.h"
+#include "MC_Vector.h"
+#include "MC_ScopedPtr.h"
 
 class NodeGraph;
 
