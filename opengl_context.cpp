@@ -2,6 +2,7 @@
 #include <windows.h>
 #define ZLGL_IMPL
 #include "glzl_core.hpp"
+#include "MC_Base.h"
 
 #pragma comment(lib, "opengl32.lib")
 

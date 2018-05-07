@@ -1,5 +1,6 @@
 #include <math.h> // fmodf
 #include "MC_GrowingArray.h"
+#include "MC_StackList.h"
 #include "MC_ScopedPtr.h"
 #include "MC_Vector.h"
 #include "MC_HashMap.h"
@@ -15,7 +16,7 @@ class ConstantNode : public Node
 public:
     ConstantNode(int id, const char* name, const MC_Vector2f& pos)
         : Node(id, name, pos) {
-        AddOutputPort(new OutputPort(GetPortType<Type>()));
+        AddOutputPort(new OutputPort(this, GetPortType<Type>()));
     };
 };
 
@@ -25,7 +26,7 @@ public:
     ResultNode(int anID, const char* aLabel, const MC_Vector2f& aPosition)
         : Node(anID, aLabel, aPosition)
     {
-        AddInputPort(new InputPort(FloatPort, nullptr));
+        AddInputPort(new InputPort(this, FloatPort, nullptr));
     };
 };
 
@@ -102,6 +103,29 @@ public:
 	{
 		return myNodes.Find2<NodeComparer, const char*>(aNodeName, 0) != -1;
 	}
+
+    static bool IsCyclicFromNode(Node* aNode)
+    {
+        MC_StackList<Node*> queue;
+        queue.Add(aNode);
+        while (!queue.IsEmpty())
+        {
+            Node* node = queue.Pop();
+            for (s32 outPortIdx = 0; outPortIdx < node->myOutputs.Count(); ++outPortIdx)
+            {
+                OutputPort* outPort = node->myOutputs[outPortIdx];
+                for (s32 inPortIdx = 0; inPortIdx < outPort->myConnectedInputs.Count(); ++inPortIdx)
+                {
+                    InputPort* inPort = outPort->myConnectedInputs[inPortIdx];
+                    if (inPort->myNode == aNode)
+                        return true;
+
+                    queue.Add(inPort->myNode);
+                }
+            }
+        }
+        return false;
+    }
 
 	MC_GrowingArray<MC_ScopedPtr<Node>> myNodes;
 };
@@ -197,13 +221,19 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
 					connection_port_mismatch = port->myType != g_draggedOutput->myType;
 					connection_port_match = port->myType == g_draggedOutput->myType;
 
-					if (ImGui::IsMouseReleased(0) && connection_port_match)
-						port->myConnectedPort = g_draggedOutput;
+                    if (ImGui::IsMouseReleased(0) && connection_port_match)
+                    {
+                        if (!port->Connect(g_draggedOutput))
+                        {
+                            connection_port_mismatch = true;
+                            connection_port_match = false;
+                        }
+                    }
 				}
 				else if (ImGui::IsMouseClicked(0))
 				{
 					g_draggedOutput = port->myConnectedPort;
-					port->myConnectedPort = nullptr;
+                    port->Connect(nullptr);
 				}
 			}
 			port->myPosition = buttonCenter;

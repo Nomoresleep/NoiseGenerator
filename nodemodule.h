@@ -1,7 +1,10 @@
 #pragma once
-#include "MCommon/MC_HashMap.h"
-#include "MCommon/MC_GrowingArray.h"
-#include "MCommon/MC_Vector.h"
+
+#include "MC_HashMap.h"
+#include "MC_GrowingArray.h"
+#include "MC_Vector.h"
+#include "MC_Base.h"
+
 class Node;
 class NodeGraph;
 

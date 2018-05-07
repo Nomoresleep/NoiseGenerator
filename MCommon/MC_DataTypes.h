@@ -57,7 +57,8 @@ typedef f64					float64;
 #define	F64_RADTODEG(ang)	((f64)(ang)*(360.0/F64_TWO_PI))
 
 #define U32_MAX 0xFFFFFFFF
-#define S32_MAX
+#define S32_MAX 0x7FFFFFFF
+
 enum McNoInitType
 {
 	MC_NO_INIT

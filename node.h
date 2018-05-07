@@ -74,12 +74,20 @@ union PortData
     float myFloatData;
     int myIntPortData;
 };
+
+struct InputPort;
+class Node;
+
 struct OutputPort
 {
-    OutputPort(PortType aPortType)
+    OutputPort(Node* aNode, PortType aPortType)
         : myType(aPortType)
+        , myNode(aNode)
+        , myConnectedInputs(8, 8)
     {};
 
+    Node* myNode;
+    MC_GrowingArray<InputPort*> myConnectedInputs;
     PortData myData;
     const PortType myType;
 	MC_Vector2f myPosition;
@@ -87,16 +95,20 @@ struct OutputPort
 
 struct InputPort
 {
-	InputPort(PortType aPortType, PropertyBase* aPortProperty)
+	InputPort(Node* aNode, PortType aPortType, PropertyBase* aPortProperty)
 		: myType(aPortType)
+        , myNode(aNode)
         , myConnectedPort(nullptr)
 		, myProperty(aPortProperty)
     {}
 
-	OutputPort* myConnectedPort;
+    bool Connect(OutputPort* aConnectedPort);
+
+    Node* myNode;
 	MC_ScopedPtr<PropertyBase> myProperty;
     const PortType myType;
 	MC_Vector2f myPosition;
+    OutputPort* myConnectedPort;
 };
 
 class Node
@@ -118,22 +130,9 @@ public:
 	MC_GrowingArray<MC_ScopedPtr<OutputPort>> myOutputs;
 	MC_GrowingArray<MC_ScopedPtr<InputPort>> myInputs;
 protected:
-	void AddInputPort(InputPort* anInputPort)
-	{
-		myInputs.Add(anInputPort);
-		CalculateSize();
-	}
-	void AddOutputPort(OutputPort* anOutputPort)
-	{
-		myOutputs.Add(anOutputPort);
-		CalculateSize();
-	}
-	void CalculateSize()
-	{
-		MC_Vector2f textSize = ImGui::CalcTextSize(myLabel);
-		mySize = MC_Vector2f(MC_Max(textSize.x, NODE_PROPERTY_WIDTH) + 2.0f * NODE_WINDOW_PADDING.x, textSize.y + 2.0f * NODE_WINDOW_PADDING.y);
-		mySize.y += MC_Max(myInputs.Count(), myOutputs.Count()) * ImGui::GetItemsLineHeightWithSpacing() + ImGui::GetStyle().ItemSpacing.y;
-	}
+    void AddInputPort(InputPort* anInputPort);
+    void AddOutputPort(OutputPort* anOutputPort);
+    void CalculateSize();
 };
 
 
