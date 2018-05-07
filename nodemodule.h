@@ -1,8 +1,8 @@
 #pragma once
-#include "MCommon/MC_HashMap.h"
-#include "MCommon/MC_GrowingArray.h"
-#include "MCommon/MC_Vector.h"
-#include "types.h"
+#include "MC_HashMap.h"
+#include "MC_GrowingArray.h"
+#include "MC_Vector.h"
+#include "MC_Base.h"
 class Node;
 class NodeGraph;
 
@@ -13,7 +13,7 @@ struct NodeComparer
 
 struct NodesModule
 {
-	typedef Node*(*NodeCreationFunction)(i32 aNodeID, const char* aNodeName, const MC_Vector2f& aPosition);
+	typedef Node*(*NodeCreationFunction)(s32 aNodeID, const char* aNodeName, const MC_Vector2f& aPosition);
 	struct NodeCreationData
 	{
 		NodeCreationFunction myCreationFunction;
@@ -39,7 +39,7 @@ struct RegisterNodeType
 
 private:
 	//avoid ugly lamdas!
-    static Node* Create(i32 aNodeID, const char* nodeName, const MC_Vector2f& aPosition) {
+    static Node* Create(s32 aNodeID, const char* nodeName, const MC_Vector2f& aPosition) {
 		Type* newNode = new Type(aNodeID, nodeName, aPosition);
 		return newNode;
 	}

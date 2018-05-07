@@ -71,7 +71,7 @@ static void locDrawNode(ImDrawList* aDrawList, Node* aNode, MC_Vector2f anOffset
 	ImGui::Text("%s", aNode->myLabel);
 
 	//Draw Output ports
-	for (i32 slot_idx = 0; slot_idx < aNode->myOutputs.Count(); slot_idx++)
+	for (s32 slot_idx = 0; slot_idx < aNode->myOutputs.Count(); slot_idx++)
 	{
 		OutputPort* port = aNode->myOutputs[slot_idx];
 		MC_Vector2f portPos = MC_Vector2f(rect_min.x + aNode->mySize.x - NODE_SLOT_RADIUS, rect_min.y + NODE_WINDOW_PADDING.y * 2.0f + ImGui::GetTextLineHeight() + ImGui::GetItemsLineHeightWithSpacing() * (f32)slot_idx);
@@ -81,7 +81,7 @@ static void locDrawNode(ImDrawList* aDrawList, Node* aNode, MC_Vector2f anOffset
 	}
 
 	//Draw Input ports
-	for (i32 slot_idx = 0; slot_idx < aNode->myInputs.Count(); slot_idx++)
+	for (s32 slot_idx = 0; slot_idx < aNode->myInputs.Count(); slot_idx++)
 	{
 		InputPort* port = aNode->myInputs[slot_idx];
 		MC_Vector2f portPos = MC_Vector2f(rect_min.x - NODE_SLOT_RADIUS, rect_min.y + NODE_WINDOW_PADDING.y * 2.0f + ImGui::GetTextLineHeight() + ImGui::GetItemsLineHeightWithSpacing() * (f32)slot_idx);
@@ -109,7 +109,7 @@ public:
 static void locRegisterNodeTypes()
 {
 	RegisterNodeType<ConstantNode<f32>>("Constants/FloatConstantNode");
-	RegisterNodeType<ConstantNode<i32>>("Constants/IntConstantNode");
+	RegisterNodeType<ConstantNode<s32>>("Constants/IntConstantNode");
 	RegisterNodeType<ConstantNode<u32>>("Constants/UIntConstantNode");
 	RegisterNodeType<PerlinNoise2D>("PerlinNoise2D");
 	RegisterNodeType<ResultNode>("ResultNode", true);
@@ -156,7 +156,7 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
 	draw_list->ChannelsSplit(3);
 
 	draw_list->ChannelsSetCurrent(0);
-	for(i32 node_idx = aNodeGraph->myNodes.Count() - 1; node_idx >= 0; node_idx--)
+	for(s32 node_idx = aNodeGraph->myNodes.Count() - 1; node_idx >= 0; node_idx--)
 	{
 		Node* node = aNodeGraph->myNodes[node_idx];
 		MC_Vector2f rect_min = offset + node->myPosition;
@@ -166,7 +166,7 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
 		const f32 headerHeight = ImGui::GetTextLineHeight() + NODE_WINDOW_PADDING.y * 2.0f;
 		ImGui::SetCursorScreenPos(rect_min + MC_Vector2f(NODE_WINDOW_PADDING.x, headerHeight + NODE_WINDOW_PADDING.y));
 
-		for (i32 slot_idx = 0; slot_idx < node->myOutputs.Count(); slot_idx++)
+		for (s32 slot_idx = 0; slot_idx < node->myOutputs.Count(); slot_idx++)
 		{
 			OutputPort* port = node->myOutputs[slot_idx];
 			MC_Vector2f portPos = MC_Vector2f(rect_min.x + node->mySize.x - NODE_SLOT_RADIUS, rect_min.y + NODE_WINDOW_PADDING.y * 2.0f + ImGui::GetTextLineHeight() + ImGui::GetItemsLineHeightWithSpacing() * (f32)slot_idx);
@@ -182,7 +182,7 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
 			}
 		}
 
-		for (i32 slot_idx = 0; slot_idx < node->myInputs.Count(); slot_idx++)
+		for (s32 slot_idx = 0; slot_idx < node->myInputs.Count(); slot_idx++)
 		{
 			InputPort* port = node->myInputs[slot_idx];
 			MC_Vector2f portPos = MC_Vector2f(rect_min.x - NODE_SLOT_RADIUS, rect_min.y + NODE_WINDOW_PADDING.y * 2.0f + ImGui::GetTextLineHeight() + ImGui::GetItemsLineHeightWithSpacing() * (f32)slot_idx);
@@ -235,7 +235,7 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
 	draw_list->ChannelsSetCurrent(1);
 
 	// Display nodes
-	for (i32 node_idx = 0; node_idx < aNodeGraph->myNodes.Count(); node_idx++)
+	for (s32 node_idx = 0; node_idx < aNodeGraph->myNodes.Count(); node_idx++)
 	{
 		Node* node = aNodeGraph->myNodes[node_idx];
 

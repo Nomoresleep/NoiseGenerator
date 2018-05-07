@@ -41,8 +41,8 @@ static BOOL GetClientRectInScreenSpace(borderless_window_t *window, LPRECT rect)
 
 static BOOL IsLeftSnapped(LPRECT clientRect, LPRECT monitorRect)
 {
-	i32 monitorWHalf = (monitorRect->right - monitorRect->left) >> 1;
-	i32 clientW = clientRect->right - clientRect->left;
+	s32 monitorWHalf = (monitorRect->right - monitorRect->left) >> 1;
+	s32 clientW = clientRect->right - clientRect->left;
 	if (clientRect->top == monitorRect->top && clientRect->left == monitorRect->left && clientRect->bottom == monitorRect->bottom && monitorWHalf == clientW)
 		return TRUE;
 	else
@@ -51,8 +51,8 @@ static BOOL IsLeftSnapped(LPRECT clientRect, LPRECT monitorRect)
 
 static BOOL IsRightSnapped(LPRECT clientRect, LPRECT monitorRect)
 {
-	i32 monitorWHalf = (monitorRect->right - monitorRect->left) >> 1;
-	i32 clientW = clientRect->right - clientRect->left;
+	s32 monitorWHalf = (monitorRect->right - monitorRect->left) >> 1;
+	s32 clientW = clientRect->right - clientRect->left;
 	if (clientRect->top == monitorRect->top && clientRect->left == (monitorRect->left + monitorWHalf) && clientRect->bottom == monitorRect->bottom && monitorWHalf == clientW)
 		return TRUE;
 	else
@@ -86,8 +86,8 @@ static void handle_snap_left(borderless_window_t *window, LPRECT clientRect, LPR
     if (window->maximized)
         ShowWindow(window->hwnd, SW_RESTORE);
 
-    i32 w = monitorWork->right - monitorWork->left;
-    i32 h = monitorWork->bottom - monitorWork->top;
+    s32 w = monitorWork->right - monitorWork->left;
+    s32 h = monitorWork->bottom - monitorWork->top;
     if (IsLeftSnapped(clientRect, monitorWork))
     {
         //Note:[NoMoreSleep] Already snapped, select next monitor to snap to
@@ -117,8 +117,8 @@ static void handle_snap_right(borderless_window_t *window, LPRECT clientRect, LP
     if(window->maximized)
         ShowWindow(window->hwnd, SW_RESTORE);
 
-    i32 w = monitorWork->right - monitorWork->left;
-    i32 h = monitorWork->bottom - monitorWork->top;
+    s32 w = monitorWork->right - monitorWork->left;
+    s32 h = monitorWork->bottom - monitorWork->top;
     if (IsRightSnapped(clientRect, monitorWork))
     {
         //Note:[NoMoreSleep] Already snapped, select next monitor to snap to
@@ -161,7 +161,7 @@ static void handle_compositionchanged(borderless_window_t *window)
 #endif
 }
 
-static LRESULT handle_nchittest(borderless_window_t *window, i32 x, i32 y)
+static LRESULT handle_nchittest(borderless_window_t *window, s32 x, s32 y)
 {
 	if (IsMaximized(window->hwnd))
 		return HTCLIENT;
@@ -171,31 +171,31 @@ static LRESULT handle_nchittest(borderless_window_t *window, i32 x, i32 y)
 
 	/* The horizontal frame should be the same size as the vertical frame,
 	   since the NONCLIENTMETRICS structure does not distinguish between them */
-	i32 frame_size = GetSystemMetrics(SM_CXFRAME); // + GetSystemMetrics(SM_CXPADDEDBORDER);
+	s32 frame_size = GetSystemMetrics(SM_CXFRAME); // + GetSystemMetrics(SM_CXPADDEDBORDER);
 	/* The diagonal size handles are wider than the frame */
-	i32 diagonal_width = frame_size * 2 + GetSystemMetrics(SM_CXBORDER);
+	s32 diagonal_width = frame_size * 2 + GetSystemMetrics(SM_CXBORDER);
 
 	if (mouse.y < frame_size) 
 	{
 		if (mouse.x < diagonal_width)
 			return HTTOPLEFT;
-		if (mouse.x >= (i32)window->width - diagonal_width)
+		if (mouse.x >= (s32)window->width - diagonal_width)
 			return HTTOPRIGHT;
 		return HTTOP;
 	}
 
-	if (mouse.y >= (i32)window->height - frame_size) 
+	if (mouse.y >= (s32)window->height - frame_size) 
 	{
 		if (mouse.x < diagonal_width)
 			return HTBOTTOMLEFT;
-		if (mouse.x >= (i32)window->width - (i32)diagonal_width)
+		if (mouse.x >= (s32)window->width - (s32)diagonal_width)
 			return HTBOTTOMRIGHT;
 		return HTBOTTOM;
 	}
 
 	if (mouse.x < frame_size)
 		return HTLEFT;
-	if (mouse.x >= (i32)window->width - frame_size)
+	if (mouse.x >= (s32)window->width - frame_size)
 		return HTRIGHT;
 	return HTCLIENT;
 }
@@ -331,7 +331,7 @@ void borderless_window_unregister()
 	UnregisterClassW(L"borderless-window", GetModuleHandle(NULL));
 }
 
-borderless_window_t* borderless_window_create(LPCWSTR title, i32 width, i32 height, message_handler handler, void* userdata)
+borderless_window_t* borderless_window_create(LPCWSTR title, s32 width, s32 height, message_handler handler, void* userdata)
 {
 	borderless_window_t *window = (borderless_window_t*)calloc(1, sizeof(borderless_window_t));
 

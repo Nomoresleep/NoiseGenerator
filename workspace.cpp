@@ -7,7 +7,7 @@
 
 Workspace* theWorkspace = nullptr;
 
-Workspace::Workspace(i32 anImageWidth, i32 anImageHeight)
+Workspace::Workspace(s32 anImageWidth, s32 anImageHeight)
     : myImageSize(anImageWidth, anImageHeight, 0)
 {
     MF_File perlinNoiseFile(locPerlinNoise2DSource);

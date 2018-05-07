@@ -5,12 +5,12 @@
 // If you are new to ImGui, see examples/README.txt and documentation at the top of imgui.cpp.
 // https://github.com/ocornut/imgui
 
-#include "types.h"
+#include "MC_Base.h"
 #include "imgui.h"
 
 IMGUI_API bool        ImGui_Impl_WinAPI_GL3_Init();
 IMGUI_API void        ImGui_Impl_WinAPI_GL3_Shutdown();
-IMGUI_API void        ImGui_Impl_WinAPI_GL3_NewFrame(HWND hwnd, i32 w, i32 h, i32 display_w, i32 display_h);
+IMGUI_API void        ImGui_Impl_WinAPI_GL3_NewFrame(HWND hwnd, s32 w, s32 h, s32 display_w, s32 display_h);
 IMGUI_API bool        ImGui_Impl_WinAPI_GL3_Handle_Message(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 IMGUI_API void        ImGui_Impl_WinAPI_GL3_RenderDrawData(ImDrawData* draw_data);
 

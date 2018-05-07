@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types.h"
+#include "MC_Base.h"
 
 struct borderless_window_t;
 
@@ -29,6 +29,6 @@ struct borderless_window_t
 void borderless_window_register();
 void borderless_window_unregister();
 
-borderless_window_t* borderless_window_create(LPCWSTR title, i32 width, i32 height, message_handler handler, void* userdata);
+borderless_window_t* borderless_window_create(LPCWSTR title, s32 width, s32 height, message_handler handler, void* userdata);
 void borderless_window_close_all(borderless_window_t *root);
 void borderless_window_close(borderless_window_t *window);

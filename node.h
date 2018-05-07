@@ -6,7 +6,7 @@
 #include "MC_Vector.h"
 #include "MC_Pair.h"
 #include "imgui.h"
-#include "types.h"
+#include "MC_Base.h"
 
 static const f32 NODE_SLOT_RADIUS = 6.0f;
 static const MC_Vector2f NODE_PORT_SIZE = MC_Vector2f(2.0f * NODE_SLOT_RADIUS, 2.0f * NODE_SLOT_RADIUS);
@@ -47,7 +47,7 @@ static void locRenderDrag<f32>(Property<f32>* aProperty)
 }
 
 template <>
-static void locRenderDrag<i32>(Property<i32>* aProperty)
+static void locRenderDrag<s32>(Property<s32>* aProperty)
 {
 	ImGui::DragInt("##knawlfn", aProperty->myValue, 1.0f, aProperty->myMin, aProperty->myMax);
 }
@@ -55,7 +55,7 @@ static void locRenderDrag<i32>(Property<i32>* aProperty)
 template <>
 static void locRenderDrag<u32>(Property<u32>* aProperty)
 {
-	i32 propertyValue = (i32)*aProperty->myValue;
+	s32 propertyValue = (s32)*aProperty->myValue;
 	ImGui::DragInt("##knawlfn", &propertyValue, 1.0f, MC_Max(0u, aProperty->myMin), aProperty->myMax);
 	*aProperty->myValue = (u32)propertyValue;
 }
@@ -146,7 +146,7 @@ template<>
 static PortType GetPortType<f32>() { return PortType::FloatPort; }
 
 template<>
-static PortType GetPortType<i32>() { return PortType::IntPort; }
+static PortType GetPortType<s32>() { return PortType::IntPort; }
 
 template<>
 static PortType GetPortType<u32>() { return PortType::UIntPort; }

@@ -4,8 +4,8 @@
 
 void ShowNewFileDialog()
 {
-	static i32 width = 1024;
-	static i32 height = 1024;
+	static s32 width = 1024;
+	static s32 height = 1024;
 	ImGui::DragInt("Width", &width);
 	ImGui::DragInt("Height", &height);
 	if (ImGui::Button("Create"))
@@ -27,7 +27,7 @@ void ShowExportDialog()
 		"jpg",
 		"hdr",
 	};
-	static i32 currentExtension = 0;
+	static s32 currentExtension = 0;
 	ImGui::Combo("Extension", &currentExtension, extensions, ExportExtensionCount);
 	if (ImGui::Button("Export"))
 	{

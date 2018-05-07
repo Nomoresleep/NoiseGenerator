@@ -133,19 +133,19 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 
 static void app_init_resources()
 {
-	i32 permutationBuffer12[512];
-	i32 permutationBuffer[512];
+	s32 permutationBuffer12[512];
+	s32 permutationBuffer[512];
 
 	std::mt19937_64 gen(1337);
 
-	for (i32 i = 0; i < 256; i++)
+	for (s32 i = 0; i < 256; i++)
 		permutationBuffer[i] = i;
 
-	for (i32 j = 0; j < 256; j++)
+	for (s32 j = 0; j < 256; j++)
 	{
-		i32 rng = (i32)(gen() % (256 - j));
-		i32 k = rng + j;
-		i32 l = permutationBuffer[j];
+		s32 rng = (s32)(gen() % (256 - j));
+		s32 k = rng + j;
+		s32 l = permutationBuffer[j];
 		permutationBuffer[j] = permutationBuffer[j + 256] = permutationBuffer[k];
 		permutationBuffer[k] = l;
 		permutationBuffer12[j] = permutationBuffer12[j + 256] = permutationBuffer[j] % 12;
@@ -164,7 +164,7 @@ static void app_init_resources()
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, permBuffer12ID);
 }
 
-i32 CALLBACK wWinMain(HINSTANCE /*inst*/, HINSTANCE /*prev*/, LPWSTR /*cmd*/, int /*show*/)
+s32 CALLBACK wWinMain(HINSTANCE /*inst*/, HINSTANCE /*prev*/, LPWSTR /*cmd*/, int /*show*/)
 {
     MC_IniFile iniFile(thePathToIni);
     iniFile.Process();
@@ -176,7 +176,7 @@ i32 CALLBACK wWinMain(HINSTANCE /*inst*/, HINSTANCE /*prev*/, LPWSTR /*cmd*/, in
 
 	app_init_resources();
 
-	i32 result = imgui_window_message_loop();
+	s32 result = imgui_window_message_loop();
 	imgui_window_shutdown();
 	return result;
 }
