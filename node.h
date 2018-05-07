@@ -77,14 +77,17 @@ union PortData
 };
 
 struct InputPort;
+class Node;
 
 struct OutputPort
 {
-    OutputPort(PortType aPortType)
+    OutputPort(Node* aNode, PortType aPortType)
         : myType(aPortType)
-        , myConnectedInputs(32, 32)
+        , myNode(aNode)
+        , myConnectedInputs(8, 8)
     {};
 
+    Node* myNode;
     MC_GrowingArray<InputPort*> myConnectedInputs;
     PortData myData;
     const PortType myType;
@@ -93,8 +96,9 @@ struct OutputPort
 
 struct InputPort
 {
-	InputPort(PortType aPortType, PropertyBase* aPortProperty)
+	InputPort(Node* aNode, PortType aPortType, PropertyBase* aPortProperty)
 		: myType(aPortType)
+        , myNode(aNode)
         , myConnectedPort(nullptr)
 		, myProperty(aPortProperty)
     {}
@@ -112,6 +116,7 @@ struct InputPort
         }
     }
 
+    Node* myNode;
 	MC_ScopedPtr<PropertyBase> myProperty;
     const PortType myType;
 	MC_Vector2f myPosition;
