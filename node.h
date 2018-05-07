@@ -102,7 +102,8 @@ struct InputPort
 		, myProperty(aPortProperty)
     {}
 
-    bool Connect(OutputPort* aConnectedPort);
+    void Connect(OutputPort* aConnectedPort);
+	bool TryConnect(OutputPort* aConnectedPort);
 
     Node* myNode;
 	MC_ScopedPtr<PropertyBase> myProperty;

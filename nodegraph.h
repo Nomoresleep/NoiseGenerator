@@ -221,14 +221,21 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
 					connection_port_mismatch = port->myType != g_draggedOutput->myType;
 					connection_port_match = port->myType == g_draggedOutput->myType;
 
-                    if (ImGui::IsMouseReleased(0) && connection_port_match)
-                    {
-                        if (!port->Connect(g_draggedOutput))
-                        {
-                            connection_port_mismatch = true;
-                            connection_port_match = false;
-                        }
-                    }
+					if (connection_port_match)
+					{
+						if (port->TryConnect(g_draggedOutput))
+						{
+							if (ImGui::IsMouseReleased(0))
+							{
+								port->Connect(g_draggedOutput);
+							}
+						}
+						else
+						{
+							connection_port_mismatch = true;
+							connection_port_match = false;
+						}
+					}
 				}
 				else if (ImGui::IsMouseClicked(0))
 				{
