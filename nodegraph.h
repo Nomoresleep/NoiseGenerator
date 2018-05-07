@@ -214,7 +214,8 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
 			ImGui::InvisibleButton("##input", NODE_PORT_SIZE);
 
 			MC_Vector2f buttonCenter = portPos + MC_Vector2f(NODE_SLOT_RADIUS, NODE_SLOT_RADIUS);
-			if (ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly))
+			const bool hovered = ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly);
+			if (hovered)
 			{
 				if (g_draggedOutput != nullptr)
 				{
@@ -265,7 +266,7 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
 
 			if (port->myConnectedPort != nullptr)
 			{
-				locDrawBezierCurve(draw_list, port->myConnectedPort->myPosition, port->myPosition, IM_COL32(100, 100, 100, 255));
+				locDrawBezierCurve(draw_list, port->myConnectedPort->myPosition, port->myPosition, hovered ? IM_COL32(255, 255, 255, 255) : IM_COL32(100, 100, 100, 255));
 			}
 			else if(port->myProperty != nullptr)
 			{
