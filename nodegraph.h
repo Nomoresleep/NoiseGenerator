@@ -223,7 +223,11 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
 
                     if (ImGui::IsMouseReleased(0) && connection_port_match)
                     {
-                        port->Connect(g_draggedOutput);
+                        if (!port->Connect(g_draggedOutput))
+                        {
+                            connection_port_mismatch = true;
+                            connection_port_match = false;
+                        }
                     }
 				}
 				else if (ImGui::IsMouseClicked(0))
