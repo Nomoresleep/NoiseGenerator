@@ -24,7 +24,7 @@ MT_ThreadPool::MT_ThreadPool()
 {
 	MT_MutexLock lock(locThreadPoolMutex);
 
-	myThreads.Init(16, 16);
+	myThreads.Init(16);
 }
 
 MT_ThreadPool::~MT_ThreadPool()

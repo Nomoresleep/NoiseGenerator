@@ -28,8 +28,8 @@ public:
 	typedef ValueT value_t;
 
 	MC_ArrayMap()
-		: myKeys(0, 4, true)
-		, myValues(0, 4, true)
+		: myKeys(0, true)
+		, myValues(0, true)
 	{
 	}
 

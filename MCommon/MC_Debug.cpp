@@ -233,8 +233,8 @@ bool MC_Debug::Init(const char* aDebugFileName,const char* aErrorFileName, bool 
 	
 	if( ourStatsFileName && strcmp( aStatsFileName, "" )  )
 	{
-		ourStatFloat.Init( 0, 32, false );
-		ourStatInt.Init( 0, 32, false );
+		ourStatFloat.Init( 0, false );
+		ourStatInt.Init( 0, false );
 	}
 
 	if( aMsDevOutputFlag )
@@ -316,8 +316,8 @@ bool MC_Debug::Init( void )
 
 	if( ourStatsFileName )
 	{
-		ourStatFloat.Init( 0, 32, false );
-		ourStatInt.Init( 0, 32, false );
+		ourStatFloat.Init( 0, false );
+		ourStatInt.Init( 0, false );
 	}
 #endif
 	return true;

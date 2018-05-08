@@ -84,7 +84,7 @@ bool MC_CommandLine::Create( const char* aCommandLine )
 	char* cmdLineBuf = ourInstance->myCommandLineBuf;
 	cmdLineBuf[255] = 0;
 
-	ourInstance->myArguments.Init( 2, 2, false );
+	ourInstance->myArguments.Init( 2, false );
 
 	if( aCommandLine == NULL )
 		strncpy(cmdLineBuf, GetCommandLine(), 255);

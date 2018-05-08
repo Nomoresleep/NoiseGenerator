@@ -32,7 +32,7 @@
 bool MF_File::ourDebugDisableZipDds = false;		// can be disabled by app to measure load performance gain
 bool MF_File::ourURLCommentFix		= false;			// this will enable test for ':' sign before // in ReadLine
 MC_String MF_File::ourMissingFileLog;
-MC_GrowingArray<MC_String> MF_File::ourMissingFiles(2,64,true);
+MC_GrowingArray<MC_String> MF_File::ourMissingFiles(2,true);
 
 static unsigned int ReadFileDateTimeFromHandle(FILETIME& aFT)
 {
@@ -1374,7 +1374,7 @@ MC_GrowingArray<MC_String> MF_File::FindFiles(MC_String aSearchString, bool aRec
 	RecursiveSearch rs;
 	rs.myExt=extension;
 	rs.myRecurse=aRecursive;
-	rs.myFound.Init(128,128);
+	rs.myFound.Init(128);
 	rs.RecursiveFind(finishedDir);
 
 	return rs.myFound;

@@ -28,8 +28,8 @@ MC_ProxyManager theProxyManager;
 
 MC_ProxyManager::MC_ProxyManager()
 {
-	myProxies.Init(0, 1024);
-	myFree.Init(0, 1024);
+	myProxies.Init(0);
+	myFree.Init(0);
 }
 
 MC_ProxyManager::~MC_ProxyManager()

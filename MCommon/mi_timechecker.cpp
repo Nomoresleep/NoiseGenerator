@@ -48,8 +48,8 @@ void MI_TimeChecker::BeginFrame()
 
 	if(!ourIsInitedFlag)
 	{
-		ourIds.Init(32, 32, false);
-		ourFrameTimes.Init(4096, 4096, false);
+		ourIds.Init(32, false);
+		ourFrameTimes.Init(4096, false);
 		ourIsInitedFlag = true;
 	}
 	else
@@ -92,7 +92,7 @@ void MI_TimeChecker::BeginCheck(unsigned int anId)
 		id = new MI_TimeCheckerIdData;
 		id->myId = anId;
 		id->myLastFrameNum = -1;
-		id->myFrames.Init(4096, 4096, false);
+		id->myFrames.Init(4096, false);
 		ourIds.Add(id);
 	}
 
@@ -103,7 +103,7 @@ void MI_TimeChecker::BeginCheck(unsigned int anId)
 	else
 	{
 		frame = new MI_TimeCheckerIdFrameData;
-		frame->myElapsedTimes.Init(1, 1, false);
+		frame->myElapsedTimes.Init(1, false);
 		id->myFrames.Add(frame);
 	}
 
