@@ -28,8 +28,8 @@ namespace MC_Algorithm
 	template <typename T, typename U=T>
 	struct StandardComparer
 	{
-		inline bool LessThan(const T& a, const U& b) const { return a < b; }
-		inline bool Equals(const T& a, const U& b) const { return a == b; }
+		static bool LessThan(const T& a, const U& b) { return a < b; }
+		static bool Equals(const T& a, const U& b) { return a == b; }
 	};
 
 	template <typename T>
@@ -130,33 +130,14 @@ namespace MC_Algorithm
 	//
 	// Sort
 	//
-
-	template <typename ITERATOR, typename COMPARER>
-	inline void Sort(ITERATOR aFirst, ITERATOR aLast, COMPARER& aComparer)
-	{
-		if(aFirst+1 > aLast)	// Bail if one item or less
-			return;
-
-		SortInternal(*aFirst, aFirst, aLast, aComparer);
-	}
-
+	
 	template <typename ITERATOR>
 	inline void Sort(ITERATOR aFirst, ITERATOR aLast)
 	{
 		if(aFirst+1 > aLast)	// Bail if one item or less
 			return;
 
-		SortInternal(*aFirst, aFirst, aLast, MakeStandardComparer(*aFirst));
-	}
-
-	template <typename ITERATOR, typename COMPARER>
-	inline void SortReverse(ITERATOR aFirst, ITERATOR aLast, COMPARER& aComparer)
-	{
-		if(aFirst+1 > aLast)	// Bail if one item or less
-			return;
-
-		SortInternal(*aFirst, aFirst, aLast, aComparer);
-		Reverse(aFirst, aLast);
+		SortInternal(*aFirst, aFirst, aLast);
 	}
 
 	template <typename ITERATOR>
@@ -165,12 +146,12 @@ namespace MC_Algorithm
 		if(aFirst+1 > aLast)	// Bail if one item or less
 			return;
 
-		SortInternal(*aFirst, aFirst, aLast, MakeStandardComparer(*aFirst));
+		SortInternal(*aFirst, aFirst, aLast);
 		Reverse(aFirst, aLast);
 	}
 
-	template <typename T, typename ITERATOR, typename COMPARER>
-	inline void SortInternal(const T&, ITERATOR aFirst, ITERATOR aLast, COMPARER& aComparer)
+	template <typename T, typename ITERATOR>
+	inline void SortInternal(const T&, ITERATOR aFirst, ITERATOR aLast)
 	{
 		const int TEMP_BUFFER_SIZE = 128*1024;
 		char tempBufData[TEMP_BUFFER_SIZE];
@@ -185,14 +166,14 @@ namespace MC_Algorithm
 		for(int i=0; i<maxTempElements; ++i)
 			new (tempBuf+i) T;
 
-		SortInternal_MergeSort(aFirst, aLast, tempBuf, maxTempElements, aComparer);
+		SortInternal_MergeSort(aFirst, aLast, tempBuf, maxTempElements);
 
 		for(int i=0; i<maxTempElements; ++i)
 			(tempBuf+i)->~T();
 	}
 
-	template <typename T, typename ITERATOR, typename COMPARER>
-	inline void SortInternal_MergeSort(ITERATOR aFirst, ITERATOR aLast, T* __restrict const tempBuf, const int maxTempElements, COMPARER& aComparer)
+	template <typename T, typename ITERATOR, typename COMPARATOR = StandardComparer<T>>
+	inline void SortInternal_MergeSort(ITERATOR aFirst, ITERATOR aLast, T* __restrict const tempBuf, const int maxTempElements)
 	{
 		if( aLast - aFirst > 8 )
 		{
@@ -200,15 +181,15 @@ namespace MC_Algorithm
 			ITERATOR mid = aFirst + ((Diff(aFirst, aLast) - 1) / 2);
 
 			// Sort each half
-			SortInternal_MergeSort(aFirst, mid, tempBuf, maxTempElements, aComparer);
-			SortInternal_MergeSort(mid, aLast, tempBuf, maxTempElements, aComparer);
+			SortInternal_MergeSort(aFirst, mid, tempBuf, maxTempElements);
+			SortInternal_MergeSort(mid, aLast, tempBuf, maxTempElements);
 
 			// Return early if there is no need to merge
-			if(aComparer.LessThan(*(mid-1), *mid))
+			if(COMPARATOR::LessThan(*(mid-1), *mid))
 				return;
 
 			// And then merge them
-			SortInternal_Merge(aFirst, mid, aLast, tempBuf, maxTempElements, aComparer);
+			SortInternal_Merge(aFirst, mid, aLast, tempBuf, maxTempElements);
 		}
 		else
 		{
@@ -220,12 +201,12 @@ namespace MC_Algorithm
 				bool done = true;
 				for( ITERATOR i=aFirst; i<lastValid; ++i )
 				{
-					if( aComparer.LessThan(*(i+1), *i) )
+					if(COMPARATOR::LessThan(*(i+1), *i) )
 					{
 						done = false;
 						temp = *i;;
 						*i = *(i+1);
-						while(i+1 < lastValid && aComparer.LessThan(*(i+2), temp))
+						while(i+1 < lastValid && COMPARATOR::LessThan(*(i+2), temp))
 						{
 							*(i+1) = *(i+2);
 							++i;
@@ -240,12 +221,12 @@ namespace MC_Algorithm
 				done = true;
 				for( ITERATOR i=aLast-1; i>aFirst; --i )
 				{
-					if( aComparer.LessThan(*i, *(i-1)) )
+					if(COMPARATOR::LessThan(*i, *(i-1)) )
 					{
 						done = false;
 						temp = *i;
 						*i = *(i-1);
-						while(i-1 > aFirst && aComparer.LessThan(temp, *(i-2)))
+						while(i-1 > aFirst && COMPARATOR::LessThan(temp, *(i-2)))
 						{
 							*(i-1) = *(i-2);
 							--i;
@@ -260,8 +241,8 @@ namespace MC_Algorithm
 		}
 	}
 
-	template <typename T, typename ITERATOR, typename COMPARER>
-	inline void SortInternal_Merge(ITERATOR aFirst, ITERATOR aMid, ITERATOR aLast, T* __restrict const tempBuf, const int maxTempElements, COMPARER& aComparer)
+	template <typename T, typename ITERATOR, typename COMPARATOR = StandardComparer<T>>
+	inline void SortInternal_Merge(ITERATOR aFirst, ITERATOR aMid, ITERATOR aLast, T* __restrict const tempBuf, const int maxTempElements)
 	{
 		int tempHead = 0;
 		int tempTail = 0;
@@ -278,7 +259,7 @@ namespace MC_Algorithm
 		{
 			while(a1 < b1 && (a1 <= a2 || tempCount))
 			{
-				if( b1 <= b2 && aComparer.LessThan(*b1, (tempCount ? tempBuf[tempTail] : *a1)) )
+				if( b1 <= b2 && COMPARATOR::LessThan(*b1, (tempCount ? tempBuf[tempTail] : *a1)) )
 				{
 					if(a1 > a2)
 					{
@@ -361,7 +342,7 @@ namespace MC_Algorithm
 			tempTail = maxTempElements-1;
 			while(a1 < b1 && (a1 <= a2 || tempCount))
 			{
-				if( b1 <= b2 && aComparer.LessThan(*b1, (tempCount ? tempBuf[tempTail] : *a1)) )
+				if( b1 <= b2 && COMPARATOR::LessThan(*b1, (tempCount ? tempBuf[tempTail] : *a1)) )
 				{
 					if(a1 > a2)
 					{
