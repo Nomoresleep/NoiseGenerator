@@ -34,6 +34,8 @@ public:
         Heapify(0);
         return result;
     }
+
+    bool IsEmpty() const { return myData.Count() == 0; }
 protected:
 
     static s32 Parent(s32 aChildIndex) { return aChildIndex / 2; }
