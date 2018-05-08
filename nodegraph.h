@@ -97,7 +97,7 @@ class NodeGraph
 {
 public:
 	NodeGraph()
-		: myNodes(32, 32){}
+		: myNodes(32){}
 
 	bool ContainsNodeOfName(const char* aNodeName)
 	{
@@ -173,7 +173,7 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
     for (float y = fmodf(scrolling.y, GRID_SZ); y < canvas_sz.y; y += GRID_SZ)
         draw_list->AddLine(MC_Vector2f(0.0f, y) + win_pos, MC_Vector2f(canvas_sz.x, y) + win_pos, GRID_COLOR);
 	
-	MC_GrowingArray<InputPort*> connections(32, 32);
+	MC_GrowingArray<InputPort*> connections(32);
     bool connection_port_mismatch = false;
     bool connection_port_match = false;
 

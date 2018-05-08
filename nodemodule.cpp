@@ -2,7 +2,7 @@
 #include "nodegraph.h"
 
 MC_HashMap<const char*, NodesModule::NodeCreationData> NodesModule::ourRegisteredNodes;
-MC_GrowingArray<const char*> NodesModule::ourRegisteredNodesNames(32, 32);
+MC_GrowingArray<const char*> NodesModule::ourRegisteredNodesNames(32);
 
 bool NodeComparer::Equals(Node* aNode, const char* nodeName)
 {

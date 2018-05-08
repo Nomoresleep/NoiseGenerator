@@ -17,6 +17,21 @@ bool InputPort::TryConnect(OutputPort* aConnectedPort)
 	return !result;
 }
 
+bool Node::HasInputs() const
+{
+    bool hasInputs = false;
+    for (s32 inPortIdx = 0; inPortIdx < myInputs.Count(); ++inPortIdx)
+    {
+        InputPort* inPort = myInputs[inPortIdx];
+        if (inPort->myConnectedPort != nullptr)
+        {
+            hasInputs = true;
+            break;
+        }
+    }
+    return hasInputs;
+}
+
 void Node::AddInputPort(InputPort* anInputPort)
 {
 	myInputs.Add(anInputPort);

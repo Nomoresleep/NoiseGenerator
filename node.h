@@ -83,7 +83,7 @@ struct OutputPort
     OutputPort(Node* aNode, PortType aPortType)
         : myType(aPortType)
         , myNode(aNode)
-        , myConnectedInputs(8, 8)
+        , myConnectedInputs(8)
     {};
 
     Node* myNode;
@@ -119,8 +119,10 @@ public:
         : myID(id)
         , myLabel(name)
         , myPosition(pos)
-        , myOutputs(8, 8)
-        , myInputs(8, 8){};
+        , myOutputs(8)
+        , myInputs(8){};
+
+    bool HasInputs() const;
 
     const char* myLabel;
     int myID;
