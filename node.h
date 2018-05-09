@@ -2,6 +2,7 @@
 
 #include <math.h> // fmodf
 #include "MC_GrowingArray.h"
+#include "MC_String.h"
 #include "MC_ScopedPtr.h"
 #include "MC_Vector.h"
 #include "MC_Pair.h"
@@ -14,7 +15,7 @@ static const f32 NODE_PROPERTY_WIDTH = 120.0f;
 
 struct GraphRunnerContext
 {
-    
+    MC_GrowingArray<MC_String> myGeneratedSource;
 };
 
 class PropertyBase
@@ -127,7 +128,7 @@ public:
         , myOutputs(8)
         , myInputs(8){};
 
-    virtual void OnTraverse(GraphRunnerContext* aGraphRunnerContext) = 0;
+    virtual void OnTraverse(GraphRunnerContext* aGraphRunnerContext) const = 0;
     u32 ConnectedInputCount() const;
 
     const char* myLabel;
@@ -136,8 +137,8 @@ public:
     MC_Vector2f myPosition;
     MC_Vector2f mySize;
 
-	MC_GrowingArray<MC_ScopedPtr<OutputPort>> myOutputs;
-	MC_GrowingArray<MC_ScopedPtr<InputPort>> myInputs;
+	MC_GrowingArray<OutputPort*> myOutputs;
+	MC_GrowingArray<InputPort*> myInputs;
 protected:
     void AddInputPort(InputPort* anInputPort);
     void AddOutputPort(OutputPort* anOutputPort);

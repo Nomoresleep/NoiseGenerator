@@ -11,7 +11,7 @@
 #include "workspace.h"
 #include "dialogs.h"
 #include "filedialog.h"
-
+#include "graphrunner.h"
 #include "nodegraph.h"
 
 #pragma comment(lib, "MCommon.lib")
@@ -108,6 +108,12 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
     iniFile.SetUInt("WindowWidth", window->width);
     iniFile.SetUInt("WindowHeight", window->height);
     iniFile.WriteToFile();
+
+    if (theWorkspace)
+    {
+        GraphRunner runner(theWorkspace->myNodegraph);
+        runner.Run();
+    }
 
 	static bool openContextMenu = false;
 	if (!imgui_window_begin(window, "NoiseGenerator", &openContextMenu))

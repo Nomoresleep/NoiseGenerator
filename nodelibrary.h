@@ -12,7 +12,7 @@ public:
         AddOutputPort(new OutputPort(this, GetPortType<Type>()));
     };
 
-    void OnTraverse(GraphRunnerContext* aGraphRunnerContext) override {};
+    void OnTraverse(GraphRunnerContext* aGraphRunnerContext) const override;
 };
 
 class ResultNode : public Node
@@ -24,7 +24,22 @@ public:
         AddInputPort(new InputPort(this, FloatPort, nullptr));
     };
 
-    void OnTraverse(GraphRunnerContext* aGraphRunnerContext) override {};
+    void OnTraverse(GraphRunnerContext* aGraphRunnerContext) const override 
+    {
+        if (myInputs[0]->myConnectedPort)
+        {
+            MC_String source;
+            const Node* connectedNode = myInputs[0]->myConnectedPort->myNode;
+            s32 nodeID = connectedNode->myID;
+            s32 outputIndex = connectedNode->myOutputs.Find(myInputs[0]->myConnectedPort);
+            source.Format("float result = node_%d_%d;\n", nodeID, outputIndex);
+            aGraphRunnerContext->myGeneratedSource.Add(source);
+        }
+        else
+        {
+            aGraphRunnerContext->myGeneratedSource.Add("float result = 0.0;\n");
+        }
+    };
 };
 
 struct PerlinNoiseConstants
@@ -49,7 +64,10 @@ public:
 		AddOutputPort(new OutputPort(this, PortType::FloatPort));
 	}
 
-    void OnTraverse(GraphRunnerContext* aGraphRunnerContext) override {};
+    void OnTraverse(GraphRunnerContext* aGraphRunnerContext) const override 
+    {
+    
+    };
 private:
 	PerlinNoiseConstants myConstants;
 };
