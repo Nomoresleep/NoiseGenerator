@@ -122,7 +122,7 @@ public:
         , myOutputs(8)
         , myInputs(8){};
 
-    bool HasInputs() const;
+    u32 ConnectedInputCount() const;
 
     const char* myLabel;
     int myID;
