@@ -19,6 +19,7 @@ public:
     void Run()
     {
         MC_BinaryHeap<Node*, NodeComparator> pqueue(myNodegraph->myNodes.Count());
+        GraphRunnerContext runnerContext;
 
         for (s32 nodeIdx = 0; nodeIdx < myNodegraph->myNodes.Count(); ++nodeIdx)
         {
@@ -30,7 +31,7 @@ public:
         while (!pqueue.IsEmpty())
         {
             Node* node = pqueue.Pop();
-            //node->Run();
+            node->OnTraverse(&runnerContext);
             for (s32 outPortIdx = 0; outPortIdx < node->myOutputs.Count(); ++outPortIdx)
             {
                 OutputPort* outPort = node->myOutputs[outPortIdx];

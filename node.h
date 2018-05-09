@@ -12,6 +12,11 @@ static const MC_Vector2f NODE_PORT_SIZE = MC_Vector2f(2.0f * NODE_SLOT_RADIUS, 2
 static const MC_Vector2f NODE_WINDOW_PADDING = MC_Vector2f(8.0f, 4.0f);
 static const f32 NODE_PROPERTY_WIDTH = 120.0f;
 
+struct GraphRunnerContext
+{
+    
+};
+
 class PropertyBase
 {
 public:
@@ -122,6 +127,7 @@ public:
         , myOutputs(8)
         , myInputs(8){};
 
+    virtual void OnTraverse(GraphRunnerContext* aGraphRunnerContext) = 0;
     u32 ConnectedInputCount() const;
 
     const char* myLabel;

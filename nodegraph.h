@@ -1,3 +1,5 @@
+#pragma once 
+
 #include <math.h> // fmodf
 #include "MC_GrowingArray.h"
 #include "MC_StackList.h"
@@ -8,27 +10,7 @@
 #include "imgui.h"
 #include "node.h"
 #include "nodemodule.h"
-#include "image_subpass.h"
-
-template <typename Type>
-class ConstantNode : public Node
-{
-public:
-    ConstantNode(int id, const char* name, const MC_Vector2f& pos)
-        : Node(id, name, pos) {
-        AddOutputPort(new OutputPort(this, GetPortType<Type>()));
-    };
-};
-
-class ResultNode : public Node
-{
-public:
-    ResultNode(int anID, const char* aLabel, const MC_Vector2f& aPosition)
-        : Node(anID, aLabel, aPosition)
-    {
-        AddInputPort(new InputPort(this, FloatPort, nullptr));
-    };
-};
+#include "nodelibrary.h"
 
 static OutputPort* g_draggedOutput = nullptr;
 
@@ -129,15 +111,6 @@ public:
 
 	MC_GrowingArray<MC_ScopedPtr<Node>> myNodes;
 };
-
-static void locRegisterNodeTypes()
-{
-	RegisterNodeType<ConstantNode<f32>>("Constants/FloatConstantNode");
-	RegisterNodeType<ConstantNode<s32>>("Constants/IntConstantNode");
-	RegisterNodeType<ConstantNode<u32>>("Constants/UIntConstantNode");
-	RegisterNodeType<PerlinNoise2D>("PerlinNoise2D");
-	RegisterNodeType<ResultNode>("ResultNode", true);
-}
 
 static void ShowNodeGraph(NodeGraph* aNodeGraph)
 {
