@@ -86,17 +86,18 @@ class Node;
 
 struct OutputPort
 {
-    OutputPort(Node* aNode, PortType aPortType)
+    OutputPort(Node* aNode, PortType aPortType, PropertyBase* aPortProperty)
         : myType(aPortType)
         , myNode(aNode)
+		, myProperty(aPortProperty)
         , myConnectedInputs(8)
     {};
 
     Node* myNode;
-    MC_GrowingArray<InputPort*> myConnectedInputs;
-    PortData myData;
+	MC_ScopedPtr<PropertyBase> myProperty;
     const PortType myType;
 	MC_Vector2f myPosition;
+	MC_GrowingArray<InputPort*> myConnectedInputs;
 };
 
 struct InputPort

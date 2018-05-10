@@ -9,10 +9,12 @@ class ConstantNode : public Node
 public:
     ConstantNode(int id, const char* name, const MC_Vector2f& pos)
         : Node(id, name, pos) {
-        AddOutputPort(new OutputPort(this, GetPortType<Type>()));
+        AddOutputPort(new OutputPort(this, GetPortType<Type>(), new Property<Type>(&myConstant, Type(0), Type(1))));
     };
 
     void OnTraverse(GraphRunnerContext* aGraphRunnerContext) const override;
+
+	Type myConstant;
 };
 
 class ResultNode : public Node
@@ -61,7 +63,7 @@ public:
 
 		//Add Properties
 
-		AddOutputPort(new OutputPort(this, PortType::FloatPort));
+		AddOutputPort(new OutputPort(this, PortType::FloatPort, nullptr));
 	}
 
     void OnTraverse(GraphRunnerContext* aGraphRunnerContext) const override 

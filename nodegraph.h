@@ -57,7 +57,7 @@ static void locDrawNode(ImDrawList* aDrawList, Node* aNode, MC_Vector2f anOffset
 	for (s32 slot_idx = 0; slot_idx < aNode->myOutputs.Count(); slot_idx++)
 	{
 		OutputPort* port = aNode->myOutputs[slot_idx];
-		MC_Vector2f portPos = MC_Vector2f(rect_min.x + aNode->mySize.x - NODE_SLOT_RADIUS, rect_min.y + NODE_WINDOW_PADDING.y * 2.0f + ImGui::GetTextLineHeight() + ImGui::GetItemsLineHeightWithSpacing() * (f32)slot_idx);
+		MC_Vector2f portPos = port->myPosition - MC_Vector2f(NODE_SLOT_RADIUS, NODE_SLOT_RADIUS);
 		ImGui::SetCursorScreenPos(portPos);
 
 		locDrawPort(aDrawList, portPos, GetColorFromPortType(port->myType));
@@ -67,7 +67,7 @@ static void locDrawNode(ImDrawList* aDrawList, Node* aNode, MC_Vector2f anOffset
 	for (s32 slot_idx = 0; slot_idx < aNode->myInputs.Count(); slot_idx++)
 	{
 		InputPort* port = aNode->myInputs[slot_idx];
-		MC_Vector2f portPos = MC_Vector2f(rect_min.x - NODE_SLOT_RADIUS, rect_min.y + NODE_WINDOW_PADDING.y * 2.0f + ImGui::GetTextLineHeight() + ImGui::GetItemsLineHeightWithSpacing() * (f32)slot_idx);
+		MC_Vector2f portPos = port->myPosition - MC_Vector2f(NODE_SLOT_RADIUS, NODE_SLOT_RADIUS);
 		ImGui::SetCursorScreenPos(portPos);
 
 		locDrawPort(aDrawList, portPos, GetColorFromPortType(port->myType));
@@ -150,6 +150,8 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
     bool connection_port_mismatch = false;
     bool connection_port_match = false;
 
+	const f32 headerHeight = ImGui::GetTextLineHeight() + NODE_WINDOW_PADDING.y * 2.0f;
+
 	draw_list->ChannelsSplit(3);
 
 	draw_list->ChannelsSetCurrent(0);
@@ -166,11 +168,11 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
 		for (s32 slot_idx = 0; slot_idx < node->myOutputs.Count(); slot_idx++)
 		{
 			OutputPort* port = node->myOutputs[slot_idx];
-			MC_Vector2f portPos = MC_Vector2f(rect_min.x + node->mySize.x - NODE_SLOT_RADIUS, rect_min.y + NODE_WINDOW_PADDING.y * 2.0f + ImGui::GetTextLineHeight() + ImGui::GetItemsLineHeightWithSpacing() * (f32)slot_idx);
-			ImGui::SetCursorScreenPos(portPos);
+			port->myPosition = MC_Vector2f(rect_min.x + node->mySize.x - NODE_SLOT_RADIUS, rect_min.y + headerHeight + ImGui::GetStyle().ItemSpacing.y + ImGui::GetItemsLineHeightWithSpacing() * (slot_idx + node->myInputs.Count()));
+			ImGui::SetCursorScreenPos(port->myPosition);
 			ImGui::InvisibleButton("##output", NODE_PORT_SIZE);
 			
-			MC_Vector2f buttonCenter = portPos + MC_Vector2f(NODE_SLOT_RADIUS, NODE_SLOT_RADIUS);
+			MC_Vector2f buttonCenter = port->myPosition + MC_Vector2f(NODE_SLOT_RADIUS, NODE_SLOT_RADIUS);
 			port->myPosition = buttonCenter;
 
 			if (ImGui::IsItemActive())
@@ -182,11 +184,11 @@ static void ShowNodeGraph(NodeGraph* aNodeGraph)
 		for (s32 slot_idx = 0; slot_idx < node->myInputs.Count(); slot_idx++)
 		{
 			InputPort* port = node->myInputs[slot_idx];
-			MC_Vector2f portPos = MC_Vector2f(rect_min.x - NODE_SLOT_RADIUS, rect_min.y + NODE_WINDOW_PADDING.y * 2.0f + ImGui::GetTextLineHeight() + ImGui::GetItemsLineHeightWithSpacing() * (f32)slot_idx);
-			ImGui::SetCursorScreenPos(portPos);
+			port->myPosition = MC_Vector2f(rect_min.x - NODE_SLOT_RADIUS, rect_min.y + headerHeight + ImGui::GetStyle().ItemSpacing.y + ImGui::GetItemsLineHeightWithSpacing() * (f32)slot_idx);
+			ImGui::SetCursorScreenPos(port->myPosition);
 			ImGui::InvisibleButton("##input", NODE_PORT_SIZE);
 
-			MC_Vector2f buttonCenter = portPos + MC_Vector2f(NODE_SLOT_RADIUS, NODE_SLOT_RADIUS);
+			MC_Vector2f buttonCenter = port->myPosition + MC_Vector2f(NODE_SLOT_RADIUS, NODE_SLOT_RADIUS);
 			const bool hovered = ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly);
 			if (hovered)
 			{
