@@ -15,7 +15,7 @@ struct NodeComparer
 
 struct NodesModule
 {
-	typedef Node*(*NodeCreationFunction)(s32 aNodeID, const char* aNodeName, const MC_Vector2f& aPosition);
+	typedef Node*(*NodeCreationFunction)();
 	struct NodeCreationData
 	{
 		NodeCreationFunction myCreationFunction;
@@ -41,8 +41,8 @@ struct RegisterNodeType
 
 private:
 	//avoid ugly lamdas!
-    static Node* Create(s32 aNodeID, const char* nodeName, const MC_Vector2f& aPosition) {
-		Type* newNode = new Type(aNodeID, nodeName, aPosition);
+    static Node* Create() {
+		Type* newNode = new Type();
 		return newNode;
 	}
 };

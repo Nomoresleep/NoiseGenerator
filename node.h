@@ -15,58 +15,9 @@ static const f32 NODE_PROPERTY_WIDTH = 120.0f;
 
 struct GraphRunnerContext
 {
+	u32 myNodesTraversed;
     MC_GrowingArray<MC_String> myGeneratedSource;
 };
-
-class PropertyBase
-{
-public:
-	virtual void Render() = 0;
-};
-
-template <typename T>
-class Property : public PropertyBase
-{
-public:
-	Property(T* aValueAddress, T aMin, T aMax)
-		: myMin(aMin)
-		, myMax(aMax)
-		, myValue(aValueAddress) {}
-
-	void Render() override;
-
-	void Set(T aValue) { *myValue = MC_Min(myMax, MC_Max(myMin, aValue)); }
-	const T& Get() const { return *myValue; }
-	
-	T* myValue;
-	T myMin, myMax;
-};
-
-template <typename T>
-static void locRenderDrag(Property<T>* aProperty);
-
-template <>
-static void locRenderDrag<f32>(Property<f32>* aProperty)
-{
-	ImGui::DragFloatProgress("Test Label##awinqwfpi", aProperty->myValue, 0.001f, aProperty->myMin, aProperty->myMax);
-}
-
-template <>
-static void locRenderDrag<s32>(Property<s32>* aProperty)
-{
-	ImGui::DragInt("##knawlfn", aProperty->myValue, 1.0f, aProperty->myMin, aProperty->myMax);
-}
-
-template <>
-static void locRenderDrag<u32>(Property<u32>* aProperty)
-{
-	s32 propertyValue = (s32)*aProperty->myValue;
-	ImGui::DragInt("##knawlfn", &propertyValue, 1.0f, MC_Max(0u, aProperty->myMin), aProperty->myMax);
-	*aProperty->myValue = (u32)propertyValue;
-}
-
-template <typename T>
-void Property<T>::Render() { locRenderDrag(this); }
 
 enum PortType
 {
@@ -77,8 +28,9 @@ enum PortType
 
 union PortData
 {
-    float myFloatData;
-    int myIntPortData;
+    f32 myFloatData;
+    s32 myIntPortData;
+	u32 myUIntPortData;
 };
 
 struct InputPort;
@@ -86,34 +38,31 @@ class Node;
 
 struct OutputPort
 {
-    OutputPort(Node* aNode, PortType aPortType, PropertyBase* aPortProperty)
+    OutputPort(Node* aNode, PortType aPortType)
         : myType(aPortType)
         , myNode(aNode)
-		, myProperty(aPortProperty)
         , myConnectedInputs(8)
     {};
 
     Node* myNode;
-	MC_ScopedPtr<PropertyBase> myProperty;
     const PortType myType;
+	PortData myData;
 	MC_Vector2f myPosition;
 	MC_GrowingArray<InputPort*> myConnectedInputs;
 };
 
 struct InputPort
 {
-	InputPort(Node* aNode, PortType aPortType, PropertyBase* aPortProperty)
+	InputPort(Node* aNode, PortType aPortType)
 		: myType(aPortType)
         , myNode(aNode)
         , myConnectedPort(nullptr)
-		, myProperty(aPortProperty)
     {}
 
     void Connect(OutputPort* aConnectedPort);
 	bool TryConnect(OutputPort* aConnectedPort);
 
     Node* myNode;
-	MC_ScopedPtr<PropertyBase> myProperty;
     const PortType myType;
 	MC_Vector2f myPosition;
     OutputPort* myConnectedPort;
@@ -122,28 +71,18 @@ struct InputPort
 class Node
 {
 public:
-    Node(int id, const char* name, const MC_Vector2f& pos)
-        : myID(id)
-        , myLabel(name)
-        , myPosition(pos)
-        , myOutputs(8)
+    Node()
+        : myOutputs(8)
         , myInputs(8){};
 
     virtual void OnTraverse(GraphRunnerContext* aGraphRunnerContext) const = 0;
     u32 ConnectedInputCount() const;
-
-    const char* myLabel;
-    int myID;
-
-    MC_Vector2f myPosition;
-    MC_Vector2f mySize;
 
 	MC_GrowingArray<OutputPort*> myOutputs;
 	MC_GrowingArray<InputPort*> myInputs;
 protected:
     void AddInputPort(InputPort* anInputPort);
     void AddOutputPort(OutputPort* anOutputPort);
-    void CalculateSize();
 };
 
 
@@ -168,6 +107,8 @@ static ImU32 GetColorFromPortType(PortType aType)
         return IM_COL32(0, 95, 0, 255);
     case IntPort:
         return IM_COL32(66, 150, 250, 255);
+	case UIntPort:
+		return IM_COL32(0, 0, 0, 255);
     }
     return IM_COL32(255, 255, 255, 255);
 }

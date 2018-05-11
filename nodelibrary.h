@@ -7,9 +7,9 @@ template <typename Type>
 class ConstantNode : public Node
 {
 public:
-    ConstantNode(int id, const char* name, const MC_Vector2f& pos)
-        : Node(id, name, pos) {
-        AddOutputPort(new OutputPort(this, GetPortType<Type>(), new Property<Type>(&myConstant, Type(0), Type(1))));
+    ConstantNode()
+	{
+        AddOutputPort(new OutputPort(this, GetPortType<Type>()));
     };
 
     void OnTraverse(GraphRunnerContext* aGraphRunnerContext) const override;
@@ -20,10 +20,9 @@ public:
 class ResultNode : public Node
 {
 public:
-    ResultNode(int anID, const char* aLabel, const MC_Vector2f& aPosition)
-        : Node(anID, aLabel, aPosition)
+    ResultNode()
     {
-        AddInputPort(new InputPort(this, FloatPort, nullptr));
+        AddInputPort(new InputPort(this, FloatPort));
     };
 
     void OnTraverse(GraphRunnerContext* aGraphRunnerContext) const override 
@@ -32,14 +31,11 @@ public:
         {
             MC_String source;
             const Node* connectedNode = myInputs[0]->myConnectedPort->myNode;
-            s32 nodeID = connectedNode->myID;
+			//TODO: fix node ids
+            s32 nodeID = 0;
             s32 outputIndex = connectedNode->myOutputs.Find(myInputs[0]->myConnectedPort);
-            source.Format("float result = node_%d_%d;\n", nodeID, outputIndex);
+            source.Format("result = node_%d_%d;\n", nodeID, outputIndex);
             aGraphRunnerContext->myGeneratedSource.Add(source);
-        }
-        else
-        {
-            aGraphRunnerContext->myGeneratedSource.Add("float result = 0.0;\n");
         }
     };
 };
@@ -54,16 +50,15 @@ struct PerlinNoiseConstants
 class PerlinNoise2D : public Node
 {
 public:
-	PerlinNoise2D(int anID, const char* aName, const MC_Vector2f& aPosition)
-		: Node(anID, aName, aPosition)
+	PerlinNoise2D()
 	{
-		AddInputPort(new InputPort(this, PortType::FloatPort, new Property<f32>(&myConstants.myFrequency, 0.0f, 20.0f)));
-		AddInputPort(new InputPort(this, PortType::FloatPort, new Property<f32>(&myConstants.myAmplitude, -2.0f, 2.0f)));
-		AddInputPort(new InputPort(this, PortType::UIntPort, new Property<u32>(&myConstants.mySeed, 0, U32_MAX)));
+		AddInputPort(new InputPort(this, PortType::FloatPort));
+		AddInputPort(new InputPort(this, PortType::FloatPort));
+		AddInputPort(new InputPort(this, PortType::UIntPort));
 
 		//Add Properties
 
-		AddOutputPort(new OutputPort(this, PortType::FloatPort, nullptr));
+		AddOutputPort(new OutputPort(this, PortType::FloatPort));
 	}
 
     void OnTraverse(GraphRunnerContext* aGraphRunnerContext) const override 

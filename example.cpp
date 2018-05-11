@@ -13,8 +13,10 @@
 #include "filedialog.h"
 #include "graphrunner.h"
 #include "nodegraph.h"
+#include "Editor_NodeEditor.h"
 
 #pragma comment(lib, "MCommon.lib")
+#pragma comment(lib, "Editor.lib")
 #pragma comment(lib, "Dbghelp.lib")
 
 static f32 zoom = 1.0f;
@@ -111,7 +113,7 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 
     if (theWorkspace)
     {
-        GraphRunner runner(theWorkspace->myNodegraph);
+        GraphRunner runner(theWorkspace->myNodeGraph);
         runner.Run();
     }
 
@@ -132,7 +134,7 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
         ImGui::Columns(2);
         locShowTexturePreview();
         ImGui::NextColumn();
-        ShowNodeGraph(theWorkspace->myNodegraph);
+		theWorkspace->myNodeEditor->Display();
     }
 	imgui_window_end();
 }
