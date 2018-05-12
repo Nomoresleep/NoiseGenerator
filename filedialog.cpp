@@ -2,7 +2,7 @@
 #include "MCommon/mf_file.h"
 #include "MCommon/MC_SystemPaths.h"
 #include "dialogs.h"
-#include "imgui.h"
+#include "imgui/imgui.h"
 #include <Shlwapi.h>
 #pragma comment(lib, "Shlwapi.lib")
 

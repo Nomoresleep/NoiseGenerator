@@ -4,7 +4,7 @@
 #include "mf_file.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
+#include "stb/stb_image_write.h"
 
 Workspace* theWorkspace = nullptr;
 

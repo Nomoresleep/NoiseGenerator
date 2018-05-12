@@ -1,6 +1,6 @@
 #include "dialogs.h"
 #include "workspace.h"
-#include "imgui.h"
+#include "imgui/imgui.h"
 
 void ShowNewFileDialog()
 {

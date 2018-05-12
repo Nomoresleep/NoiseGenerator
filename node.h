@@ -6,7 +6,6 @@
 #include "MC_ScopedPtr.h"
 #include "MC_Vector.h"
 #include "MC_Pair.h"
-#include "imgui_custom_widgets.h"
 
 static const f32 NODE_SLOT_RADIUS = 6.0f;
 static const MC_Vector2f NODE_PORT_SIZE = MC_Vector2f(2.0f * NODE_SLOT_RADIUS, 2.0f * NODE_SLOT_RADIUS);
@@ -86,7 +85,6 @@ protected:
 };
 
 
-
 template <typename Type>
 static PortType GetPortType();
 
@@ -98,17 +96,3 @@ static PortType GetPortType<s32>() { return PortType::IntPort; }
 
 template<>
 static PortType GetPortType<u32>() { return PortType::UIntPort; }
-
-static ImU32 GetColorFromPortType(PortType aType)
-{
-    switch (aType)
-    {
-    case FloatPort:
-        return IM_COL32(0, 95, 0, 255);
-    case IntPort:
-        return IM_COL32(66, 150, 250, 255);
-	case UIntPort:
-		return IM_COL32(0, 0, 0, 255);
-    }
-    return IM_COL32(255, 255, 255, 255);
-}

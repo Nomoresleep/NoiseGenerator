@@ -4,8 +4,8 @@
 #include "borderless-window.h"
 
 #include "opengl_context.h"
-#include "imgui.h"
-#include "imgui_window.h"
+#include "imgui/imgui.h"
+#include "imgui/imgui_window.h"
 
 #include "glzl_core.hpp"
 #include "workspace.h"

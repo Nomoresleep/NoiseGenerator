@@ -1,6 +1,32 @@
 #include "Editor_NodeEditor.h"
 #include "Editor_NodeTools.h"
 
+static void locDrawBezierCurve(ImDrawList* aDrawList, MC_Vector2f aP0, MC_Vector2f aP1, ImU32 aColor)
+{
+	static const f32 CURVE_THICKNESS = 2.0f;
+	float xdist = MC_Min(50.0f, aP1.x - aP0.x);
+	aDrawList->AddBezierCurve(aP0, aP0 + MC_Vector2f(xdist, 0), aP1 + MC_Vector2f(-xdist, 0), aP1, IM_COL32(100, 100, 100, 255), CURVE_THICKNESS + 1.5f);
+	aDrawList->AddBezierCurve(aP0, aP0 + MC_Vector2f(xdist, 0), aP1 + MC_Vector2f(-xdist, 0), aP1, aColor, CURVE_THICKNESS);
+}
+
+static void locDrawPort(ImDrawList* aDrawList, MC_Vector2f aPortPos, ImU32 aColor)
+{
+	//aDrawList->AddCircleFilled(aPortPos + NODE_PORT_SIZE * 0.5f, NODE_PORT_SIZE.x * 0.5f, aColor);
+	//aDrawList->AddCircle(aPortPos + NODE_PORT_SIZE * 0.5f, NODE_PORT_SIZE.x * 0.5f, IM_COL32(200, 200, 200, 255));
+	aDrawList->AddRectFilled(aPortPos, aPortPos + NODE_PORT_SIZE, aColor);
+	aDrawList->AddRect(aPortPos, aPortPos + NODE_PORT_SIZE, IM_COL32(200, 200, 200, 255), 0.0f, ImDrawCornerFlags_All, 1.0f);
+}
+
+static void locDisplayWarning(const char* aWarningMessage)
+{
+	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(200, 170, 50, 255));
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4, 4));
+	ImGui::BeginTooltip();
+	ImGui::Text(aWarningMessage);
+	ImGui::EndTooltip();
+	ImGui::PopStyleVar();
+	ImGui::PopStyleColor();
+}
 
 static void locDrawNode(ImDrawList* aDrawList, NodeEditorProperties* aProp, MC_Vector2f anOffset)
 {

@@ -64,7 +64,7 @@ namespace ImGuiStb
 #define STB_TEXTEDIT_STRING             ImGuiTextEditState
 #define STB_TEXTEDIT_CHARTYPE           ImWchar
 #define STB_TEXTEDIT_GETWIDTH_NEWLINE   -1.0f
-#include "stb_textedit.h"
+#include "stb/stb_textedit.h"
 
 } // namespace ImGuiStb
 
