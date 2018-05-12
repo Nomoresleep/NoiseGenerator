@@ -1,22 +1,22 @@
-#include "nodegraph.h"
+#include "NG_NodeGraph.h"
 
-NodeGraph::NodeGraph()
+NG_NodeGraph::NG_NodeGraph()
 	: myNodes(32)
 {
 }
 
-bool NodeGraph::ContainsNodeOfName(const char* aNodeName)
+bool NG_NodeGraph::ContainsNodeOfName(const char* aNodeName)
 {
-	return myNodes.Find2<NodeComparer, const char*>(aNodeName, 0) != -1;
+	return myNodes.Find2<NG_NodeComparer, const char*>(aNodeName, 0) != -1;
 }
 
-bool NodeGraph::IsCyclicFromNode(Node* aNode)
+bool NG_NodeGraph::IsCyclicFromNode(NG_Node* aNode)
 {
-	MC_StackList<Node*> queue;
+	MC_StackList<NG_Node*> queue;
 	queue.Add(aNode);
 	while (!queue.IsEmpty())
 	{
-		Node* node = queue.Pop();
+		NG_Node* node = queue.Pop();
 		for (s32 outPortIdx = 0; outPortIdx < node->myOutputs.Count(); ++outPortIdx)
 		{
 			OutputPort* outPort = node->myOutputs[outPortIdx];
@@ -33,7 +33,7 @@ bool NodeGraph::IsCyclicFromNode(Node* aNode)
 	return false;
 }
 
-void NodeGraph::AddNode(Node* aNewNode, const char* aNodeName, const MC_Vector2f& aPosition)
+void NG_NodeGraph::AddNode(NG_Node* aNewNode, const char* aNodeName, const MC_Vector2f& aPosition)
 {
 	myNodes.Add(aNewNode);
 	for (s32 listenerIdx = 0; listenerIdx < myListeners.Count(); ++listenerIdx)

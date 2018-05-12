@@ -7,12 +7,12 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_window.h"
 
-#include "glzl_core.hpp"
+#include "opengl_context.h"
 #include "workspace.h"
 #include "dialogs.h"
 #include "filedialog.h"
-#include "graphrunner.h"
-#include "nodegraph.h"
+#include "NG_GraphRunner.h"
+#include "NG_NodeGraph.h"
 #include "Editor_NodeEditor.h"
 
 #pragma comment(lib, "MCommon.lib")
@@ -113,8 +113,9 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 
     if (theWorkspace)
     {
-        GraphRunner runner(theWorkspace->myNodeGraph);
+        NG_GraphRunner runner(theWorkspace->myNodeGraph);
         runner.Run();
+		theWorkspace->SetProgramSource(runner.mySource);
     }
 
 	static bool openContextMenu = false;

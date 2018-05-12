@@ -1,10 +1,10 @@
 #pragma once
 
-#include "node.h"
+#include "NG_Node.h"
 
 struct Editor_NodeProperties
 {
-	Editor_NodeProperties(Node* aNode, const char* aLabel, u32 anID, const MC_Vector2f& aPosition)
+	Editor_NodeProperties(NG_Node* aNode, const char* aLabel, u32 anID, const MC_Vector2f& aPosition)
 		: myNode(aNode)
 		, myLabel(aLabel)
 		, myID(anID)
@@ -13,7 +13,7 @@ struct Editor_NodeProperties
 		CalculateSize();
 	};
 
-	Node* myNode;
+	NG_Node* myNode;
 
 	const char* myLabel;
 	u32 myID;

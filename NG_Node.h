@@ -7,52 +7,50 @@
 #include "MC_Vector.h"
 #include "MC_Pair.h"
 
-static const f32 NODE_SLOT_RADIUS = 6.0f;
-static const MC_Vector2f NODE_PORT_SIZE = MC_Vector2f(2.0f * NODE_SLOT_RADIUS, 2.0f * NODE_SLOT_RADIUS);
-static const MC_Vector2f NODE_WINDOW_PADDING = MC_Vector2f(8.0f, 4.0f);
-static const f32 NODE_PROPERTY_WIDTH = 120.0f;
+struct InputPort;
+class NG_Node;
 
-struct GraphRunnerContext
+struct NG_GraphRunnerContext
 {
 	u32 myNodesTraversed;
     MC_GrowingArray<MC_String> myGeneratedSource;
 };
 
-enum PortType
+struct NG_Port
 {
-    FloatPort,
-    IntPort,
-	UIntPort,
-};
+	enum Type
+	{
+		FloatPort,
+		IntPort,
+		UIntPort,
+	};
 
-union PortData
-{
-    f32 myFloatData;
-    s32 myIntPortData;
-	u32 myUIntPortData;
+	union Data
+	{
+		f32 myFloatData;
+		s32 myIntPortData;
+		u32 myUIntPortData;
+	};
 };
-
-struct InputPort;
-class Node;
 
 struct OutputPort
 {
-    OutputPort(Node* aNode, PortType aPortType)
+    OutputPort(NG_Node* aNode, NG_Port::Type aPortType)
         : myType(aPortType)
         , myNode(aNode)
         , myConnectedInputs(8)
     {};
 
-    Node* myNode;
-    const PortType myType;
-	PortData myData;
+	NG_Node* myNode;
+    const NG_Port::Type myType;
+	NG_Port::Data myData;
 	MC_Vector2f myPosition;
 	MC_GrowingArray<InputPort*> myConnectedInputs;
 };
 
 struct InputPort
 {
-	InputPort(Node* aNode, PortType aPortType)
+	InputPort(NG_Node* aNode, NG_Port::Type aPortType)
 		: myType(aPortType)
         , myNode(aNode)
         , myConnectedPort(nullptr)
@@ -61,20 +59,20 @@ struct InputPort
     void Connect(OutputPort* aConnectedPort);
 	bool TryConnect(OutputPort* aConnectedPort);
 
-    Node* myNode;
-    const PortType myType;
+	NG_Node* myNode;
+    const NG_Port::Type myType;
 	MC_Vector2f myPosition;
     OutputPort* myConnectedPort;
 };
 
-class Node
+class NG_Node
 {
 public:
-    Node()
+	NG_Node()
         : myOutputs(8)
         , myInputs(8){};
 
-    virtual void OnTraverse(GraphRunnerContext* aGraphRunnerContext) const = 0;
+    virtual void OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const = 0;
     u32 ConnectedInputCount() const;
 
 	MC_GrowingArray<OutputPort*> myOutputs;
@@ -86,13 +84,13 @@ protected:
 
 
 template <typename Type>
-static PortType GetPortType();
+static NG_Port::Type GetPortType();
 
 template<>
-static PortType GetPortType<f32>() { return PortType::FloatPort; }
+static NG_Port::Type GetPortType<f32>() { return NG_Port::FloatPort; }
 
 template<>
-static PortType GetPortType<s32>() { return PortType::IntPort; }
+static NG_Port::Type GetPortType<s32>() { return NG_Port::IntPort; }
 
 template<>
-static PortType GetPortType<u32>() { return PortType::UIntPort; }
+static NG_Port::Type GetPortType<u32>() { return NG_Port::UIntPort; }

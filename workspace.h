@@ -1,10 +1,10 @@
 #pragma once
-#include "glzl_core.hpp"
+#include "opengl_context.h"
 #include "MC_Vector.h"
 #include "MC_ScopedPtr.h"
 #include "MC_String.h"
 
-class NodeGraph;
+class NG_NodeGraph;
 class Editor_NodeEditor;
 
 #define DEPENDENCY_FILE(text) text
@@ -36,7 +36,7 @@ public:
     MC_Vector3i myImageSize;
 
 	MC_ScopedPtr<Editor_NodeEditor> myNodeEditor;
-    MC_ScopedPtr<NodeGraph> myNodeGraph;
+    MC_ScopedPtr<NG_NodeGraph> myNodeGraph;
 };
 
 extern Workspace* theWorkspace;

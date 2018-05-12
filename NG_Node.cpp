@@ -1,5 +1,5 @@
-#include "node.h"
-#include "nodegraph.h"
+#include "NG_Node.h"
+#include "NG_NodeGraph.h"
 
 void InputPort::Connect(OutputPort* aConnectedPort)
 {
@@ -12,12 +12,12 @@ bool InputPort::TryConnect(OutputPort* aConnectedPort)
 {
 	OutputPort* prevPort = myConnectedPort;
 	Connect(aConnectedPort);
-	bool result = NodeGraph::IsCyclicFromNode(myNode);
+	bool result = NG_NodeGraph::IsCyclicFromNode(myNode);
 	Connect(prevPort);
 	return !result;
 }
 
-u32 Node::ConnectedInputCount() const
+u32 NG_Node::ConnectedInputCount() const
 {
     u32 inputCount = 0;
     for (s32 inPortIdx = 0; inPortIdx < myInputs.Count(); ++inPortIdx)
@@ -31,12 +31,12 @@ u32 Node::ConnectedInputCount() const
     return inputCount;
 }
 
-void Node::AddInputPort(InputPort* anInputPort)
+void NG_Node::AddInputPort(InputPort* anInputPort)
 {
 	myInputs.Add(anInputPort);
 }
 
-void Node::AddOutputPort(OutputPort* anOutputPort)
+void NG_Node::AddOutputPort(OutputPort* anOutputPort)
 {
 	myOutputs.Add(anOutputPort);
 }

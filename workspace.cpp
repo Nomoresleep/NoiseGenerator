@@ -1,5 +1,5 @@
 #include "workspace.h"
-#include "nodegraph.h"
+#include "NG_NodeGraph.h"
 #include "Editor_NodeEditor.h"
 #include "mf_file.h"
 
@@ -21,7 +21,7 @@ Workspace::Workspace(s32 anImageWidth, s32 anImageHeight)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, myImageSize.x, myImageSize.y, 0, GL_RGBA, GL_FLOAT, 0);
     glBindImageTexture(0, myImageTextureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
-	myNodeGraph = new NodeGraph();
+	myNodeGraph = new NG_NodeGraph();
     myNodeEditor = new Editor_NodeEditor(myNodeGraph);
 	myNodeGraph->RegisterListener(myNodeEditor);
 }

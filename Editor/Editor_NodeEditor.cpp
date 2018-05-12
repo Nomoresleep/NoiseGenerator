@@ -30,7 +30,7 @@ static void locDisplayWarning(const char* aWarningMessage)
 
 static void locDrawNode(ImDrawList* aDrawList, Editor_NodeProperties* aProp, MC_Vector2f anOffset)
 {
-	Node* node = aProp->myNode;
+	NG_Node* node = aProp->myNode;
 	MC_Vector2f rect_min = anOffset + aProp->myPosition;
 	MC_Vector2f rect_max = rect_min + aProp->mySize;
 	const f32 headerHeight = ImGui::GetTextLineHeight() + NODE_WINDOW_PADDING.y * 2.0f;
@@ -119,7 +119,7 @@ void Editor_NodeEditor::Display()
 	for (s32 node_idx = myNodeRenderer.Count() - 1; node_idx >= 0; node_idx--)
 	{
 		Editor_NodeProperties* props = myNodeRenderer[node_idx];
-		Node* node = props->myNode;
+		NG_Node* node = props->myNode;
 		MC_Vector2f rect_min = offset + props->myPosition;
 		ImGui::PushID(props->myID);
 
@@ -249,16 +249,16 @@ void Editor_NodeEditor::Display()
 	if (ImGui::BeginPopup("context_menu"))
 	{
 		MC_Vector2f scene_pos = MC_Vector2f(ImGui::GetMousePosOnOpeningCurrentPopup()) - offset;
-		for (const char* str : NodesModule::ourRegisteredNodesNames)
+		for (const char* str : NG_NodesModule::ourRegisteredNodesNames)
 		{
-			NodesModule::NodeCreationData* data = NodesModule::ourRegisteredNodes.GetIfExists(str);
+			NG_NodesModule::NodeCreationData* data = NG_NodesModule::ourRegisteredNodes.GetIfExists(str);
 			if (!data)
 				continue;
 
 			bool enabled = !data->myIsSingleton || !myGraph->ContainsNodeOfName(str);
 			if (ImGui::MenuItem(str, 0, false, enabled))
 			{
-				NodesModule::Create(myGraph, str, scene_pos);
+				NG_NodesModule::Create(myGraph, str, scene_pos);
 			}
 		}
 		ImGui::EndPopup();
@@ -272,12 +272,12 @@ void Editor_NodeEditor::Display()
 	ImGui::EndGroup();
 }
 
-void Editor_NodeEditor::OnNodeAdded(Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition)
+void Editor_NodeEditor::OnNodeAdded(NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition)
 {
 	myNodeRenderer.Add(new Editor_NodeProperties(aNode, aNodeLabel, aNodeUID, aPosition));
 }
 
-void Editor_NodeEditor::OnNodeRemoved(Node* aNode)
+void Editor_NodeEditor::OnNodeRemoved(NG_Node* aNode)
 {
 	(void)aNode;
 }
