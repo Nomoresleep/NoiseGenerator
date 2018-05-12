@@ -30,7 +30,7 @@ public:
 	void Display();
 
 	void OnNodeAdded(Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition) override;
-	void OnNodeRemoved(Node* aNode) {};
+	void OnNodeRemoved(Node* aNode) override;
 private:
 
 	MC_GrowingArray<Editor_NodeProperties*> myNodeRenderer;

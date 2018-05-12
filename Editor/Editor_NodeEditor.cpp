@@ -276,3 +276,8 @@ void Editor_NodeEditor::OnNodeAdded(Node* aNode, u32 aNodeUID, const char* aNode
 {
 	myNodeRenderer.Add(new Editor_NodeProperties(aNode, aNodeLabel, aNodeUID, aPosition));
 }
+
+void Editor_NodeEditor::OnNodeRemoved(Node* aNode)
+{
+	(void)aNode;
+}
