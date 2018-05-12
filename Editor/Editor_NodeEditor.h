@@ -2,6 +2,7 @@
 
 #include "NG_NodeGraph.h"
 #include "MC_GrowingArray.h"
+#include "MC_ArrayMap.h"
 #include "imgui/imgui.h"
 
 static const f32 NODE_SLOT_RADIUS = 6.0f;
@@ -25,18 +26,44 @@ static ImU32 GetColorFromPortType(NG_Port::Type aType)
 	return IM_COL32(255, 255, 255, 255);
 }
 
+struct Editor_NodeGraphSelection
+{
+	MC_GrowingArray<NG_Node*> myNodes;
+	MC_GrowingArray<int*> myConnections;
+};
+
 class Editor_NodeEditor : public NG_NodeGraphChangeListener
 {
+	enum ConnectionStatus
+	{
+		ConnectionUnknown,
+		ConnectionValid,
+		ConnectionMisMatch
+	};
+
 public:
 	Editor_NodeEditor(NG_NodeGraph* aGraph)
-		: myGraph(aGraph) {};
+		: myGraph(aGraph)
+		, myDraggedOutput(nullptr, 0)
+		, myScrolling(0.0f, 0.0f)
+	{
+		NodeLibrary::RegisterNodeTypes();
+	};
 	void Display();
+	void ShowNodeCreationContextMenu(const MC_Vector2f& aCreateLocation);
 
 	void OnNodeAdded(NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition) override;
 	void OnNodeRemoved(NG_Node* aNode) override;
 private:
 
-	MC_GrowingArray<Editor_NodeProperties*> myNodeRenderer;
+	MC_Vector2f myScrolling;
 
+	MC_Pair<Editor_NodeProperties*, u32> myDraggedOutput;
+
+
+	Editor_NodeGraphSelection mySelection;
+	MC_GrowingArray<Editor_NodeProperties*> myNodeProperties;
+	MC_ArrayMap<NG_OutputPort*, Editor_NodeProperties*> myOutputToPropertyMap;
+	MC_ArrayMap<NG_InputPort*, Editor_NodeProperties*> myInputToPropertyMap;
 	NG_NodeGraph* myGraph;
 };

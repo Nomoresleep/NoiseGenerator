@@ -9,7 +9,7 @@ class ConstantNode : public NG_Node
 public:
     ConstantNode()
 	{
-        AddOutputPort(new OutputPort(this, GetPortType<Type>()));
+        AddOutputPort(new NG_OutputPort(this, GetPortType<Type>()));
     };
 
     void OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const override;
@@ -22,7 +22,7 @@ class ResultNode : public NG_Node
 public:
     ResultNode()
     {
-        AddInputPort(new InputPort(this, NG_Port::FloatPort));
+        AddInputPort(new NG_InputPort(this, NG_Port::FloatPort));
     };
 
     void OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const override 
@@ -52,13 +52,13 @@ class PerlinNoise2D : public NG_Node
 public:
 	PerlinNoise2D()
 	{
-		AddInputPort(new InputPort(this, NG_Port::FloatPort));
-		AddInputPort(new InputPort(this, NG_Port::FloatPort));
-		AddInputPort(new InputPort(this, NG_Port::UIntPort));
+		AddInputPort(new NG_InputPort(this, NG_Port::FloatPort));
+		AddInputPort(new NG_InputPort(this, NG_Port::FloatPort));
+		AddInputPort(new NG_InputPort(this, NG_Port::UIntPort));
 
 		//Add Properties
 
-		AddOutputPort(new OutputPort(this, NG_Port::FloatPort));
+		AddOutputPort(new NG_OutputPort(this, NG_Port::FloatPort));
 	}
 
     void OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const override 
@@ -69,11 +69,7 @@ private:
 	PerlinNoiseConstants myConstants;
 };
 
-static void locRegisterNodeTypes()
+namespace NodeLibrary
 {
-    NG_RegisterNodeType<ConstantNode<f32>>("Constants/FloatConstantNode");
-    NG_RegisterNodeType<ConstantNode<s32>>("Constants/IntConstantNode");
-    NG_RegisterNodeType<ConstantNode<u32>>("Constants/UIntConstantNode");
-    NG_RegisterNodeType<PerlinNoise2D>("PerlinNoise2D");
-    NG_RegisterNodeType<ResultNode>("ResultNode", true);
+	void RegisterNodeTypes();
 }

@@ -11,8 +11,6 @@
 #include "NG_NodeModule.h"
 #include "NG_NodeLibrary.h"
 
-static OutputPort* g_draggedOutput = nullptr;
-
 class NG_NodeGraphChangeListener
 {
 public:

@@ -42,7 +42,7 @@ public:
 	T1 mySecond;
 };
 
-template<typename T0, typename T1> MC_Pair<T0, T1> MakePair(const T0& aFirst, const T1& aSecond)
+template<typename T0, typename T1> MC_Pair<T0, T1> MC_MakePair(const T0& aFirst, const T1& aSecond)
 {
 	return MC_Pair<T0, T1>(aFirst, aSecond);
 }

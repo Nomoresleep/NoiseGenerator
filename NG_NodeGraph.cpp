@@ -19,10 +19,10 @@ bool NG_NodeGraph::IsCyclicFromNode(NG_Node* aNode)
 		NG_Node* node = queue.Pop();
 		for (s32 outPortIdx = 0; outPortIdx < node->myOutputs.Count(); ++outPortIdx)
 		{
-			OutputPort* outPort = node->myOutputs[outPortIdx];
+			NG_OutputPort* outPort = node->myOutputs[outPortIdx];
 			for (s32 inPortIdx = 0; inPortIdx < outPort->myConnectedInputs.Count(); ++inPortIdx)
 			{
-				InputPort* inPort = outPort->myConnectedInputs[inPortIdx];
+				NG_InputPort* inPort = outPort->myConnectedInputs[inPortIdx];
 				if (inPort->myNode == aNode)
 					return true;
 

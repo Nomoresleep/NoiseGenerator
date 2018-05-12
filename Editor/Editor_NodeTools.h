@@ -2,6 +2,7 @@
 
 #include "NG_Node.h"
 
+
 struct Editor_NodeProperties
 {
 	Editor_NodeProperties(NG_Node* aNode, const char* aLabel, u32 anID, const MC_Vector2f& aPosition)

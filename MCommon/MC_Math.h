@@ -23,15 +23,15 @@
 #pragma intrinsic( cos, sin, sqrt )
 
 // Fast with decent accuracy.
-MC_FORCEINLINE float MC_InvSqrtFastSafe(float x)
+MC_FORCEINLINE f32 MC_InvSqrtFastSafe(f32 x)
 {
 #if IS_PC_BUILD
 
 	// Error around 0.0004%
-	float xhalf = 0.5f * x;
-	int i = *(int*)&x;
+	f32 xhalf = 0.5f * x;
+	s32 i = *(s32*)&x;
 	i = 0x5f3759df - (i>>1);
-	x = *(float*)&i;
+	x = *(f32*)&i;
 	x = x*(1.5f - xhalf*x*x);
 	x = x*(1.5f - xhalf*x*x);	// Extra Newton-Raphson step to improve precision
 	return x;
@@ -46,15 +46,15 @@ MC_FORCEINLINE float MC_InvSqrtFastSafe(float x)
 }
 
 // Very fast, but very inaccurate.
-MC_FORCEINLINE float MC_InvSqrtFastSafe_Estimate(float x)
+MC_FORCEINLINE f32 MC_InvSqrtFastSafe_Estimate(f32 x)
 {
 #if IS_PC_BUILD
 
 	// Error around 0.15%
-	float xhalf = 0.5f * x;
-	int i = *(int*)&x;
+	f32 xhalf = 0.5f * x;
+	s32 i = *(s32*)&x;
 	i = 0x5f3759df - (i>>1);
-	x = *(float*)&i;
+	x = *(f32*)&i;
 	x = x*(1.5f - xhalf*x*x);
 	return x;
 
@@ -67,7 +67,7 @@ MC_FORCEINLINE float MC_InvSqrtFastSafe_Estimate(float x)
 #endif
 }
 
-MC_FORCEINLINE void __fastcall MC_SinCos(float angle, float* s, float* c)
+MC_FORCEINLINE void __fastcall MC_SinCos(f32 angle, f32* s, f32* c)
 {
 	__asm
 	{
@@ -79,11 +79,11 @@ MC_FORCEINLINE void __fastcall MC_SinCos(float angle, float* s, float* c)
 		fstp     dword ptr [ecx]
 		fstp     dword ptr [edx]
 	}
-	*s = (float)sin(angle);
-	*c = (float)cos(angle);
+	*s = (f32)sin(angle);
+	*c = (f32)cos(angle);
 }
 
-MC_FORCEINLINE void __fastcall MC_SinCosVec(float angleA, float angleB, float angleC, float* sinvals, float* cosvals)
+MC_FORCEINLINE void __fastcall MC_SinCosVec(f32 angleA, f32 angleB, f32 angleC, f32* sinvals, f32* cosvals)
 {
 	__asm
 	{
@@ -105,6 +105,12 @@ MC_FORCEINLINE void __fastcall MC_SinCosVec(float angleA, float angleB, float an
 		fstp     dword ptr [ecx+8]
 		fstp     dword ptr [edx+8]
 	}
+}
+
+MC_FORCEINLINE f32 __fastcall MC_Abs(f32 x)
+{
+	*((u32*)&x) &= 0x7fffffff;
+	return x;
 }
 
 #endif//INCGUARD_MC_MATH_H

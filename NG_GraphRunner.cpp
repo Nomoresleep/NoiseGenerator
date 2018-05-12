@@ -48,10 +48,10 @@ void NG_GraphRunner::Run()
 		node->OnTraverse(&runnerContext);
 		for (s32 outPortIdx = 0; outPortIdx < node->myOutputs.Count(); ++outPortIdx)
 		{
-			const OutputPort* outPort = node->myOutputs[outPortIdx];
+			const NG_OutputPort* outPort = node->myOutputs[outPortIdx];
 			for (s32 inPortIdx = 0; inPortIdx < outPort->myConnectedInputs.Count(); ++inPortIdx)
 			{
-				const InputPort* inPort = outPort->myConnectedInputs[inPortIdx];
+				const NG_InputPort* inPort = outPort->myConnectedInputs[inPortIdx];
 				pqueue.Push(inPort->myNode);
 			}
 		}
