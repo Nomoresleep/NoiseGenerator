@@ -95,8 +95,8 @@ public:
 		int index = FindKey(aKey);
 		if (index >= 0)
 		{
-			myKeys.RemoveAtIndex(aKey);
-			myValues.RemoveAtIndex(aValue);
+			myKeys.RemoveAtIndex(index);
+			myValues.RemoveAtIndex(index);
 			Balance();
 		}
 	}

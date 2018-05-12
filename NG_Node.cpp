@@ -1,6 +1,12 @@
 #include "NG_Node.h"
 #include "NG_NodeGraph.h"
 
+NG_OutputPort::~NG_OutputPort()
+{
+	for (NG_InputPort* port : myConnectedInputs)
+		port->Connect(nullptr);
+}
+
 void NG_InputPort::Connect(NG_OutputPort* aConnectedPort)
 {
 	if (myConnectedPort) myConnectedPort->myConnectedInputs.Remove(this);

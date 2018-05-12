@@ -30,6 +30,12 @@ struct Editor_NodeGraphSelection
 {
 	MC_GrowingArray<NG_Node*> myNodes;
 	MC_GrowingArray<int*> myConnections;
+
+	void Clear() 
+	{
+		myNodes.RemoveAll();
+		myConnections.RemoveAll();
+	}
 };
 
 class Editor_NodeEditor : public NG_NodeGraphChangeListener

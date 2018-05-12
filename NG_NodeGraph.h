@@ -20,7 +20,6 @@ public:
 
 class NG_NodeGraph
 {
-	typedef MC_GrowingArray<MC_ScopedPtr<NG_Node>> NodeList;
 public:
 	NG_NodeGraph();
 
@@ -28,12 +27,13 @@ public:
 	static bool IsCyclicFromNode(NG_Node* aNode);
 
 	void AddNode(NG_Node* aNewNode, const char* aNodeName, const MC_Vector2f& aPosition);
+	void RemoveNode(NG_Node* aNode);
 
 	void RegisterListener(NG_NodeGraphChangeListener* aListener) { myListeners.Add(aListener); }
 	void UnregisterListener(NG_NodeGraphChangeListener* aListener) { myListeners.Remove(aListener); }
 
-	const NodeList& GetNodes() const { return myNodes; };
+	const MC_GrowingArray<NG_Node*>& GetNodes() const { return myNodes; };
 private:
 	MC_GrowingArray<NG_NodeGraphChangeListener*> myListeners;
-	MC_GrowingArray<MC_ScopedPtr<NG_Node>> myNodes;
+	MC_GrowingArray<NG_Node*> myNodes;
 };

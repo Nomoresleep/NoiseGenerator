@@ -41,3 +41,14 @@ void NG_NodeGraph::AddNode(NG_Node* aNewNode, const char* aNodeName, const MC_Ve
 		myListeners[listenerIdx]->OnNodeAdded(aNewNode, myNodes.Count(), aNodeName, aPosition);
 	}
 }
+
+void NG_NodeGraph::RemoveNode(NG_Node* aNode)
+{
+	for (s32 listenerIdx = 0; listenerIdx < myListeners.Count(); ++listenerIdx)
+	{
+		myListeners[listenerIdx]->OnNodeRemoved(aNode);
+	}
+
+	myNodes.Remove(aNode);
+	delete aNode;
+}

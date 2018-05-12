@@ -41,6 +41,8 @@ struct NG_OutputPort
         , myConnectedInputs(8)
     {};
 
+	~NG_OutputPort();
+
 	NG_Node* myNode;
 	NG_Port::Data myData;
 	const NG_Port::Type myType;
@@ -54,6 +56,11 @@ struct NG_InputPort
         , myNode(aNode)
         , myConnectedPort(nullptr)
     {}
+
+	~NG_InputPort()
+	{
+		Connect(nullptr);
+	}
 
     void Connect(NG_OutputPort* aConnectedPort);
 	bool TryConnect(NG_OutputPort* aConnectedPort);
@@ -69,6 +76,12 @@ public:
 	NG_Node()
         : myOutputs(8)
         , myInputs(8){};
+
+	~NG_Node()
+	{
+		myOutputs.DeleteAll();
+		myInputs.DeleteAll();
+	}
 
     virtual void OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const = 0;
     u32 ConnectedInputCount() const;
