@@ -2,9 +2,9 @@
 
 #include "node.h"
 
-struct NodeEditorProperties
+struct Editor_NodeProperties
 {
-	NodeEditorProperties(Node* aNode, const char* aLabel, u32 anID, const MC_Vector2f& aPosition)
+	Editor_NodeProperties(Node* aNode, const char* aLabel, u32 anID, const MC_Vector2f& aPosition)
 		: myNode(aNode)
 		, myLabel(aLabel)
 		, myID(anID)

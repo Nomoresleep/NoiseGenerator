@@ -5,7 +5,7 @@
 #include "MC_String.h"
 
 class NodeGraph;
-class NodeEditor;
+class Editor_NodeEditor;
 
 #define DEPENDENCY_FILE(text) text
 
@@ -35,7 +35,7 @@ public:
     GLuint myImageTextureID;
     MC_Vector3i myImageSize;
 
-	MC_ScopedPtr<NodeEditor> myNodeEditor;
+	MC_ScopedPtr<Editor_NodeEditor> myNodeEditor;
     MC_ScopedPtr<NodeGraph> myNodeGraph;
 };
 

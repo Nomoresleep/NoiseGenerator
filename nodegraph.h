@@ -13,7 +13,12 @@
 
 static OutputPort* g_draggedOutput = nullptr;
 
-class NodeEditor;
+class NodeGraphChangeListener
+{
+public:
+	virtual void OnNodeAdded(Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition) = 0;
+	virtual void OnNodeRemoved(Node* aNode) = 0;
+};
 
 class NodeGraph
 {
@@ -25,10 +30,12 @@ public:
 	static bool IsCyclicFromNode(Node* aNode);
 
 	void AddNode(Node* aNewNode, const char* aNodeName, const MC_Vector2f& aPosition);
-	void SetEditor(NodeEditor* anEditor) { myEditor = anEditor; }
+
+	void RegisterListener(NodeGraphChangeListener* aListener) { myListeners.Add(aListener); }
+	void UnregisterListener(NodeGraphChangeListener* aListener) { myListeners.Remove(aListener); }
 
 	const NodeList& GetNodes() const { return myNodes; };
 private:
-	NodeEditor* myEditor;
+	MC_GrowingArray<NodeGraphChangeListener*> myListeners;
 	MC_GrowingArray<MC_ScopedPtr<Node>> myNodes;
 };

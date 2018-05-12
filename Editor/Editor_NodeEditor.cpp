@@ -28,7 +28,7 @@ static void locDisplayWarning(const char* aWarningMessage)
 	ImGui::PopStyleColor();
 }
 
-static void locDrawNode(ImDrawList* aDrawList, NodeEditorProperties* aProp, MC_Vector2f anOffset)
+static void locDrawNode(ImDrawList* aDrawList, Editor_NodeProperties* aProp, MC_Vector2f anOffset)
 {
 	Node* node = aProp->myNode;
 	MC_Vector2f rect_min = anOffset + aProp->myPosition;
@@ -73,7 +73,7 @@ static void locDrawNode(ImDrawList* aDrawList, NodeEditorProperties* aProp, MC_V
 	}
 }
 
-void NodeEditor::Display()
+void Editor_NodeEditor::Display()
 {
 	static MC_Vector2f scrolling = MC_Vector2f(0.0f, 0.0f);
 	static bool inited = false;
@@ -118,7 +118,7 @@ void NodeEditor::Display()
 	draw_list->ChannelsSetCurrent(0);
 	for (s32 node_idx = myNodeRenderer.Count() - 1; node_idx >= 0; node_idx--)
 	{
-		NodeEditorProperties* props = myNodeRenderer[node_idx];
+		Editor_NodeProperties* props = myNodeRenderer[node_idx];
 		Node* node = props->myNode;
 		MC_Vector2f rect_min = offset + props->myPosition;
 		ImGui::PushID(props->myID);
@@ -217,7 +217,7 @@ void NodeEditor::Display()
 	// Display nodes
 	for (s32 node_idx = 0; node_idx < myNodeRenderer.Count(); node_idx++)
 	{
-		NodeEditorProperties* prop = myNodeRenderer[node_idx];
+		Editor_NodeProperties* prop = myNodeRenderer[node_idx];
 
 		ImGui::PushID(prop->myID);
 		locDrawNode(draw_list, prop, offset);
@@ -272,7 +272,7 @@ void NodeEditor::Display()
 	ImGui::EndGroup();
 }
 
-void NodeEditor::NodeGraphAddedNode(Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition)
+void Editor_NodeEditor::OnNodeAdded(Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition)
 {
-	myNodeRenderer.Add(new NodeEditorProperties(aNode, aNodeLabel, aNodeUID, aPosition));
+	myNodeRenderer.Add(new Editor_NodeProperties(aNode, aNodeLabel, aNodeUID, aPosition));
 }

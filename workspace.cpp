@@ -22,8 +22,8 @@ Workspace::Workspace(s32 anImageWidth, s32 anImageHeight)
     glBindImageTexture(0, myImageTextureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
 	myNodeGraph = new NodeGraph();
-    myNodeEditor = new NodeEditor(myNodeGraph);
-	myNodeGraph->SetEditor(myNodeEditor);
+    myNodeEditor = new Editor_NodeEditor(myNodeGraph);
+	myNodeGraph->RegisterListener(myNodeEditor);
 }
 
 Workspace::~Workspace()

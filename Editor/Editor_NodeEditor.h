@@ -4,7 +4,7 @@
 #include "MC_GrowingArray.h"
 #include "imgui/imgui.h"
 
-struct NodeEditorProperties;
+struct Editor_NodeProperties;
 class Node;
 class NodeGraph;
 
@@ -22,17 +22,18 @@ static ImU32 GetColorFromPortType(PortType aType)
 	return IM_COL32(255, 255, 255, 255);
 }
 
-class NodeEditor
+class Editor_NodeEditor : public NodeGraphChangeListener
 {
 public:
-	NodeEditor(NodeGraph* aGraph)
+	Editor_NodeEditor(NodeGraph* aGraph)
 		: myGraph(aGraph) {};
 	void Display();
 
-	void NodeGraphAddedNode(Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition);
+	void OnNodeAdded(Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition) override;
+	void OnNodeRemoved(Node* aNode) {};
 private:
 
-	MC_GrowingArray<NodeEditorProperties*> myNodeRenderer;
+	MC_GrowingArray<Editor_NodeProperties*> myNodeRenderer;
 
 	NodeGraph* myGraph;
 };

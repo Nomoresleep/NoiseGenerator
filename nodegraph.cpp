@@ -1,5 +1,4 @@
 #include "nodegraph.h"
-#include "Editor_NodeEditor.h"
 
 NodeGraph::NodeGraph()
 	: myNodes(32)
@@ -37,8 +36,8 @@ bool NodeGraph::IsCyclicFromNode(Node* aNode)
 void NodeGraph::AddNode(Node* aNewNode, const char* aNodeName, const MC_Vector2f& aPosition)
 {
 	myNodes.Add(aNewNode);
-	if (myEditor)
+	for (s32 listenerIdx = 0; listenerIdx < myListeners.Count(); ++listenerIdx)
 	{
-		myEditor->NodeGraphAddedNode(aNewNode, myNodes.Count(), aNodeName, aPosition);
+		myListeners[listenerIdx]->OnNodeAdded(aNewNode, myNodes.Count(), aNodeName, aPosition);
 	}
 }
