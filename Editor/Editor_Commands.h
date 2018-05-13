@@ -26,3 +26,18 @@ private:
 	const char* myNodeLabel;
 	MC_Vector2f myNodePosition;
 };
+
+class Editor_RemoveNodeCommand : public Editor_Command
+{
+public:
+	Editor_RemoveNodeCommand(Editor_NodeEditor* anEditor, NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition);
+
+	void Execute() override;
+	void Undo() override;
+private:
+	Editor_NodeEditor* myEditor;
+	NG_Node* myNode;
+	u32 myNodeUID;
+	const char* myNodeLabel;
+	MC_Vector2f myNodePosition;
+};

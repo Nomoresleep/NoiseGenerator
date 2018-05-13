@@ -29,7 +29,7 @@ static ImU32 GetColorFromPortType(NG_Port::Type aType)
 
 struct Editor_NodeGraphSelection
 {
-	MC_GrowingArray<NG_Node*> myNodes;
+	MC_GrowingArray<Editor_NodeProperties*> myNodes;
 	MC_GrowingArray<int*> myConnections;
 
 	void Clear() 

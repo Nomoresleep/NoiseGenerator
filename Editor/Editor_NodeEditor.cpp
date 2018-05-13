@@ -229,7 +229,7 @@ void Editor_NodeEditor::Display()
 		if (ImGui::InvisibleButton("node", props->mySize))
 		{
 			mySelection.Clear();
-			mySelection.myNodes.Add(node);
+			mySelection.myNodes.Add(props);
 		}
 
 		if (ImGui::IsItemActive() && ImGui::IsMouseDragging(0))
@@ -275,7 +275,10 @@ void Editor_NodeEditor::Display()
 		{
 			for (s32 nodeIdx = 0; nodeIdx < mySelection.myNodes.Count(); ++nodeIdx)
 			{
-				myGraph->RemoveNode(mySelection.myNodes[nodeIdx]);
+				Editor_NodeProperties* props = mySelection.myNodes[nodeIdx];
+				myCommandList.Add(new Editor_RemoveNodeCommand(this, props->myNode, NG_NodesModule::GetNodeUID(), props->myLabel, props->myPosition));
+				myCommandList.GetLast()->Execute();
+				myCommandListIndex++;
 			}
 		}
 		else if (mySelection.myConnections.Count())
