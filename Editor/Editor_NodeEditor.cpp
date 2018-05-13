@@ -107,9 +107,7 @@ void Editor_NodeEditor::ShowNodeCreationContextMenu(const MC_Vector2f& aCreateLo
 		{
 			NG_Node* newNode = NG_NodesModule::Create(str);
 			//TODO: Create node uids
-			myCommandList.Add(new Editor_NewNodeCommand(this, newNode, NG_NodesModule::GetNodeUID(), str, aCreateLocation));
-			myCommandList.GetLast()->Execute();
-			myCommandListIndex++;
+			myCommands.ExecuteCommand(new Editor_NewNodeCommand(this, newNode, NG_NodesModule::GetNodeUID(), str, aCreateLocation));
 		}
 	}
 }
@@ -276,9 +274,7 @@ void Editor_NodeEditor::Display()
 			for (s32 nodeIdx = 0; nodeIdx < mySelection.myNodes.Count(); ++nodeIdx)
 			{
 				Editor_NodeProperties* props = mySelection.myNodes[nodeIdx];
-				myCommandList.Add(new Editor_RemoveNodeCommand(this, props->myNode, NG_NodesModule::GetNodeUID(), props->myLabel, props->myPosition));
-				myCommandList.GetLast()->Execute();
-				myCommandListIndex++;
+				myCommands.ExecuteCommand(new Editor_RemoveNodeCommand(this, props->myNode, NG_NodesModule::GetNodeUID(), props->myLabel, props->myPosition));
 			}
 		}
 		else if (mySelection.myConnections.Count())
@@ -292,13 +288,11 @@ void Editor_NodeEditor::Display()
 	{
 		if (ImGui::IsKeyPressed('Z'))
 		{
-			myCommandListIndex = MC_Max(myCommandListIndex - 1, 0);
-			myCommandList[myCommandListIndex]->Undo();
+			myCommands.Undo();
 		}
 		else if (ImGui::IsKeyPressed('Y'))
 		{
-			myCommandList[myCommandListIndex]->Execute();
-			myCommandListIndex = MC_Min(myCommandListIndex + 1, myCommandList.Count());
+			myCommands.Redo();
 		}
 	}
 

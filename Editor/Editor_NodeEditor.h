@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Editor_CommandList.h"
 #include "NG_NodeGraph.h"
 #include "MC_GrowingArray.h"
 #include "MC_ArrayMap.h"
@@ -11,7 +12,6 @@ static const MC_Vector2f NODE_WINDOW_PADDING = MC_Vector2f(8.0f, 4.0f);
 static const f32 NODE_PROPERTY_WIDTH = 120.0f;
 
 struct Editor_NodeProperties;
-class Editor_Command;
 
 static ImU32 GetColorFromPortType(NG_Port::Type aType)
 {
@@ -51,7 +51,6 @@ class Editor_NodeEditor
 public:
 	Editor_NodeEditor(NG_NodeGraph* aGraph)
 		: myGraph(aGraph)
-		, myCommandListIndex(0)
 		, myDraggedOutput(nullptr, 0)
 		, myScrolling(0.0f, 0.0f)
 	{
@@ -72,8 +71,7 @@ private:
 
 	MC_Pair<Editor_NodeProperties*, u32> myDraggedOutput;
 
-	MC_GrowingArray<Editor_Command*> myCommandList;
-	s32 myCommandListIndex;
+	Editor_CommandList myCommands;
 
 	Editor_NodeGraphSelection mySelection;
 	MC_GrowingArray<Editor_NodeProperties*> myNodeProperties;
