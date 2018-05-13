@@ -8,33 +8,31 @@
 class NG_Node;
 class NG_NodeGraph;
 
-struct NG_NodeComparer
-{
-	static bool Equals(NG_Node* aNode, const char* nodeName);
-};
-
 struct NG_NodesModule
 {
 	typedef NG_Node*(*NodeCreationFunction)();
 	struct NodeCreationData
 	{
 		NodeCreationFunction myCreationFunction;
-		bool myIsSingleton;
 	};
 
-	static NG_Node* Create(NG_NodeGraph* aNodegraph, const char* aNodeName, const MC_Vector2f& aPosition);
+	static NG_Node* Create(const char* aNodeName);
 	static MC_HashMap<const char*, NodeCreationData> ourRegisteredNodes;
 	static MC_GrowingArray<const char*> ourRegisteredNodesNames;
+	static u32 ourNodeCounter;
+
+	//TODO: This is ugly! :D
+	static u32 GetNodeUID() { return ++ourNodeCounter; }
 };
 
 template <typename Type>
 struct NG_RegisterNodeType
 {
-	NG_RegisterNodeType(const char* aNodeName, bool isSingleton = false)
+	NG_RegisterNodeType(const char* aNodeName)
 	{
 		NG_NodesModule::NodeCreationData* func = NG_NodesModule::ourRegisteredNodes.GetIfExists(aNodeName);
 		assert(func == nullptr);
-		NG_NodesModule::ourRegisteredNodes[aNodeName] = { Create, isSingleton };
+		NG_NodesModule::ourRegisteredNodes[aNodeName] = { Create };
 		assert(NG_NodesModule::ourRegisteredNodes.GetIfExists(aNodeName));
 		NG_NodesModule::ourRegisteredNodesNames.Add(aNodeName);
 	}
@@ -44,5 +42,14 @@ private:
     static NG_Node* Create() {
 		Type* newNode = new Type();
 		return newNode;
+	}
+};
+
+struct NG_UnregisterNodeType
+{
+	NG_UnregisterNodeType(const char* aNodeName)
+	{
+		NG_NodesModule::ourRegisteredNodes.RemoveByKey(aNodeName);
+		NG_NodesModule::ourRegisteredNodesNames.Remove(aNodeName);
 	}
 };

@@ -31,5 +31,14 @@ void NodeLibrary::RegisterNodeTypes()
 	NG_RegisterNodeType<ConstantNode<s32>>("Constants/IntConstantNode");
 	NG_RegisterNodeType<ConstantNode<u32>>("Constants/UIntConstantNode");
 	NG_RegisterNodeType<PerlinNoise2D>("PerlinNoise2D");
-	NG_RegisterNodeType<ResultNode>("ResultNode", true);
+	NG_RegisterNodeType<ResultNode>("ResultNode");
+}
+
+void NodeLibrary::UnregisterNodeTypes()
+{
+	NG_UnregisterNodeType("Constants/FloatConstantNode");
+	NG_UnregisterNodeType("Constants/IntConstantNode");
+	NG_UnregisterNodeType("Constants/UIntConstantNode");
+	NG_UnregisterNodeType("PerlinNoise2D");
+	NG_UnregisterNodeType("ResultNode");
 }

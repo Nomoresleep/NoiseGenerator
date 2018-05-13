@@ -72,4 +72,5 @@ private:
 namespace NodeLibrary
 {
 	void RegisterNodeTypes();
+	void UnregisterNodeTypes();
 }

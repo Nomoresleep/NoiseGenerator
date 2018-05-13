@@ -23,7 +23,6 @@ Workspace::Workspace(s32 anImageWidth, s32 anImageHeight)
 
 	myNodeGraph = new NG_NodeGraph();
     myNodeEditor = new Editor_NodeEditor(myNodeGraph);
-	myNodeGraph->RegisterListener(myNodeEditor);
 }
 
 Workspace::~Workspace()

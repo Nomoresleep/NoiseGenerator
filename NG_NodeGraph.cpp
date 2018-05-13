@@ -5,11 +5,6 @@ NG_NodeGraph::NG_NodeGraph()
 {
 }
 
-bool NG_NodeGraph::ContainsNodeOfName(const char* aNodeName)
-{
-	return myNodes.Find2<NG_NodeComparer, const char*>(aNodeName, 0) != -1;
-}
-
 bool NG_NodeGraph::IsCyclicFromNode(NG_Node* aNode)
 {
 	MC_StackList<NG_Node*> queue;
@@ -33,22 +28,12 @@ bool NG_NodeGraph::IsCyclicFromNode(NG_Node* aNode)
 	return false;
 }
 
-void NG_NodeGraph::AddNode(NG_Node* aNewNode, const char* aNodeName, const MC_Vector2f& aPosition)
+void NG_NodeGraph::AddNode(NG_Node* aNewNode)
 {
 	myNodes.Add(aNewNode);
-	for (s32 listenerIdx = 0; listenerIdx < myListeners.Count(); ++listenerIdx)
-	{
-		myListeners[listenerIdx]->OnNodeAdded(aNewNode, myNodes.Count(), aNodeName, aPosition);
-	}
 }
 
 void NG_NodeGraph::RemoveNode(NG_Node* aNode)
 {
-	for (s32 listenerIdx = 0; listenerIdx < myListeners.Count(); ++listenerIdx)
-	{
-		myListeners[listenerIdx]->OnNodeRemoved(aNode);
-	}
-
 	myNodes.Remove(aNode);
-	delete aNode;
 }

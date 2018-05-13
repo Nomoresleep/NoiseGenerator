@@ -1,5 +1,6 @@
 #include "Editor_NodeEditor.h"
 #include "Editor_NodeTools.h"
+#include "Editor_Commands.h"
 
 static const f32 GRID_SPACING = 64.0f;
 
@@ -102,10 +103,13 @@ void Editor_NodeEditor::ShowNodeCreationContextMenu(const MC_Vector2f& aCreateLo
 		if (!data)
 			continue;
 
-		bool enabled = !data->myIsSingleton || !myGraph->ContainsNodeOfName(str);
-		if (ImGui::MenuItem(str, 0, false, enabled))
+		if (ImGui::MenuItem(str, 0, false, true))
 		{
-			NG_NodesModule::Create(myGraph, str, aCreateLocation);
+			NG_Node* newNode = NG_NodesModule::Create(str);
+			//TODO: Create node uids
+			myCommandList.Add(new Editor_NewNodeCommand(this, newNode, NG_NodesModule::GetNodeUID(), str, aCreateLocation));
+			myCommandList.GetLast()->Execute();
+			myCommandListIndex++;
 		}
 	}
 }
@@ -264,6 +268,7 @@ void Editor_NodeEditor::Display()
 	}
 	drawList->ChannelsMerge();
 
+	//TODO: Custom Key bindings
 	if (ImGui::IsKeyPressed(46))
 	{
 		if (mySelection.myNodes.Count())
@@ -278,6 +283,20 @@ void Editor_NodeEditor::Display()
 
 		}
 		mySelection.Clear();
+	}
+
+	if (ImGui::GetIO().KeyCtrl)
+	{
+		if (ImGui::IsKeyPressed('Z'))
+		{
+			myCommandListIndex = MC_Max(myCommandListIndex - 1, 0);
+			myCommandList[myCommandListIndex]->Undo();
+		}
+		else if (ImGui::IsKeyPressed('Y'))
+		{
+			myCommandList[myCommandListIndex]->Execute();
+			myCommandListIndex = MC_Min(myCommandListIndex + 1, myCommandList.Count());
+		}
 	}
 
 	static const char* contextMenuLabel = "context_menu";
@@ -306,7 +325,7 @@ void Editor_NodeEditor::Display()
 	ImGui::PopStyleVar(2);
 }
 
-void Editor_NodeEditor::OnNodeAdded(NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition)
+void Editor_NodeEditor::CreateNode(NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition)
 {
 	myNodeProperties.Add(new Editor_NodeProperties(aNode, aNodeLabel, aNodeUID, aPosition));
 
@@ -319,10 +338,14 @@ void Editor_NodeEditor::OnNodeAdded(NG_Node* aNode, u32 aNodeUID, const char* aN
 	{
 		myOutputToPropertyMap.Insert(port, myNodeProperties.GetLast());
 	}
+
+	myGraph->AddNode(aNode);
 }
 
-void Editor_NodeEditor::OnNodeRemoved(NG_Node* aNode)
+void Editor_NodeEditor::RemoveNode(NG_Node* aNode)
 {
+	myGraph->RemoveNode(aNode);
+
 	for (s32 propIdx = 0; propIdx < myNodeProperties.Count(); ++propIdx)
 	{
 		Editor_NodeProperties* props = myNodeProperties[propIdx];

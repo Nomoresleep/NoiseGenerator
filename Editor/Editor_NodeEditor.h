@@ -11,6 +11,7 @@ static const MC_Vector2f NODE_WINDOW_PADDING = MC_Vector2f(8.0f, 4.0f);
 static const f32 NODE_PROPERTY_WIDTH = 120.0f;
 
 struct Editor_NodeProperties;
+class Editor_Command;
 
 static ImU32 GetColorFromPortType(NG_Port::Type aType)
 {
@@ -38,7 +39,7 @@ struct Editor_NodeGraphSelection
 	}
 };
 
-class Editor_NodeEditor : public NG_NodeGraphChangeListener
+class Editor_NodeEditor
 {
 	enum ConnectionStatus
 	{
@@ -50,22 +51,29 @@ class Editor_NodeEditor : public NG_NodeGraphChangeListener
 public:
 	Editor_NodeEditor(NG_NodeGraph* aGraph)
 		: myGraph(aGraph)
+		, myCommandListIndex(0)
 		, myDraggedOutput(nullptr, 0)
 		, myScrolling(0.0f, 0.0f)
 	{
 		NodeLibrary::RegisterNodeTypes();
 	};
+	~Editor_NodeEditor()
+	{
+		NodeLibrary::UnregisterNodeTypes();
+	}
 	void Display();
 	void ShowNodeCreationContextMenu(const MC_Vector2f& aCreateLocation);
 
-	void OnNodeAdded(NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition) override;
-	void OnNodeRemoved(NG_Node* aNode) override;
+	void CreateNode(NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition);
+	void RemoveNode(NG_Node* aNode);
 private:
 
 	MC_Vector2f myScrolling;
 
 	MC_Pair<Editor_NodeProperties*, u32> myDraggedOutput;
 
+	MC_GrowingArray<Editor_Command*> myCommandList;
+	s32 myCommandListIndex;
 
 	Editor_NodeGraphSelection mySelection;
 	MC_GrowingArray<Editor_NodeProperties*> myNodeProperties;
