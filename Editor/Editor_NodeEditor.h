@@ -67,7 +67,7 @@ public:
 	void Undo();
 	void Redo();
 
-	void CreateNode(NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition);
+	void CreateNode(NG_Node* aNode, const char* aNodeLabel, const MC_Vector2f& aPosition);
 	void RemoveNode(NG_Node* aNode);
 private:
 

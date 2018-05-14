@@ -35,7 +35,7 @@ protected:
 class Editor_NodeCreationCommand : public Editor_MakroCommand
 {
 public:
-    Editor_NodeCreationCommand(const char* aMakroName, Editor_NodeEditor* anEditor, NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition);
+    Editor_NodeCreationCommand(const char* aMakroName, Editor_NodeEditor* anEditor, NG_Node* aNode, const char* aNodeLabel, const MC_Vector2f& aPosition);
 
 protected:
     void AddNode();
@@ -43,7 +43,6 @@ protected:
 
 	Editor_NodeEditor* myEditor;
 	NG_Node* myNode;
-	u32 myNodeUID;
 	const char* myNodeLabel;
 	MC_Vector2f myNodePosition;
 };
@@ -51,7 +50,7 @@ protected:
 class Editor_CreateNodeCommand : public Editor_NodeCreationCommand
 {
 public:
-    Editor_CreateNodeCommand(Editor_NodeEditor* anEditor, NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition);
+    Editor_CreateNodeCommand(Editor_NodeEditor* anEditor, NG_Node* aNode, const char* aNodeLabel, const MC_Vector2f& aPosition);
 
     void Execute() override;
     void Undo() override;
@@ -60,7 +59,7 @@ public:
 class Editor_RemoveNodeCommand : public Editor_NodeCreationCommand
 {
 public:
-    Editor_RemoveNodeCommand(Editor_NodeEditor* anEditor, NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition);
+    Editor_RemoveNodeCommand(Editor_NodeEditor* anEditor, NG_Node* aNode, const char* aNodeLabel, const MC_Vector2f& aPosition);
 
     void Execute() override;
     void Undo() override;

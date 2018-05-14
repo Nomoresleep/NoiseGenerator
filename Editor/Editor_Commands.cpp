@@ -29,11 +29,10 @@ void Editor_MakroCommand::Undo()
         myCommands[commandIdx]->Undo();
 }
 
-Editor_NodeCreationCommand::Editor_NodeCreationCommand(const char* aMakroName, Editor_NodeEditor* anEditor, NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition)
+Editor_NodeCreationCommand::Editor_NodeCreationCommand(const char* aMakroName, Editor_NodeEditor* anEditor, NG_Node* aNode, const char* aNodeLabel, const MC_Vector2f& aPosition)
 	: Editor_MakroCommand(aMakroName)
     , myEditor(anEditor)
 	, myNode(aNode)
-	, myNodeUID(aNodeUID)
 	, myNodeLabel(aNodeLabel)
 	, myNodePosition(aPosition)
 {
@@ -41,7 +40,7 @@ Editor_NodeCreationCommand::Editor_NodeCreationCommand(const char* aMakroName, E
 
 void Editor_NodeCreationCommand::AddNode()
 {
-	myEditor->CreateNode(myNode, myNodeUID, myNodeLabel, myNodePosition);
+	myEditor->CreateNode(myNode, myNodeLabel, myNodePosition);
 }
 
 void Editor_NodeCreationCommand::RemoveNode()
@@ -49,8 +48,8 @@ void Editor_NodeCreationCommand::RemoveNode()
 	myEditor->RemoveNode(myNode);
 }
 
-Editor_CreateNodeCommand::Editor_CreateNodeCommand(Editor_NodeEditor* anEditor, NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition)
-    : Editor_NodeCreationCommand("Create Node", anEditor, aNode, aNodeUID, aNodeLabel, aPosition)
+Editor_CreateNodeCommand::Editor_CreateNodeCommand(Editor_NodeEditor* anEditor, NG_Node* aNode, const char* aNodeLabel, const MC_Vector2f& aPosition)
+    : Editor_NodeCreationCommand("Create Node", anEditor, aNode, aNodeLabel, aPosition)
 {
 }
 
@@ -64,8 +63,8 @@ void Editor_CreateNodeCommand::Undo()
     Editor_NodeCreationCommand::RemoveNode();
 }
 
-Editor_RemoveNodeCommand::Editor_RemoveNodeCommand(Editor_NodeEditor* anEditor, NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition)
-    : Editor_NodeCreationCommand("Remove Node", anEditor, aNode, aNodeUID, aNodeLabel, aPosition)
+Editor_RemoveNodeCommand::Editor_RemoveNodeCommand(Editor_NodeEditor* anEditor, NG_Node* aNode, const char* aNodeLabel, const MC_Vector2f& aPosition)
+    : Editor_NodeCreationCommand("Remove Node", anEditor, aNode, aNodeLabel, aPosition)
 {
     for (s32 inputIdx = 0; inputIdx < aNode->myInputs.Count(); ++inputIdx)
     {

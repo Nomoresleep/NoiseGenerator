@@ -97,17 +97,17 @@ static void locDrawNode(ImDrawList* aDrawList, Editor_NodeProperties* aProp, MC_
 
 void Editor_NodeEditor::ShowNodeCreationContextMenu(const MC_Vector2f& aCreateLocation)
 {
-	for (const char* str : NG_NodesModule::ourRegisteredNodesNames)
+	for (const char* str : NG_NodeModule::ourRegisteredNodesNames)
 	{
-		NG_NodesModule::NodeCreationData* data = NG_NodesModule::ourRegisteredNodes.GetIfExists(str);
+		NG_NodeModule::NodeCreationData* data = NG_NodeModule::ourRegisteredNodes.GetIfExists(str);
 		if (!data)
 			continue;
 
 		if (ImGui::MenuItem(str, 0, false, true))
 		{
-			NG_Node* newNode = NG_NodesModule::Create(str);
+			NG_Node* newNode = NG_NodeModule::Create(str);
 			//TODO: Create node uids
-			myCommands.ExecuteCommand(new Editor_CreateNodeCommand(this, newNode, NG_NodesModule::GetNodeUID(), str, aCreateLocation));
+			myCommands.ExecuteCommand(new Editor_CreateNodeCommand(this, newNode, str, aCreateLocation));
 		}
 	}
 }
@@ -152,7 +152,7 @@ void Editor_NodeEditor::Display()
 		Editor_NodeProperties* props = myNodeProperties[node_idx];
 		NG_Node* node = props->myNode;
 		MC_Vector2f rect_min = offset + props->myPosition + props->myDeltaPosition;
-		ImGui::PushID(props->myID);
+		ImGui::PushID(node->myUID);
 
 		//Draw Node properties
 		ImGui::SetCursorScreenPos(rect_min + MC_Vector2f(NODE_WINDOW_PADDING.x, locGetHeaderHeight() + NODE_WINDOW_PADDING.y));
@@ -248,7 +248,7 @@ void Editor_NodeEditor::Display()
 	{
 		Editor_NodeProperties* prop = myNodeProperties[node_idx];
 
-		ImGui::PushID(prop->myID);
+		ImGui::PushID(prop->myNode->myUID);
 		locDrawNode(drawList, prop, offset);
 		ImGui::PopID();
 	}
@@ -281,7 +281,7 @@ void Editor_NodeEditor::Display()
 			for (s32 nodeIdx = 0; nodeIdx < mySelection.myNodes.Count(); ++nodeIdx)
 			{
 				Editor_NodeProperties* props = mySelection.myNodes[nodeIdx];
-				myCommands.ExecuteCommand(new Editor_RemoveNodeCommand(this, props->myNode, NG_NodesModule::GetNodeUID(), props->myLabel, props->myPosition));
+				myCommands.ExecuteCommand(new Editor_RemoveNodeCommand(this, props->myNode, props->myLabel, props->myPosition));
 			}
 		}
 		else if (mySelection.myConnections.Count())
@@ -335,9 +335,9 @@ void Editor_NodeEditor::Redo()
 	myCommands.Redo();
 }
 
-void Editor_NodeEditor::CreateNode(NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition)
+void Editor_NodeEditor::CreateNode(NG_Node* aNode, const char* aNodeLabel, const MC_Vector2f& aPosition)
 {
-	myNodeProperties.Add(new Editor_NodeProperties(aNode, aNodeLabel, aNodeUID, aPosition));
+	myNodeProperties.Add(new Editor_NodeProperties(aNode, aNodeLabel, aPosition));
 
 	for (NG_InputPort* port : aNode->myInputs)
 	{

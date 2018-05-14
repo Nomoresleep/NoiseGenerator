@@ -7,7 +7,8 @@ template <typename Type>
 class ConstantNode : public NG_Node
 {
 public:
-    ConstantNode()
+    ConstantNode(u32 aNodeUID)
+		: NG_Node(aNodeUID)
 	{
         AddOutputPort(new NG_OutputPort(this, GetPortType<Type>()));
     };
@@ -20,7 +21,8 @@ public:
 class ResultNode : public NG_Node
 {
 public:
-    ResultNode()
+    ResultNode(u32 aNodeUID)
+		: NG_Node(aNodeUID)
     {
         AddInputPort(new NG_InputPort(this, NG_Port::FloatPort));
     };
@@ -50,7 +52,8 @@ struct PerlinNoiseConstants
 class PerlinNoise2D : public NG_Node
 {
 public:
-	PerlinNoise2D()
+	PerlinNoise2D(u32 aNodeUID)
+		: NG_Node(aNodeUID)
 	{
 		AddInputPort(new NG_InputPort(this, NG_Port::FloatPort));
 		AddInputPort(new NG_InputPort(this, NG_Port::FloatPort));

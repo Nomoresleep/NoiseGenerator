@@ -73,8 +73,9 @@ struct NG_InputPort
 class NG_Node
 {
 public:
-	NG_Node()
-        : myOutputs(8)
+	NG_Node(u32 aNodeUID)
+        : myUID(aNodeUID)
+		, myOutputs(8)
         , myInputs(8){};
 
 	~NG_Node()
@@ -86,6 +87,7 @@ public:
     virtual void OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const = 0;
     u32 ConnectedInputCount() const;
 
+	u32 myUID;
 	MC_GrowingArray<NG_OutputPort*> myOutputs;
 	MC_GrowingArray<NG_InputPort*> myInputs;
 protected:
