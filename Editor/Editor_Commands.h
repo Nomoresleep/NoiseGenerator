@@ -3,6 +3,7 @@
 class NG_Node;
 struct NG_OutputPort;
 struct NG_InputPort;
+struct Editor_NodeProperties;
 class Editor_NodeEditor;
 
 #include "MC_Vector.h"
@@ -85,4 +86,17 @@ public:
 private:
     NG_OutputPort* myOutputPort;
     NG_InputPort* myInputPort;
+};
+
+class Editor_NodeMoveCommand : public Editor_Command
+{
+public:
+    Editor_NodeMoveCommand(Editor_NodeProperties* someNodeProps, const MC_Vector2f& aNewPosition, const MC_Vector2f& anOldPosition);
+
+    void Execute() override;
+    void Undo() override;
+private:
+    Editor_NodeProperties* myNodeProps;
+    MC_Vector2f myNewPosition;
+    MC_Vector2f myOldPosition;
 };

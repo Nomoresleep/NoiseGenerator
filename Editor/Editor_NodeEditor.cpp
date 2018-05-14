@@ -236,7 +236,7 @@ void Editor_NodeEditor::Display()
         }
         else if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(0))
         {
-            props->myPosition += props->myDeltaPosition;
+            myCommands.ExecuteCommand(new Editor_NodeMoveCommand(props, props->myPosition + props->myDeltaPosition, props->myPosition));
             props->myDeltaPosition = MC_Vector2f(0, 0);
         }
 

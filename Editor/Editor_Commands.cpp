@@ -1,5 +1,6 @@
 #include "Editor_Commands.h"
 #include "Editor_NodeEditor.h"
+#include "Editor_NodeTools.h"
 
 Editor_MakroCommand::~Editor_MakroCommand()
 {
@@ -118,4 +119,22 @@ void Editor_NodeDisconnectCommand::Execute()
 void Editor_NodeDisconnectCommand::Undo()
 {
     myInputPort->Connect(myOutputPort);
+}
+
+Editor_NodeMoveCommand::Editor_NodeMoveCommand(Editor_NodeProperties* someNodeProps, const MC_Vector2f& aNewPosition, const MC_Vector2f& anOldPosition)
+    : myNodeProps(someNodeProps)
+    , myNewPosition(aNewPosition)
+    , myOldPosition(anOldPosition)
+{
+
+}
+
+void Editor_NodeMoveCommand::Execute()
+{
+    myNodeProps->myPosition = myNewPosition;
+}
+
+void Editor_NodeMoveCommand::Undo()
+{
+    myNodeProps->myPosition = myOldPosition;
 }
