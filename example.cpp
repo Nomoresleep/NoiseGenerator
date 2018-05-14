@@ -98,6 +98,14 @@ static void HandleDialogs()
 		ShowAboutDialog();
 		ImGui::EndPopup();
 	}
+
+    bool commandWindowOpen = true;
+    if (theWorkspace && ImGui::BeginPopupModal(theCommandWindowID, &commandWindowOpen, modalFlags))
+    {
+        theWorkspace->myNodeEditor->ShowCommandDialogHelper();
+
+        ImGui::EndPopup();
+    }
     theFileDialog.Show();
 }
 

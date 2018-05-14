@@ -128,6 +128,7 @@ void imgui_window_menu_bar(borderless_window_t* window)
 	bool openGPUCapabilitiesDialog = false;
 	bool openAboutDialog = false;
     bool saveFileDialog = false;
+    bool openCommandWindow = false;
 
 	if (ImGui::BeginMenuBar())
 	{
@@ -149,6 +150,7 @@ void imgui_window_menu_bar(borderless_window_t* window)
 
 		if (ImGui::BeginMenu(TR("Help")))
 		{
+            openCommandWindow = ImGui::MenuItem(TR("Command Stack"));
 			openGPUCapabilitiesDialog = ImGui::MenuItem(TR("GPU Capabilities"));
 			openAboutDialog = ImGui::MenuItem(TR("About"));
 			ImGui::EndMenu();
@@ -173,6 +175,10 @@ void imgui_window_menu_bar(borderless_window_t* window)
 	{
 		ImGui::OpenPopup(theAboutDialogID);
 	}
+    if (openCommandWindow)
+    {
+        ImGui::OpenPopup(theCommandWindowID);
+    }
     if (saveFileDialog)
     {
         ImGui::OpenPopup(theSaveFileDialogID);

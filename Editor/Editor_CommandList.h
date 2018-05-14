@@ -14,6 +14,7 @@ public:
 	void Redo();
 
     s32 Count() const { return myCommands.Count(); }
+    s32 GetCommandIndex() const { return myCommandIndexPointer; }
 
     const Editor_Command* const operator[](s32 anIndex) const
     {

@@ -329,6 +329,14 @@ void Editor_NodeEditor::Display()
 	ImGui::PopStyleVar(2);
 }
 
+void Editor_NodeEditor::ShowCommandDialogHelper()
+{
+    for (s32 commandIdx = myCommands.Count() - 1; commandIdx >= 0; --commandIdx)
+    {
+        ImGui::MenuItem(myCommands[commandIdx]->GetCommandName(), 0, false, commandIdx < myCommands.GetCommandIndex());
+    }
+}
+
 void Editor_NodeEditor::CreateNode(NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition)
 {
 	myNodeProperties.Add(new Editor_NodeProperties(aNode, aNodeLabel, aNodeUID, aPosition));
