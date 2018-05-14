@@ -107,7 +107,7 @@ void Editor_NodeEditor::ShowNodeCreationContextMenu(const MC_Vector2f& aCreateLo
 		{
 			NG_Node* newNode = NG_NodesModule::Create(str);
 			//TODO: Create node uids
-			myCommands.ExecuteCommand(new Editor_NewNodeCommand(this, newNode, NG_NodesModule::GetNodeUID(), str, aCreateLocation));
+			myCommands.ExecuteCommand(new Editor_CreateNodeCommand(this, newNode, NG_NodesModule::GetNodeUID(), str, aCreateLocation));
 		}
 	}
 }
