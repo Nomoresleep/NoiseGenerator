@@ -1,6 +1,8 @@
 #pragma once
 
 class NG_Node;
+struct NG_OutputPort;
+struct NG_InputPort;
 class Editor_NodeEditor;
 
 #include "MC_Vector.h"
@@ -44,4 +46,30 @@ public:
 
     void Execute() override;
     void Undo() override;
+};
+
+class Editor_NodeConnectCommand : public Editor_Command
+{
+public:
+    Editor_NodeConnectCommand(NG_OutputPort* anOutputPort, NG_InputPort* anOldInputPort);
+
+    void Execute() override;
+    void Undo() override;
+
+private:
+    NG_OutputPort* myOutputPort;
+    NG_InputPort* myInputPort;
+};
+
+class Editor_NodeDisconnectCommand : public Editor_Command
+{
+public:
+    Editor_NodeDisconnectCommand(NG_OutputPort* anOutputPort, NG_InputPort* anOldInputPort);
+
+    void Execute() override;
+    void Undo() override;
+
+private:
+    NG_OutputPort* myOutputPort;
+    NG_InputPort* myInputPort;
 };

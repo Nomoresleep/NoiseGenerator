@@ -49,3 +49,35 @@ void Editor_RemoveNodeCommand::Undo()
 {
     Editor_NodeCreationCommand::RemoveNode();
 }
+
+Editor_NodeConnectCommand::Editor_NodeConnectCommand(NG_OutputPort* anOutputPort, NG_InputPort* anInputPort)
+    : myOutputPort(anOutputPort)
+    , myInputPort(anInputPort)
+{
+}
+
+void Editor_NodeConnectCommand::Execute()
+{
+    myInputPort->Connect(myOutputPort);
+}
+
+void Editor_NodeConnectCommand::Undo()
+{
+    myInputPort->Connect(nullptr);
+}
+
+Editor_NodeDisconnectCommand::Editor_NodeDisconnectCommand(NG_OutputPort* anOutputPort, NG_InputPort* anInputPort)
+    : myOutputPort(anOutputPort)
+    , myInputPort(anInputPort)
+{
+}
+
+void Editor_NodeDisconnectCommand::Execute()
+{
+    myInputPort->Connect(nullptr);
+}
+
+void Editor_NodeDisconnectCommand::Undo()
+{
+    myInputPort->Connect(myOutputPort);
+}

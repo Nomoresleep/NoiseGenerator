@@ -192,7 +192,7 @@ void Editor_NodeEditor::Display()
 						{
 							if (ImGui::IsMouseReleased(0))
 							{
-								port->Connect(draggedPort);
+                                myCommands.ExecuteCommand(new Editor_NodeConnectCommand(draggedPort, port));
 							}
 							connectionError = ConnectionValid;
 						}
@@ -211,7 +211,7 @@ void Editor_NodeEditor::Display()
 				else if (ImGui::IsMouseClicked(0))
 				{
 					myDraggedOutput = MC_MakePair<Editor_NodeProperties*, u32>(myOutputToPropertyMap.At(port->myConnectedPort), port->myConnectedPort->myNode->myOutputs.Find(port->myConnectedPort));
-					port->Connect(nullptr);
+                    myCommands.ExecuteCommand(new Editor_NodeDisconnectCommand(port->myConnectedPort, port));
 				}
 			}
 
