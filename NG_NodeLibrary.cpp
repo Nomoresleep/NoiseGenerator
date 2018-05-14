@@ -13,7 +13,7 @@ template<>
 void ConstantNode<u32>::OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const
 {
 	MC_String source;
-	source.Format("float node_%d_0 = %d;\n", 0, 0);
+	source.Format("float node_%d_0 = %d;\n", myUID, 0);
 	aGraphRunnerContext->myGeneratedSource.Add(source);
 }
 
@@ -21,7 +21,7 @@ template<>
 void ConstantNode<s32>::OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const
 {
 	MC_String source;
-	source.Format("float node_%d_0 = %d;\n", 0, 0);
+	source.Format("float node_%d_0 = %d;\n", myUID, 0);
 	aGraphRunnerContext->myGeneratedSource.Add(source);
 }
 
