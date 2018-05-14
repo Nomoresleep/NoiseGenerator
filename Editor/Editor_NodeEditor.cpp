@@ -31,14 +31,14 @@ float locGetHeaderHeight()
 
 MC_Vector2f locGetGlobalInputPortPosition(Editor_NodeProperties* someNodeProperties, u32 aPortIndex, const MC_Vector2f& anOffset)
 {
-	return MC_Vector2f(someNodeProperties->myPosition.x - NODE_SLOT_RADIUS,
-		someNodeProperties->myPosition.y + locGetHeaderHeight() + ImGui::GetStyle().ItemSpacing.y + ImGui::GetItemsLineHeightWithSpacing() * (f32)aPortIndex) + anOffset;
+	return someNodeProperties->myPosition + someNodeProperties->myDeltaPosition + MC_Vector2f(-NODE_SLOT_RADIUS,
+		locGetHeaderHeight() + ImGui::GetStyle().ItemSpacing.y + ImGui::GetItemsLineHeightWithSpacing() * (f32)aPortIndex) + anOffset;
 }
 
 MC_Vector2f locGetGlobalOutputPortPosition(Editor_NodeProperties* someNodeProperties, u32 aPortIndex, const MC_Vector2f& anOffset)
 {
-	return MC_Vector2f(someNodeProperties->myPosition.x + someNodeProperties->mySize.x - NODE_SLOT_RADIUS, 
-		someNodeProperties->myPosition.y + locGetHeaderHeight() + ImGui::GetStyle().ItemSpacing.y + ImGui::GetItemsLineHeightWithSpacing() * (aPortIndex + someNodeProperties->myNode->myInputs.Count())) + anOffset;
+	return someNodeProperties->myPosition + someNodeProperties->myDeltaPosition + MC_Vector2f(someNodeProperties->mySize.x - NODE_SLOT_RADIUS, 
+		locGetHeaderHeight() + ImGui::GetStyle().ItemSpacing.y + ImGui::GetItemsLineHeightWithSpacing() * (aPortIndex + someNodeProperties->myNode->myInputs.Count())) + anOffset;
 
 }
 
@@ -53,7 +53,7 @@ static void locDrawBezierCurve(ImDrawList* aDrawList, MC_Vector2f aP0, MC_Vector
 static void locDrawNode(ImDrawList* aDrawList, Editor_NodeProperties* aProp, MC_Vector2f anOffset)
 {
 	NG_Node* node = aProp->myNode;
-	MC_Vector2f rect_min = anOffset + aProp->myPosition;
+	MC_Vector2f rect_min = anOffset + aProp->myPosition + aProp->myDeltaPosition;
 	MC_Vector2f rect_max = rect_min + aProp->mySize;
 	const f32 headerHeight = ImGui::GetTextLineHeight() + NODE_WINDOW_PADDING.y * 2.0f;
 	MC_Vector2f rect_header_max = rect_min + MC_Vector2f(aProp->mySize.x, headerHeight);
@@ -151,7 +151,7 @@ void Editor_NodeEditor::Display()
 	{
 		Editor_NodeProperties* props = myNodeProperties[node_idx];
 		NG_Node* node = props->myNode;
-		MC_Vector2f rect_min = offset + props->myPosition;
+		MC_Vector2f rect_min = offset + props->myPosition + props->myDeltaPosition;
 		ImGui::PushID(props->myID);
 
 		//Draw Node properties
@@ -230,8 +230,15 @@ void Editor_NodeEditor::Display()
 			mySelection.myNodes.Add(props);
 		}
 
-		if (ImGui::IsItemActive() && ImGui::IsMouseDragging(0))
-			props->myPosition = props->myPosition + ImGui::GetIO().MouseDelta;
+        if (ImGui::IsItemActive() && ImGui::IsMouseDragging(0))
+        {
+            props->myDeltaPosition += ImGui::GetIO().MouseDelta;
+        }
+        else if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(0))
+        {
+            props->myPosition += props->myDeltaPosition;
+            props->myDeltaPosition = MC_Vector2f(0, 0);
+        }
 
 		ImGui::PopID();
 	}

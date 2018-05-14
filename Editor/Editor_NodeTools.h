@@ -5,11 +5,12 @@
 
 struct Editor_NodeProperties
 {
-	Editor_NodeProperties(NG_Node* aNode, const char* aLabel, u32 anID, const MC_Vector2f& aPosition)
-		: myNode(aNode)
-		, myLabel(aLabel)
-		, myID(anID)
-		, myPosition(aPosition)
+    Editor_NodeProperties(NG_Node* aNode, const char* aLabel, u32 anID, const MC_Vector2f& aPosition)
+        : myNode(aNode)
+        , myLabel(aLabel)
+        , myID(anID)
+        , myPosition(aPosition)
+        , myDeltaPosition(0, 0)
 	{
 		CalculateSize();
 	};
@@ -20,6 +21,7 @@ struct Editor_NodeProperties
 	u32 myID;
 
 	MC_Vector2f myPosition;
+    MC_Vector2f myDeltaPosition;
 	MC_Vector2f mySize;
 
 	void CalculateSize()
