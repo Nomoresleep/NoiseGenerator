@@ -291,18 +291,6 @@ void Editor_NodeEditor::Display()
 		mySelection.Clear();
 	}
 
-	if (ImGui::GetIO().KeyCtrl)
-	{
-		if (ImGui::IsKeyPressed('Z'))
-		{
-			myCommands.Undo();
-		}
-		else if (ImGui::IsKeyPressed('Y'))
-		{
-			myCommands.Redo();
-		}
-	}
-
 	static const char* contextMenuLabel = "context_menu";
 	if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive())
 	{
@@ -335,6 +323,16 @@ void Editor_NodeEditor::ShowCommandDialogHelper()
     {
         ImGui::MenuItem(myCommands[commandIdx]->GetCommandName(), 0, false, commandIdx < myCommands.GetCommandIndex());
     }
+}
+
+void Editor_NodeEditor::Undo()
+{
+	myCommands.Undo();
+}
+
+void Editor_NodeEditor::Redo()
+{
+	myCommands.Redo();
 }
 
 void Editor_NodeEditor::CreateNode(NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition)

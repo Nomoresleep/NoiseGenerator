@@ -140,6 +140,17 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 
     if (theWorkspace)
     {
+		if (ImGui::GetIO().KeyCtrl)
+		{
+			if (ImGui::IsKeyPressed('Z'))
+			{
+				theWorkspace->myNodeEditor->Undo();
+			}
+			else if (ImGui::IsKeyPressed('Y'))
+			{
+				theWorkspace->myNodeEditor->Redo();
+			}
+		}
         ImGui::Columns(2);
         locShowTexturePreview();
         ImGui::NextColumn();

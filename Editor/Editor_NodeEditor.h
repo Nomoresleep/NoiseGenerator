@@ -64,6 +64,9 @@ public:
 	void ShowNodeCreationContextMenu(const MC_Vector2f& aCreateLocation);
     void ShowCommandDialogHelper();
 
+	void Undo();
+	void Redo();
+
 	void CreateNode(NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition);
 	void RemoveNode(NG_Node* aNode);
 private:

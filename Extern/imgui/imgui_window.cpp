@@ -4,6 +4,8 @@
 #include "opengl_context.h"
 #include "dialogs.h"
 #include "imgui.h"
+#include "workspace.h"
+#include "Editor_NodeEditor.h"
 
 //dummy translate macro for later maybe?
 #define TR(text) text
@@ -130,6 +132,7 @@ void imgui_window_menu_bar(borderless_window_t* window)
     bool saveFileDialog = false;
     bool openCommandWindow = false;
 
+	const bool appRunning = theWorkspace != nullptr;
 	if (ImGui::BeginMenuBar())
 	{
 		if (ImGui::BeginMenu(TR("File")))
@@ -140,17 +143,24 @@ void imgui_window_menu_bar(borderless_window_t* window)
 			{
 				ImGui::EndMenu();
 			}
-            saveFileDialog = ImGui::MenuItem(TR("Save"), KM("Ctrl+S"));
-            if (ImGui::MenuItem(TR("Save As.."))) {}
+            saveFileDialog = ImGui::MenuItem(TR("Save"), KM("Ctrl+S"), false, appRunning);
+            if (ImGui::MenuItem(TR("Save As.."), 0, false, appRunning)) {}
 			ImGui::Separator();
-            openExportDialog = ImGui::MenuItem(TR("Export"));
+            openExportDialog = ImGui::MenuItem(TR("Export"), 0, false, appRunning);
 			if (ImGui::MenuItem(TR("Quit"), KM("Alt+F4"))) { PostMessageW(window->hwnd, WM_QUIT, 0, 0); }
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu(TR("Edit")))
+		{
+			if (ImGui::MenuItem(TR("Undo"), KM("Ctrl+Z"), false, appRunning)) { theWorkspace->myNodeEditor->Undo(); }
+			if (ImGui::MenuItem(TR("Redo"), KM("Ctrl+Y"), false, appRunning)) { theWorkspace->myNodeEditor->Redo(); }
 			ImGui::EndMenu();
 		}
 
 		if (ImGui::BeginMenu(TR("Help")))
 		{
-            openCommandWindow = ImGui::MenuItem(TR("Command Stack"));
+            openCommandWindow = ImGui::MenuItem(TR("Command Stack"), 0, false, appRunning);
 			openGPUCapabilitiesDialog = ImGui::MenuItem(TR("GPU Capabilities"));
 			openAboutDialog = ImGui::MenuItem(TR("About"));
 			ImGui::EndMenu();
