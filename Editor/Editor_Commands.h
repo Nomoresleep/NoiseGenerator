@@ -12,6 +12,7 @@ class Editor_NodeEditor;
 class Editor_Command
 {
 public:
+    virtual const char* GetCommandName() const = 0;
 	virtual void Execute() = 0;
 	virtual void Undo() = 0;
 };
@@ -19,19 +20,22 @@ public:
 class Editor_MakroCommand : public Editor_Command
 {
 public:
+    Editor_MakroCommand(const char* aMakroName);
     ~Editor_MakroCommand();
     void AddCommand(Editor_Command* aCommand);
 
+    const char* GetCommandName() const override { return myMakroName; }
     void Execute() override;
     void Undo() override;
 protected:
     MC_GrowingArray<Editor_Command*> myCommands;
+    const char* myMakroName;
 };
 
 class Editor_NodeCreationCommand : public Editor_MakroCommand
 {
 public:
-    Editor_NodeCreationCommand(Editor_NodeEditor* anEditor, NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition);
+    Editor_NodeCreationCommand(const char* aMakroName, Editor_NodeEditor* anEditor, NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition);
 
 protected:
     void AddNode();
@@ -67,6 +71,7 @@ class Editor_NodeConnectCommand : public Editor_Command
 public:
     Editor_NodeConnectCommand(NG_OutputPort* anOutputPort, NG_InputPort* anOldInputPort);
 
+    const char* GetCommandName() const override { return "Connect Nodes"; }
     void Execute() override;
     void Undo() override;
 
@@ -80,6 +85,7 @@ class Editor_NodeDisconnectCommand : public Editor_Command
 public:
     Editor_NodeDisconnectCommand(NG_OutputPort* anOutputPort, NG_InputPort* anOldInputPort);
 
+    const char* GetCommandName() const override { return "Disconnect Nodes"; }
     void Execute() override;
     void Undo() override;
 
@@ -93,6 +99,7 @@ class Editor_NodeMoveCommand : public Editor_Command
 public:
     Editor_NodeMoveCommand(Editor_NodeProperties* someNodeProps, const MC_Vector2f& aNewPosition, const MC_Vector2f& anOldPosition);
 
+    const char* GetCommandName() const override { return "Move Node"; }
     void Execute() override;
     void Undo() override;
 private:

@@ -2,6 +2,11 @@
 #include "Editor_NodeEditor.h"
 #include "Editor_NodeTools.h"
 
+Editor_MakroCommand::Editor_MakroCommand(const char* aMakroName)
+    : myMakroName(aMakroName)
+{
+}
+
 Editor_MakroCommand::~Editor_MakroCommand()
 {
     myCommands.DeleteAll();
@@ -24,8 +29,9 @@ void Editor_MakroCommand::Undo()
         myCommands[commandIdx]->Undo();
 }
 
-Editor_NodeCreationCommand::Editor_NodeCreationCommand(Editor_NodeEditor* anEditor, NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition)
-	: myEditor(anEditor)
+Editor_NodeCreationCommand::Editor_NodeCreationCommand(const char* aMakroName, Editor_NodeEditor* anEditor, NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition)
+	: Editor_MakroCommand(aMakroName)
+    , myEditor(anEditor)
 	, myNode(aNode)
 	, myNodeUID(aNodeUID)
 	, myNodeLabel(aNodeLabel)
@@ -44,7 +50,7 @@ void Editor_NodeCreationCommand::RemoveNode()
 }
 
 Editor_CreateNodeCommand::Editor_CreateNodeCommand(Editor_NodeEditor* anEditor, NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition)
-    : Editor_NodeCreationCommand(anEditor, aNode, aNodeUID, aNodeLabel, aPosition)
+    : Editor_NodeCreationCommand("Create Node", anEditor, aNode, aNodeUID, aNodeLabel, aPosition)
 {
 }
 
@@ -59,7 +65,7 @@ void Editor_CreateNodeCommand::Undo()
 }
 
 Editor_RemoveNodeCommand::Editor_RemoveNodeCommand(Editor_NodeEditor* anEditor, NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition)
-    : Editor_NodeCreationCommand(anEditor, aNode, aNodeUID, aNodeLabel, aPosition)
+    : Editor_NodeCreationCommand("Remove Node", anEditor, aNode, aNodeUID, aNodeLabel, aPosition)
 {
     for (s32 inputIdx = 0; inputIdx < aNode->myInputs.Count(); ++inputIdx)
     {

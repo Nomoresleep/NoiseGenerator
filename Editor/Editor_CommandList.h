@@ -13,6 +13,12 @@ public:
 	void Undo();
 	void Redo();
 
+    s32 Count() const { return myCommands.Count(); }
+
+    const Editor_Command* const operator[](s32 anIndex) const
+    {
+        return myCommands[anIndex];
+    }
 private:
 	MC_GrowingArray<Editor_Command*> myCommands;
 	s32 myCommandIndexPointer;
