@@ -6,6 +6,7 @@ struct NG_InputPort;
 class Editor_NodeEditor;
 
 #include "MC_Vector.h"
+#include "MC_GrowingArray.h"
 
 class Editor_Command
 {
@@ -14,7 +15,19 @@ public:
 	virtual void Undo() = 0;
 };
 
-class Editor_NodeCreationCommand : public Editor_Command
+class Editor_MakroCommand : public Editor_Command
+{
+public:
+    ~Editor_MakroCommand();
+    void AddCommand(Editor_Command* aCommand);
+
+    void Execute() override;
+    void Undo() override;
+protected:
+    MC_GrowingArray<Editor_Command*> myCommands;
+};
+
+class Editor_NodeCreationCommand : public Editor_MakroCommand
 {
 public:
     Editor_NodeCreationCommand(Editor_NodeEditor* anEditor, NG_Node* aNode, u32 aNodeUID, const char* aNodeLabel, const MC_Vector2f& aPosition);

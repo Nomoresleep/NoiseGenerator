@@ -208,7 +208,7 @@ void Editor_NodeEditor::Display()
 						connectionError = ConnectionMisMatch;
 					}
 				}
-				else if (ImGui::IsMouseClicked(0))
+				else if (ImGui::IsMouseClicked(0) && port->myConnectedPort != nullptr)
 				{
 					myDraggedOutput = MC_MakePair<Editor_NodeProperties*, u32>(myOutputToPropertyMap.At(port->myConnectedPort), port->myConnectedPort->myNode->myOutputs.Find(port->myConnectedPort));
                     myCommands.ExecuteCommand(new Editor_NodeDisconnectCommand(port->myConnectedPort, port));
