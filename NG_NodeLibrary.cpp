@@ -5,7 +5,7 @@ template<>
 void ConstantNode<f32>::OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const
 {
 	MC_String source;
-	source.Format("float node_%d_0 = %f;\n", 0, 0.5f);
+	source.Format("float node_%d_0 = %f;\n", myUID, 0.5f);
 	aGraphRunnerContext->myGeneratedSource.Add(source);
 }
 

@@ -573,16 +573,12 @@ void MC_GrowingArray<Type>::AddUnique(const Type& anItem)
 {
 	unsigned int i;
 
-	// Call Init() before using the array
-	//assert(myMaxNrOfItems > 0);
-	assert( myItemIncreaseSize > 0 );
-
 	for(i = 0; i < (unsigned int) myUsedNrOfItems; i++)
 		if(myItemList[i] == anItem)
 			return; // already exists
 
-	if(myUsedNrOfItems == myMaxNrOfItems)
-		if(SetSize(myMaxNrOfItems + myItemIncreaseSize) < int(myUsedNrOfItems + myItemIncreaseSize))
+    if (myUsedNrOfItems == myMaxNrOfItems)
+        if (SetSize(MC_Max(myMaxNrOfItems + MC_GROWINGARRAY_MIN_INC, myMaxNrOfItems * 2)) < s32(myUsedNrOfItems))
 			return;
 
 	myItemList[myUsedNrOfItems] = anItem;

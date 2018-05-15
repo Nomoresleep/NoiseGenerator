@@ -26,6 +26,20 @@ public:
         }
     }
 
+    void PushUnique(const Type& anElement)
+    {
+        s32 i = myData.Count();
+        myData.AddUnique(anElement);
+        if (i != myData.Count())
+        {
+            while (i > 0 && !COMPARER::LessThan(myData[Parent(i)], myData[i]))
+            {
+                MC_Swap(myData[Parent(i)], myData[i]);
+                i = Parent(i);
+            }
+        }
+    }
+
     Type Pop()
     {
         Type result = myData.GetFirst();

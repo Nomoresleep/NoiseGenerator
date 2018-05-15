@@ -52,7 +52,7 @@ void NG_GraphRunner::Run()
 			for (s32 inPortIdx = 0; inPortIdx < outPort->myConnectedInputs.Count(); ++inPortIdx)
 			{
 				const NG_InputPort* inPort = outPort->myConnectedInputs[inPortIdx];
-				pqueue.Push(inPort->myNode);
+				pqueue.PushUnique(inPort->myNode);
 			}
 		}
 	}
