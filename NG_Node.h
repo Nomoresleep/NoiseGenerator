@@ -25,12 +25,10 @@ struct NG_Port
 		UIntPort,
 	};
 
-	union Data
-	{
-		f32 myFloatData;
-		s32 myIntPortData;
-		u32 myUIntPortData;
-	};
+    struct Data
+    {
+        MC_String myVariableName;
+    };
 };
 
 struct NG_OutputPort
@@ -44,9 +42,9 @@ struct NG_OutputPort
 	~NG_OutputPort();
 
 	NG_Node* myNode;
-	NG_Port::Data myData;
-	const NG_Port::Type myType;
 	MC_GrowingArray<NG_InputPort*> myConnectedInputs;
+    const NG_Port::Type myType;
+    NG_Port::Data myData;
 };
 
 struct NG_InputPort
@@ -68,6 +66,7 @@ struct NG_InputPort
 	NG_Node* myNode;
     NG_OutputPort* myConnectedPort;
 	const NG_Port::Type myType;
+    NG_Port::Data myData;
 };
 
 class NG_Node

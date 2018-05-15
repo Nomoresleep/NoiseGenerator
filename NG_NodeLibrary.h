@@ -32,9 +32,7 @@ public:
         if (myInputs[0]->myConnectedPort)
         {
             MC_String source;
-            const NG_Node* connectedNode = myInputs[0]->myConnectedPort->myNode;
-            s32 outputIndex = connectedNode->myOutputs.Find(myInputs[0]->myConnectedPort);
-            source.Format("result = node_%d_%d;\n", connectedNode->myUID, outputIndex);
+            source.Format("result = %s;\n", myInputs[0]->myConnectedPort->myData.myVariableName);
             aGraphRunnerContext->myGeneratedSource.Add(source);
         }
     };
@@ -62,9 +60,11 @@ public:
 
     void OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const override 
     {
+        MC_String varName = MC_Strfmt<32>("perlinNoise2D%d", myUID);
 		MC_String source;
-		source.Format("float node_%d_0 = PerlinNoise2D(x, y);\n", myUID);
+		source.Format("float %s = PerlinNoise2D(x, y);\n", varName);
 		aGraphRunnerContext->myGeneratedSource.Add(source);
+        myOutputs[0]->myData.myVariableName = varName;
     };
 private:
 	PerlinNoiseConstants myConstants;

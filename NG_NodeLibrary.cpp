@@ -4,25 +4,28 @@
 template<>
 void ConstantNode<f32>::OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const
 {
+    MC_String varName = MC_Strfmt<64>("constant%d", myUID);
 	MC_String source;
-	source.Format("float node_%d_0 = %f;\n", myUID, 0.5f);
+	source.Format("float %s = %f;\n", varName, 0.5f);
 	aGraphRunnerContext->myGeneratedSource.Add(source);
 }
 
 template<>
 void ConstantNode<u32>::OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const
 {
+    MC_String varName = MC_Strfmt<64>("constant%d", myUID);
 	MC_String source;
-	source.Format("float node_%d_0 = %d;\n", myUID, 0);
+    source.Format("uint %s = %d;\n", varName, 0);
 	aGraphRunnerContext->myGeneratedSource.Add(source);
 }
 
 template<>
 void ConstantNode<s32>::OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const
 {
-	MC_String source;
-	source.Format("float node_%d_0 = %d;\n", myUID, 0);
-	aGraphRunnerContext->myGeneratedSource.Add(source);
+    MC_String varName = MC_Strfmt<64>("constant%d", myUID);
+    MC_String source;
+    source.Format("int %s = %d;\n", varName, 0);
+    aGraphRunnerContext->myGeneratedSource.Add(source);
 }
 
 void NodeLibrary::RegisterNodeTypes()
