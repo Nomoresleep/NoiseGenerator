@@ -36,15 +36,15 @@ float GradCoord2D(int x, int y, float xd, float yd){
 }
 float interp(float t) { return t*t*t*(t*(t * 6 - 15) + 10); }
 
-float PerlinNoise2D(float x, float y){
-	int x0 = int(floor(x));
-	int y0 = int(floor(y));
+float PerlinNoise2D(vec2 uv){
+	int x0 = int(floor(uv.x));
+	int y0 = int(floor(uv.y));
 	int x1 = x0 + 1;
 	int y1 = y0 + 1;
-	float xs = interp(fract(x));
-	float ys = interp(fract(y));
-	float xd0 = fract(x);
-	float yd0 = fract(y);
+	float xs = interp(fract(uv.x));
+	float ys = interp(fract(uv.y));
+	float xd0 = fract(uv.x);
+	float yd0 = fract(uv.y);
 	float xd1 = xd0 - 1.0;
 	float yd1 = yd0 - 1.0;
 	float xf0 = mix(GradCoord2D(x0, y0, xd0, yd0), GradCoord2D(x1, y0, xd1, yd0), xs);

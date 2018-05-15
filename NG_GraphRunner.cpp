@@ -24,8 +24,7 @@ void NG_GraphRunner::Run()
 		"layout(rgba32f, binding = 0) uniform image2D img_output;\n"
 		"void main(){\n"
 		"ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);\n"
-		"float x = (pixel_coords.x / 1024.0) * 16.0;\n"
-		"float y = (pixel_coords.y / 1024.0) * 16.0;\n"
+		"vec2 UV = (pixel_coords.xy / 1024.0) * 16.0;\n"
 		"float result = 0.0;\n";
 	static const char* locComputeShaderString2 =
 		//"float perlin = PerlinNoise2D(x,y);\n"

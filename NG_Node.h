@@ -23,6 +23,7 @@ struct NG_Port
 		FloatPort,
 		IntPort,
 		UIntPort,
+        Vec2Port,
 	};
 
     struct Data
@@ -106,3 +107,6 @@ static NG_Port::Type GetPortType<s32>() { return NG_Port::IntPort; }
 
 template<>
 static NG_Port::Type GetPortType<u32>() { return NG_Port::UIntPort; }
+
+template<>
+static NG_Port::Type GetPortType<MC_Vector2f>() { return NG_Port::Vec2Port; }

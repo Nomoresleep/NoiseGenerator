@@ -28,11 +28,17 @@ void ConstantNode<s32>::OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) c
     aGraphRunnerContext->myGeneratedSource.Add(source);
 }
 
+struct UVConstExpr
+{
+    static constexpr char* BuildIn = "UV";
+};
+
 void NodeLibrary::RegisterNodeTypes()
 {
 	NG_RegisterNodeType<ConstantNode<f32>>("Constants/FloatConstantNode");
 	NG_RegisterNodeType<ConstantNode<s32>>("Constants/IntConstantNode");
 	NG_RegisterNodeType<ConstantNode<u32>>("Constants/UIntConstantNode");
+    NG_RegisterNodeType<BuildInConstantNode<MC_Vector2f, UVConstExpr>>("Constants/UV");
 	NG_RegisterNodeType<PerlinNoise2D>("PerlinNoise2D");
 	NG_RegisterNodeType<ResultNode>("ResultNode");
 }
