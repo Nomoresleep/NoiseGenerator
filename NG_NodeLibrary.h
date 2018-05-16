@@ -74,8 +74,8 @@ public:
     void OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const override
     {
         MC_String varName = MC_Strfmt<64>("%s%d", ConstOp::Name, myUID);
-        MC_String param0 = myInputs[In0Idx]->myConnectedPort ? myInputs[In0Idx]->myConnectedPort->myData.myVariableName : MC_String(MC_Strfmt<64>("%f", myInputs[In0Idx]->myData.myValue.myFloat));
-        MC_String param1 = myInputs[In1Idx]->myConnectedPort ? myInputs[In1Idx]->myConnectedPort->myData.myVariableName : MC_String(MC_Strfmt<64>("%f", myInputs[In1Idx]->myData.myValue.myFloat));
+		MC_String param0 = GetInputParameterString<f32>(In0Idx);
+		MC_String param1 = GetInputParameterString<f32>(In1Idx);
         MC_String source;
         source.Format("%s %s = %s %s %s;\n", GetVariableTypeFromType<Type>(), varName, param0, ConstOp::Operator, param1);
         aGraphRunnerContext->myGeneratedSource.Add(source);
@@ -88,9 +88,9 @@ class ResultNode : public NG_Node
 private:
     enum InPortIdx
     {
-        RedInIndex = 0,
-        GreenInIndex = 1,
-        BlueInIndex = 2,
+        RedInIdx = 0,
+        GreenInIdx = 1,
+        BlueInIdx = 2,
     };
 public:
     ResultNode(u32 aNodeUID)
@@ -104,38 +104,12 @@ public:
     void OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const override 
     {
         MC_String source;
-        if (myInputs[RedInIndex]->myConnectedPort)
-        {
-            source.Format("result.r = %s;\n", myInputs[RedInIndex]->myConnectedPort->myData.myVariableName);
-            aGraphRunnerContext->myGeneratedSource.Add(source);
-        }
-        else
-        {
-            source.Format("result.r = %f;\n", myInputs[RedInIndex]->myData.myValue.myFloat);
-            aGraphRunnerContext->myGeneratedSource.Add(source);
-        }
+		MC_String param0 = GetInputParameterString<f32>((u32)RedInIdx);
+		MC_String param1 = GetInputParameterString<f32>(GreenInIdx);
+		MC_String param2 = GetInputParameterString<f32>(BlueInIdx);
 
-        if (myInputs[GreenInIndex]->myConnectedPort)
-        {
-            source.Format("result.g = %s;\n", myInputs[GreenInIndex]->myConnectedPort->myData.myVariableName);
-            aGraphRunnerContext->myGeneratedSource.Add(source);
-        }
-        else
-        {
-            source.Format("result.g = %f;\n", myInputs[GreenInIndex]->myData.myValue.myFloat);
-            aGraphRunnerContext->myGeneratedSource.Add(source);
-        }
-
-        if (myInputs[BlueInIndex]->myConnectedPort)
-        {
-            source.Format("result.b = %s;\n", myInputs[BlueInIndex]->myConnectedPort->myData.myVariableName);
-            aGraphRunnerContext->myGeneratedSource.Add(source);
-        }
-        else
-        {
-            source.Format("result.b = %f;\n", myInputs[BlueInIndex]->myData.myValue.myFloat);
-            aGraphRunnerContext->myGeneratedSource.Add(source);
-        }
+		source.Format("result = vec3(%s, %s, %s);\n", param0, param1, param2);
+		aGraphRunnerContext->myGeneratedSource.Add(source);
     };
 };
 
@@ -164,14 +138,10 @@ public:
 
     void OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const override
     {
-        if (myInputs[InIdx]->myConnectedPort)
-        {
-            MC_String varName;
-            varName.Format("%s.r;\n", myInputs[InIdx]->myConnectedPort->myData.myVariableName);
-            myOutputs[Out0Idx]->myData.myVariableName = varName;
-            varName.Format("%s.g;\n", myInputs[InIdx]->myConnectedPort->myData.myVariableName);
-            myOutputs[Out1Idx]->myData.myVariableName = varName;
-        }
+		MC_String varName = MC_String(myInputs[InIdx]->myConnectedPort ? MC_Strfmt<32>("%s.r", myInputs[InIdx]->myConnectedPort->myData.myVariableName) : MC_Strfmt<32>("%f", myInputs[InIdx]->myData.myValue.myVec2.x));
+		myOutputs[Out0Idx]->myData.myVariableName = varName;
+		varName = MC_String(myInputs[InIdx]->myConnectedPort ? MC_Strfmt<32>("%s.g", myInputs[InIdx]->myConnectedPort->myData.myVariableName) : MC_Strfmt<32>("%f", myInputs[InIdx]->myData.myValue.myVec2.y));
+		myOutputs[Out1Idx]->myData.myVariableName = varName;
     };
 };
 

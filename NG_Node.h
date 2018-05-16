@@ -98,6 +98,17 @@ public:
 	}
 
     virtual void OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const = 0;
+
+	template <typename Type>
+	MC_String GetInputParameterString(u32 anInputIndex) const;
+
+	template <>
+	MC_String GetInputParameterString<f32>(u32 anInputIndex) const
+	{
+		MC_String param = myInputs[anInputIndex]->myConnectedPort ? myInputs[anInputIndex]->myConnectedPort->myData.myVariableName : MC_String(MC_Strfmt<64>("%f", myInputs[anInputIndex]->myData.myValue.myFloat));
+		return param;
+	}
+
     u32 ConnectedInputCount() const;
 
 	u32 myUID;
