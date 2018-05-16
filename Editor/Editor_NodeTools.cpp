@@ -16,11 +16,11 @@ void Editor_DisplayProperty(NG_Port::Data& somePortData, NG_Port::Type aPortType
     {
     case NG_Port::FloatPort:
     {
-        ImGui::DragFloatProgress("portData", &somePortData.myFloat);
+        ImGui::DragFloatProgress("portData", &somePortData.myValue.myFloat, 0.01f);
     }break;
     case NG_Port::Vec2Port:
     {
-        ImGui::DragFloat2("portData", &somePortData.myVec2.x);
+        ImGui::DragFloat2("portData", &somePortData.myValue.myVec2.x, 0.01f);
     }break;
     }
 }

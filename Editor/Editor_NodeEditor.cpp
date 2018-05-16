@@ -102,7 +102,7 @@ static void locDrawNode(ImDrawList* aDrawList, Editor_NodeProperties* aProp, MC_
             ImGui::SetCursorScreenPos(propPos);
             ImGui::PushItemWidth(rect_max.x - rect_min.x - NODE_WINDOW_PADDING.x * 2.0f);
             static f32 f = 0.0f;
-            ImGui::DragFloat("portData", &port->myData.myFloat);
+            ImGui::DragFloat("portData", &port->myData.myValue.myFloat);
             ImGui::PopItemWidth();
         }
         ImGui::PopID();

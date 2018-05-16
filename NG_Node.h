@@ -28,17 +28,18 @@ struct NG_Port
 
     struct Data
     {
-        Data() {};
-        ~Data() {};
-
         MC_String myVariableName;
-        union
+        union Value
         {
+            Value() {
+                memset(this, 0, sizeof(Value));
+            };
+            ~Value() {};
             f32 myFloat;
             s32 myInt;
             u32 myUInt;
             MC_Vector2f myVec2;
-        };
+        }myValue;
     };
 };
 
