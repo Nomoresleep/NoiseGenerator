@@ -4,8 +4,8 @@ namespace
 {
 	struct NodeComparator
 	{
-		static bool LessThan(NG_Node* a, NG_Node* b) { return a->ConnectedInputCount() < b->ConnectedInputCount(); }
-		static bool Equals(NG_Node* a, NG_Node* b) { return a->ConnectedInputCount() == b->ConnectedInputCount(); }
+		static bool LessThan(const NG_Node* a, const NG_Node* b) { return a->ConnectedInputCount() < b->ConnectedInputCount(); }
+		static bool Equals(const NG_Node* a, const NG_Node* b) { return a->ConnectedInputCount() == b->ConnectedInputCount(); }
 	};
 }
 
@@ -16,7 +16,7 @@ NG_GraphRunner::NG_GraphRunner(NG_NodeGraph* aNodegraph)
 
 void NG_GraphRunner::Run()
 {
-	MC_BinaryHeap<NG_Node*, ::NodeComparator> pqueue(myNodegraph->GetNodes().Count());
+	MC_BinaryHeap<const NG_Node*, ::NodeComparator> pqueue(myNodegraph->GetNodes().Count());
 	NG_GraphRunnerContext runnerContext;
 
 	static const char* locComputeShaderString1 =
@@ -34,11 +34,15 @@ void NG_GraphRunner::Run()
 
 	runnerContext.myGeneratedSource.Add(locComputeShaderString1);
 
+	MC_HashMap<const NG_Node*, s32> activeConnectionCount;
 	for (s32 nodeIdx = 0; nodeIdx < myNodegraph->GetNodes().Count(); ++nodeIdx)
 	{
-		NG_Node* node = myNodegraph->GetNodes()[nodeIdx];
-		if (node->ConnectedInputCount() == 0)
+		const NG_Node* node = myNodegraph->GetNodes()[nodeIdx];
+		s32 connectionCount = node->ConnectedInputCount();
+		if (connectionCount == 0)
 			pqueue.Push(node);
+
+		activeConnectionCount[node] = connectionCount;
 	}
 
 	while (!pqueue.IsEmpty())
@@ -51,7 +55,10 @@ void NG_GraphRunner::Run()
 			for (s32 inPortIdx = 0; inPortIdx < outPort->myConnectedInputs.Count(); ++inPortIdx)
 			{
 				const NG_InputPort* inPort = outPort->myConnectedInputs[inPortIdx];
-				pqueue.PushUnique(inPort->myNode);
+				if (--activeConnectionCount[inPort->myNode] <= 0)
+				{
+					pqueue.PushUnique(inPort->myNode);
+				}
 			}
 		}
 	}
