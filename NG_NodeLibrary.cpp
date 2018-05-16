@@ -5,8 +5,7 @@ template<>
 void ConstantNode<f32>::OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const
 {
     MC_String varName = MC_Strfmt<64>("constant%d", myUID);
-	MC_String source;
-	source.Format("float %s = %f;\n", varName, 0.5f);
+	MC_String source = MC_Strfmt<128>("float %s = %f;\n", varName, myOutputs[OutIdx]->myData.myFloat);
 	aGraphRunnerContext->myGeneratedSource.Add(source);
     myOutputs[OutIdx]->myData.myVariableName = varName;
 }
@@ -15,8 +14,7 @@ template<>
 void ConstantNode<u32>::OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const
 {
     MC_String varName = MC_Strfmt<64>("constant%d", myUID);
-	MC_String source;
-    source.Format("uint %s = %d;\n", varName, 0);
+	MC_String source = MC_Strfmt<128>("uint %s = %d;\n", varName, myOutputs[OutIdx]->myData.myUInt);
 	aGraphRunnerContext->myGeneratedSource.Add(source);
     myOutputs[OutIdx]->myData.myVariableName = varName;
 }
@@ -25,8 +23,17 @@ template<>
 void ConstantNode<s32>::OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const
 {
     MC_String varName = MC_Strfmt<64>("constant%d", myUID);
-    MC_String source;
-    source.Format("int %s = %d;\n", varName, 0);
+    MC_String source = MC_Strfmt<128>("int %s = %d;\n", varName, myOutputs[OutIdx]->myData.myInt);
+    aGraphRunnerContext->myGeneratedSource.Add(source);
+    myOutputs[OutIdx]->myData.myVariableName = varName;
+}
+
+template<>
+void ConstantNode<MC_Vector2f>::OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const
+{
+    MC_String varName = MC_Strfmt<64>("constant%d", myUID);
+    const MC_Vector2f& v2 = myOutputs[OutIdx]->myData.myVec2;
+    MC_String source = MC_Strfmt<128>("vec2 %s = vec2(%f, %f);\n", varName, v2.x, v2.y);
     aGraphRunnerContext->myGeneratedSource.Add(source);
     myOutputs[OutIdx]->myData.myVariableName = varName;
 }
@@ -64,7 +71,8 @@ void NodeLibrary::RegisterNodeTypes()
 {
 	NG_RegisterNodeType<ConstantNode<f32>>("Constants/FloatConstantNode");
 	NG_RegisterNodeType<ConstantNode<s32>>("Constants/IntConstantNode");
-	NG_RegisterNodeType<ConstantNode<u32>>("Constants/UIntConstantNode");
+    NG_RegisterNodeType<ConstantNode<u32>>("Constants/UIntConstantNode");
+    NG_RegisterNodeType<ConstantNode<MC_Vector2f>>("Constants/Vec2ConstantNode");
     NG_RegisterNodeType<BuildInConstantNode<MC_Vector2f, UVConstExpr>>("Constants/UV");
     NG_RegisterNodeType<OperationNodeTwoWay<f32, AddOp>>("Math/Add");
     NG_RegisterNodeType<OperationNodeTwoWay<f32, SubOp>>("Math/Sub");
@@ -79,6 +87,7 @@ void NodeLibrary::UnregisterNodeTypes()
 	NG_UnregisterNodeType("Constants/FloatConstantNode");
 	NG_UnregisterNodeType("Constants/IntConstantNode");
 	NG_UnregisterNodeType("Constants/UIntConstantNode");
+    NG_UnregisterNodeType("Constants/Vec2ConstantNode");
     NG_UnregisterNodeType("Constants/UV");
     NG_UnregisterNodeType("Math/Add");
     NG_UnregisterNodeType("Math/Sub");

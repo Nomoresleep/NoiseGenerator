@@ -28,15 +28,26 @@ struct NG_Port
 
     struct Data
     {
+        Data() {};
+        ~Data() {};
+
         MC_String myVariableName;
+        union
+        {
+            f32 myFloat;
+            s32 myInt;
+            u32 myUInt;
+            MC_Vector2f myVec2;
+        };
     };
 };
 
 struct NG_OutputPort
 {
-	NG_OutputPort(NG_Node* aNode, NG_Port::Type aPortType)
+	NG_OutputPort(NG_Node* aNode, NG_Port::Type aPortType, bool aResultIsCalculated)
         : myType(aPortType)
         , myNode(aNode)
+        , myResultIsCalculated(aResultIsCalculated)
         , myConnectedInputs(8)
     {};
 
@@ -46,6 +57,7 @@ struct NG_OutputPort
 	MC_GrowingArray<NG_InputPort*> myConnectedInputs;
     const NG_Port::Type myType;
     NG_Port::Data myData;
+    bool myResultIsCalculated;
 };
 
 struct NG_InputPort

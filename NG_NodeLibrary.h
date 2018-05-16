@@ -15,7 +15,7 @@ public:
     ConstantNode(u32 aNodeUID)
 		: NG_Node(aNodeUID)
 	{
-        AddOutputPort(new NG_OutputPort(this, GetPortType<Type>()));
+        AddOutputPort(new NG_OutputPort(this, GetPortType<Type>(), false));
     };
 
     void OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const override;
@@ -35,7 +35,7 @@ public:
     BuildInConstantNode(u32 aNodeUID)
         : NG_Node(aNodeUID)
     {
-        AddOutputPort(new NG_OutputPort(this, GetPortType<Type>()));
+        AddOutputPort(new NG_OutputPort(this, GetPortType<Type>(), true));
     };
 
     void OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const override 
@@ -65,7 +65,7 @@ public:
         AddInputPort(new NG_InputPort(this, GetPortType<Type>()));
         AddInputPort(new NG_InputPort(this, GetPortType<Type>()));
 
-        AddOutputPort(new NG_OutputPort(this, GetPortType<Type>()));
+        AddOutputPort(new NG_OutputPort(this, GetPortType<Type>(), true));
     }
 
     void OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const override
@@ -123,7 +123,7 @@ public:
 	{
 		AddInputPort(new NG_InputPort(this, NG_Port::Vec2Port));
 
-		AddOutputPort(new NG_OutputPort(this, NG_Port::FloatPort));
+		AddOutputPort(new NG_OutputPort(this, NG_Port::FloatPort, true));
 	}
 
     void OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const override 

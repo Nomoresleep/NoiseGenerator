@@ -77,36 +77,44 @@ static void locDrawNode(ImDrawList* aDrawList, Editor_NodeProperties* aProp, MC_
 	//Draw Output ports
 	for (s32 slotIdx = 0; slotIdx < node->myOutputs.Count(); slotIdx++)
 	{
+        ImGui::PushID(slotIdx);
 		NG_OutputPort* port = node->myOutputs[slotIdx];
 		MC_Vector2f portPos = locGetGlobalOutputPortPosition(aProp, slotIdx, anOffset);
 		ImGui::SetCursorScreenPos(portPos);
 
 		locDrawPort(aDrawList, portPos, GetColorFromPortType(port->myType));
 
-        MC_Vector2f propPos = MC_Vector2f(rect_min.x + NODE_WINDOW_PADDING.x, portPos.y);
-        ImGui::SetCursorScreenPos(propPos);
-        ImGui::PushItemWidth(rect_max.x - rect_min.x - NODE_WINDOW_PADDING.x * 2.0f);
-        static f32 f = 0.0f;
-        ImGui::DragFloat("portData", &f);
-        ImGui::PopItemWidth();
+        if (!port->myResultIsCalculated)
+        {
+            MC_Vector2f propPos = MC_Vector2f(rect_min.x + NODE_WINDOW_PADDING.x, portPos.y);
+            ImGui::SetCursorScreenPos(propPos);
+            ImGui::PushItemWidth(rect_max.x - rect_min.x - NODE_WINDOW_PADDING.x * 2.0f);
+            ImGui::DragFloat("portData", &port->myData.myFloat);
+            ImGui::PopItemWidth();
+        }
+
+        ImGui::PopID();
 	}
 
 	//Draw Input ports
 	for (s32 slotIdx = 0; slotIdx < node->myInputs.Count(); slotIdx++)
 	{
-        ImGui::PushID(slotIdx);
+        ImGui::PushID(slotIdx + node->myOutputs.Count());
 		NG_InputPort* port = node->myInputs[slotIdx];
 		MC_Vector2f portPos = locGetGlobalInputPortPosition(aProp, slotIdx, anOffset);
 		ImGui::SetCursorScreenPos(portPos);
 
 		locDrawPort(aDrawList, portPos, GetColorFromPortType(port->myType));
 
-        MC_Vector2f propPos = MC_Vector2f(rect_min.x + NODE_WINDOW_PADDING.x, portPos.y);
-        ImGui::SetCursorScreenPos(propPos);
-        ImGui::PushItemWidth(rect_max.x - rect_min.x - NODE_WINDOW_PADDING.x * 2.0f);
-        static f32 f = 0.0f;
-        ImGui::DragFloat("portData", &f);
-        ImGui::PopItemWidth();
+        if (!port->myConnectedPort)
+        {
+            MC_Vector2f propPos = MC_Vector2f(rect_min.x + NODE_WINDOW_PADDING.x, portPos.y);
+            ImGui::SetCursorScreenPos(propPos);
+            ImGui::PushItemWidth(rect_max.x - rect_min.x - NODE_WINDOW_PADDING.x * 2.0f);
+            static f32 f = 0.0f;
+            ImGui::DragFloat("portData", &port->myData.myFloat);
+            ImGui::PopItemWidth();
+        }
         ImGui::PopID();
 	}
 }
@@ -362,16 +370,17 @@ void Editor_NodeEditor::Redo()
 
 void Editor_NodeEditor::CreateNode(NG_Node* aNode, const char* aNodeLabel, const MC_Vector2f& aPosition)
 {
-	myNodeProperties.Add(new Editor_NodeProperties(aNode, aNodeLabel, aPosition));
+    Editor_NodeProperties* nodeProps = new Editor_NodeProperties(aNode, aNodeLabel, aPosition);
+	myNodeProperties.Add(nodeProps);
 
 	for (NG_InputPort* port : aNode->myInputs)
 	{
-		myInputToPropertyMap.Insert(port, myNodeProperties.GetLast());
+		myInputToPropertyMap.Insert(port, nodeProps);
 	}
 
 	for (NG_OutputPort* port : aNode->myOutputs)
 	{
-		myOutputToPropertyMap.Insert(port, myNodeProperties.GetLast());
+		myOutputToPropertyMap.Insert(port, nodeProps);
 	}
 
 	myGraph->AddNode(aNode);
