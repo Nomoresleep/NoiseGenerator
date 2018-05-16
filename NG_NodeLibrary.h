@@ -6,6 +6,11 @@
 template <typename Type>
 class ConstantNode : public NG_Node
 {
+private:
+    enum OutPortIdx
+    {
+        OutIdx = 0
+    };
 public:
     ConstantNode(u32 aNodeUID)
 		: NG_Node(aNodeUID)
@@ -21,6 +26,11 @@ public:
 template <typename Type, typename ConstBuildIn>
 class BuildInConstantNode : public NG_Node
 {
+private:
+    enum OutPortIdx
+    {
+        OutIdx = 0
+    };
 public:
     BuildInConstantNode(u32 aNodeUID)
         : NG_Node(aNodeUID)
@@ -31,12 +41,53 @@ public:
     void OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const override 
     {
         (void)aGraphRunnerContext;
-        myOutputs[0]->myData.myVariableName = ConstBuildIn::BuildIn;
+        myOutputs[OutIdx]->myData.myVariableName = ConstBuildIn::BuildIn;
+    }
+};
+
+template <typename Type, typename ConstOp>
+class OperationNodeTwoWay : public NG_Node
+{
+private:
+    enum InPortIdx
+    {
+        In0Idx = 0,
+        In1Idx = 1,
+    };
+    enum OutPortIdx
+    {
+        OutIdx = 0
+    };
+public:
+    OperationNodeTwoWay(u32 aNodeUID)
+        : NG_Node(aNodeUID)
+    {
+        AddInputPort(new NG_InputPort(this, GetPortType<Type>()));
+        AddInputPort(new NG_InputPort(this, GetPortType<Type>()));
+
+        AddOutputPort(new NG_OutputPort(this, GetPortType<Type>()));
+    }
+
+    void OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const override
+    {
+        if (myInputs[In0Idx]->myConnectedPort && myInputs[In1Idx]->myConnectedPort)
+        {
+            MC_String varName = MC_Strfmt<64>("%s%d", ConstOp::Name, myUID);
+            MC_String source;
+            source.Format("float %s = %s %s %s;\n", varName, myInputs[In0Idx]->myConnectedPort->myData.myVariableName, ConstOp::Operator, myInputs[In1Idx]->myConnectedPort->myData.myVariableName);
+            aGraphRunnerContext->myGeneratedSource.Add(source);
+            myOutputs[OutIdx]->myData.myVariableName = varName;
+        }
     }
 };
 
 class ResultNode : public NG_Node
 {
+private:
+    enum InPortIdx
+    {
+        ResultInIndex = 0
+    };
 public:
     ResultNode(u32 aNodeUID)
 		: NG_Node(aNodeUID)
@@ -46,10 +97,10 @@ public:
 
     void OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const override 
     {
-        if (myInputs[0]->myConnectedPort)
+        if (myInputs[ResultInIndex]->myConnectedPort)
         {
             MC_String source;
-            source.Format("result = %s;\n", myInputs[0]->myConnectedPort->myData.myVariableName);
+            source.Format("result = %s;\n", myInputs[ResultInIndex]->myConnectedPort->myData.myVariableName);
             aGraphRunnerContext->myGeneratedSource.Add(source);
         }
     };
@@ -57,6 +108,15 @@ public:
 
 class PerlinNoise2D : public NG_Node
 {
+private:
+    enum InPortIdx
+    {
+        UVInIdx = 0
+    };
+    enum OutPortIdx
+    {
+        PerlinOutIdx = 0
+    };
 public:
 	PerlinNoise2D(u32 aNodeUID)
 		: NG_Node(aNodeUID)
@@ -70,14 +130,14 @@ public:
     {
         MC_String varName = MC_Strfmt<32>("perlinNoise2D%d", myUID);
         MC_String argName;
-        if (myInputs[0]->myConnectedPort)
+        if (myInputs[UVInIdx]->myConnectedPort)
         {
-            argName = myInputs[0]->myConnectedPort->myData.myVariableName;
+            argName = myInputs[UVInIdx]->myConnectedPort->myData.myVariableName;
         }
 		MC_String source;
 		source.Format("float %s = PerlinNoise2D(%s);\n", varName, argName);
 		aGraphRunnerContext->myGeneratedSource.Add(source);
-        myOutputs[0]->myData.myVariableName = varName;
+        myOutputs[PerlinOutIdx]->myData.myVariableName = varName;
     };
 };
 
