@@ -1,5 +1,17 @@
 #include "NG_NodeLibrary.h"
 
+template <>
+const char* GetVariableTypeFromType<f32>() { return "float"; }
+
+template <>
+const char* GetVariableTypeFromType<s32>() { return "int"; }
+
+template <>
+const char* GetVariableTypeFromType<u32>() { return "uint"; }
+
+template <>
+const char* GetVariableTypeFromType<MC_Vector2f>() { return "vec2"; }
+
 //TODO: Fix node ids
 template<>
 void ConstantNode<f32>::OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const
@@ -74,10 +86,16 @@ void NodeLibrary::RegisterNodeTypes()
     NG_RegisterNodeType<ConstantNode<u32>>("Constants/UIntConstantNode");
     NG_RegisterNodeType<ConstantNode<MC_Vector2f>>("Constants/Vec2ConstantNode");
     NG_RegisterNodeType<BuildInConstantNode<MC_Vector2f, UVConstExpr>>("Constants/UV");
-    NG_RegisterNodeType<OperationNodeTwoWay<MC_Vector2f, AddOp>>("Math/Add");
-    NG_RegisterNodeType<OperationNodeTwoWay<MC_Vector2f, SubOp>>("Math/Sub");
-    NG_RegisterNodeType<OperationNodeTwoWay<MC_Vector2f, MultOp>>("Math/Mult");
-    NG_RegisterNodeType<OperationNodeTwoWay<MC_Vector2f, DivOp>>("Math/Div");
+    NG_RegisterNodeType<OperationNodeTwoWay<MC_Vector2f, AddOp>>("Math/V2/Add");
+    NG_RegisterNodeType<OperationNodeTwoWay<MC_Vector2f, SubOp>>("Math/V2/Sub");
+    NG_RegisterNodeType<OperationNodeTwoWay<MC_Vector2f, MultOp>>("Math/V2/Mult");
+    NG_RegisterNodeType<OperationNodeTwoWay<MC_Vector2f, DivOp>>("Math/V2/Div");
+    NG_RegisterNodeType<OperationNodeTwoWay<f32, AddOp>>("Math/float/Add");
+    NG_RegisterNodeType<OperationNodeTwoWay<f32, SubOp>>("Math/float/Sub");
+    NG_RegisterNodeType<OperationNodeTwoWay<f32, MultOp>>("Math/float/Mult");
+    NG_RegisterNodeType<OperationNodeTwoWay<f32, DivOp>>("Math/float/Div");
+    NG_RegisterNodeType<Split1To2Node>("Split1To2");
+    NG_RegisterNodeType<Combine2To1Node>("Combine2To1");
 	NG_RegisterNodeType<PerlinNoise2D>("PerlinNoise2D");
 	NG_RegisterNodeType<ResultNode>("ResultNode");
 }
@@ -93,6 +111,8 @@ void NodeLibrary::UnregisterNodeTypes()
     NG_UnregisterNodeType("Math/Sub");
     NG_UnregisterNodeType("Math/Mult");
     NG_UnregisterNodeType("Math/Div");
+    NG_UnregisterNodeType("Split2To1");
+    NG_UnregisterNodeType("Combine2To1");
 	NG_UnregisterNodeType("PerlinNoise2D");
 	NG_UnregisterNodeType("ResultNode");
 }

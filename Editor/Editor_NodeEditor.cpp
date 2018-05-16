@@ -95,16 +95,6 @@ static void locDrawNode(ImDrawList* aDrawList, Editor_NodeProperties* aProp, MC_
 		ImGui::SetCursorScreenPos(portPos);
 
 		locDrawPort(aDrawList, portPos, GetColorFromPortType(port->myType));
-
-        if (!port->myConnectedPort)
-        {
-            MC_Vector2f propPos = MC_Vector2f(rect_min.x + NODE_WINDOW_PADDING.x, portPos.y);
-            ImGui::SetCursorScreenPos(propPos);
-            ImGui::PushItemWidth(rect_max.x - rect_min.x - NODE_WINDOW_PADDING.x * 2.0f);
-            static f32 f = 0.0f;
-            ImGui::DragFloat("portData", &port->myData.myValue.myFloat);
-            ImGui::PopItemWidth();
-        }
         ImGui::PopID();
 	}
 }
@@ -250,10 +240,18 @@ void Editor_NodeEditor::Display()
 				Editor_NodeProperties* prop1 = myInputToPropertyMap.At(port);
 				connections.Add({ prop0, port->myConnectedPort, prop1, port, hovered ? IM_COL32(255, 255, 255, 255) : IM_COL32(100, 100, 100, 255) });
 			}
-            
-            MC_Vector2f propPos = MC_Vector2f(rect_min.x + NODE_WINDOW_PADDING.x, portPosition.y);
-            ImGui::SetCursorScreenPos(propPos);
-            ImGui::InvisibleButton("portData", props->mySize);
+
+
+            if (!port->myConnectedPort)
+            {
+                drawList->ChannelsSetCurrent(2);
+                MC_Vector2f propPos = MC_Vector2f(rect_min.x + NODE_WINDOW_PADDING.x, portPosition.y);
+                ImGui::SetCursorScreenPos(propPos);
+                ImGui::PushItemWidth(props->mySize.x - NODE_WINDOW_PADDING.x * 2.0f);
+                Editor_DisplayProperty(port->myData, port->myType);
+                ImGui::PopItemWidth();
+                drawList->ChannelsSetCurrent(1);
+            }
 
             ImGui::PopID();
 		}
