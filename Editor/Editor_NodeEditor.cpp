@@ -83,16 +83,6 @@ static void locDrawNode(ImDrawList* aDrawList, Editor_NodeProperties* aProp, MC_
 		ImGui::SetCursorScreenPos(portPos);
 
 		locDrawPort(aDrawList, portPos, GetColorFromPortType(port->myType));
-
-        if (!port->myResultIsCalculated)
-        {
-            MC_Vector2f propPos = MC_Vector2f(rect_min.x + NODE_WINDOW_PADDING.x, portPos.y);
-            ImGui::SetCursorScreenPos(propPos);
-            ImGui::PushItemWidth(rect_max.x - rect_min.x - NODE_WINDOW_PADDING.x * 2.0f);
-            ImGui::DragFloat("portData", &port->myData.myFloat);
-            ImGui::PopItemWidth();
-        }
-
         ImGui::PopID();
 	}
 
@@ -167,7 +157,7 @@ void Editor_NodeEditor::Display()
 	};
 	MC_GrowingArray<ConnectionCurve> connections;
 
-	drawList->ChannelsSplit(2);
+	drawList->ChannelsSplit(3);
 
 	drawList->ChannelsSetCurrent(1);
 	//Node behaviour
@@ -194,6 +184,18 @@ void Editor_NodeEditor::Display()
 			{
 				myDraggedOutput = MC_MakePair<Editor_NodeProperties*, u32>(props, slotIdx);
 			}
+            
+            if (!port->myResultIsCalculated)
+            {
+                drawList->ChannelsSetCurrent(2);
+                MC_Vector2f propPos = MC_Vector2f(rect_min.x + NODE_WINDOW_PADDING.x, portPosition.y);
+                ImGui::SetCursorScreenPos(propPos);
+                ImGui::PushItemWidth(props->mySize.x - NODE_WINDOW_PADDING.x * 2.0f);
+                Editor_DisplayProperty(port->myData, port->myType);
+                ImGui::PopItemWidth();
+                drawList->ChannelsSetCurrent(1);
+            }
+
             ImGui::PopID();
 		}
 

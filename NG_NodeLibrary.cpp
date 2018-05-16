@@ -74,10 +74,10 @@ void NodeLibrary::RegisterNodeTypes()
     NG_RegisterNodeType<ConstantNode<u32>>("Constants/UIntConstantNode");
     NG_RegisterNodeType<ConstantNode<MC_Vector2f>>("Constants/Vec2ConstantNode");
     NG_RegisterNodeType<BuildInConstantNode<MC_Vector2f, UVConstExpr>>("Constants/UV");
-    NG_RegisterNodeType<OperationNodeTwoWay<f32, AddOp>>("Math/Add");
-    NG_RegisterNodeType<OperationNodeTwoWay<f32, SubOp>>("Math/Sub");
-    NG_RegisterNodeType<OperationNodeTwoWay<f32, MultOp>>("Math/Mult");
-    NG_RegisterNodeType<OperationNodeTwoWay<f32, DivOp>>("Math/Div");
+    NG_RegisterNodeType<OperationNodeTwoWay<MC_Vector2f, AddOp>>("Math/Add");
+    NG_RegisterNodeType<OperationNodeTwoWay<MC_Vector2f, SubOp>>("Math/Sub");
+    NG_RegisterNodeType<OperationNodeTwoWay<MC_Vector2f, MultOp>>("Math/Mult");
+    NG_RegisterNodeType<OperationNodeTwoWay<MC_Vector2f, DivOp>>("Math/Div");
 	NG_RegisterNodeType<PerlinNoise2D>("PerlinNoise2D");
 	NG_RegisterNodeType<ResultNode>("ResultNode");
 }

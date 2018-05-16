@@ -74,7 +74,7 @@ public:
         {
             MC_String varName = MC_Strfmt<64>("%s%d", ConstOp::Name, myUID);
             MC_String source;
-            source.Format("float %s = %s %s %s;\n", varName, myInputs[In0Idx]->myConnectedPort->myData.myVariableName, ConstOp::Operator, myInputs[In1Idx]->myConnectedPort->myData.myVariableName);
+            source.Format("vec2 %s = %s %s %s;\n", varName, myInputs[In0Idx]->myConnectedPort->myData.myVariableName, ConstOp::Operator, myInputs[In1Idx]->myConnectedPort->myData.myVariableName);
             aGraphRunnerContext->myGeneratedSource.Add(source);
             myOutputs[OutIdx]->myData.myVariableName = varName;
         }
