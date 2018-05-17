@@ -28,7 +28,6 @@ void NG_GraphRunner::Run()
 		"vec2 UV = (pixel_coords.xy / 1024.0) * 16.0;\n"
 		"vec3 result = vec3(0.0, 0.0, 0.0);\n";
 	static const char* locComputeShaderString2 =
-		//"float perlin = PerlinNoise2D(x,y);\n"
 		"vec4 pixel_value = vec4(result, 1.0);\n"
 		"imageStore(img_output, pixel_coords, pixel_value);\n"
 		"}";

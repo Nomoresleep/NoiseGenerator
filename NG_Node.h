@@ -109,6 +109,15 @@ public:
 		return param;
 	}
 
+	template <>
+	MC_String GetInputParameterString<MC_Vector2f>(u32 anInputIndex) const
+	{
+		const MC_Vector2f& vec = myInputs[anInputIndex]->myData.myValue.myVec2;
+		MC_String param = myInputs[anInputIndex]->myConnectedPort ? myInputs[anInputIndex]->myConnectedPort->myData.myVariableName : 
+			MC_String(MC_Strfmt<64>("vec2(%f, %f)", vec.x, vec.y));
+		return param;
+	}
+
     u32 ConnectedInputCount() const;
 
 	u32 myUID;

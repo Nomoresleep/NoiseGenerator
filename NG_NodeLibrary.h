@@ -74,8 +74,8 @@ public:
     void OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const override
     {
         MC_String varName = MC_Strfmt<64>("%s%d", ConstOp::Name, myUID);
-		MC_String param0 = GetInputParameterString<f32>(In0Idx);
-		MC_String param1 = GetInputParameterString<f32>(In1Idx);
+		MC_String param0 = GetInputParameterString<Type>(In0Idx);
+		MC_String param1 = GetInputParameterString<Type>(In1Idx);
         MC_String source;
         source.Format("%s %s = %s %s %s;\n", GetVariableTypeFromType<Type>(), varName, param0, ConstOp::Operator, param1);
         aGraphRunnerContext->myGeneratedSource.Add(source);
