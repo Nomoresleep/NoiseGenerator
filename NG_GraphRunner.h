@@ -1,7 +1,6 @@
 #pragma once
 
 #include "NG_NodeGraph.h"
-#include "MC_BinaryHeap.h"
 
 class NG_GraphRunner
 {

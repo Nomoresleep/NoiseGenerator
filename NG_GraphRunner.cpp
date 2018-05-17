@@ -1,4 +1,5 @@
 #include "NG_GraphRunner.h"
+#include "MCC_BinaryHeap.h"
 
 namespace
 {
