@@ -146,8 +146,20 @@ public:
 	public:
 		Iterator() { myMap = 0; }
 		Iterator(const Iterator& anOther) : myMap(anOther.myMap), myIndex(anOther.myIndex) {}
-		Iterator( MC_HashBase& aMap ) : myMap( &aMap )	{ for( myIndex=0; myIndex<myMap->myArraySize && !myMap->myEntries[myIndex].myValidFlag; ++myIndex ) {} }
-		Iterator( MC_HashBase* aMap ) : myMap( aMap )	{ for( myIndex=0; myIndex<myMap->myArraySize && !myMap->myEntries[myIndex].myValidFlag; ++myIndex ) {} }
+		Iterator( MC_HashBase& aMap, bool initAtEnd ) : myMap( &aMap )	
+        {
+            if (initAtEnd)
+                myIndex = myMap->myArraySize;
+            else
+                for (myIndex = 0; myIndex<myMap->myArraySize && !myMap->myEntries[myIndex].myValidFlag; ++myIndex) {}
+        }
+		Iterator( MC_HashBase* aMap, bool initAtEnd ) : myMap( aMap )
+        {
+            if (initAtEnd)
+                myIndex = myMap->myArraySize;
+            else
+                for (myIndex = 0; myIndex<myMap->myArraySize && !myMap->myEntries[myIndex].myValidFlag; ++myIndex) {}
+        }
 
 		Iterator& operator=(const Iterator& anOther)
 		{ myMap = anOther.myMap; myIndex = anOther.myIndex; return *this; }
@@ -165,6 +177,11 @@ public:
 		void	operator--()						{ for( --myIndex; myIndex<myMap->myArraySize && !myMap->myEntries[myIndex].myValidFlag; --myIndex ) {} }	// prefix
 		void	operator--( int dummy )				{ --*this }			// postfix
 
+        bool operator!=(const Iterator& anotherIterator) const
+        {
+            assert(myMap == anotherIterator.myMap);
+            return myIndex != anotherIterator.myIndex;
+        }
 	private:
 		MC_HashBase*		myMap;
 		unsigned int	myIndex;
@@ -172,15 +189,38 @@ public:
 
 	Iterator Begin()
 	{
-		return Iterator(*this);
+		return Iterator(*this, false);
 	}
 
+    Iterator End()
+    {
+        return Iterator(*this, true);
+    }
 	MC_HashBase( const int aStartSize)
 	{
 		myArraySize = aStartSize > 3 ? aStartSize : 3;
 		myEntries = new Entry[myArraySize];
 		myNumEntries = 0;
 	}
+
+    MC_HashBase(const MC_HashBase& anotherHashBase)
+        : myArraySize(anotherHashBase.myArraySize)
+        , myNumEntries(anotherHashBase.myNumEntries)
+    {
+        myEntries = new Entry[myArraySize];
+        for (u32 i = 0; i < myNumEntries; ++i)
+            myEntries[i] = anotherHashBase.myEntries[i];
+    }
+
+    MC_HashBase(MC_HashBase&& anotherHashBase)
+        : myArraySize(anotherHashBase.myArraySize)
+        , myNumEntries(anotherHashBase.myNumEntries)
+        , myEntries(anotherHashBase.myEntries)
+    {
+        anotherHashBase.myArraySize = 0;
+        anotherHashBase.myNumEntries = 0;
+        anotherHashBase.myEntries = nullptr;
+    }
 
 	~MC_HashBase()
 	{
