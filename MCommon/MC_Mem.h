@@ -19,6 +19,12 @@
 
 #include "mc_globaldefines.h"
 
+template <typename Type>
+Type&& MC_Move(Type& aType)
+{
+    return (Type&&)aType;
+}
+
 void __cdecl	FatalError(const char* aMessage, ...);
 bool			MC_EnableDeadlockFinder();
 extern bool		ourGlobalIsCrashingFlag;
