@@ -14,6 +14,7 @@
 #include "NG_GraphRunner.h"
 #include "NG_NodeGraph.h"
 #include "Editor_NodeEditor.h"
+#include "MCC_Json.h"
 
 #pragma comment(lib, "MCommon.lib")
 #pragma comment(lib, "Editor.lib")
@@ -24,7 +25,6 @@ static const f32 zoom_min = 0.2f;
 static const f32 zoom_max = 20.0f;
 
 static const char* thePathToIni = "NoiseGen.ini";
-static FileDialog theFileDialog;
 
 static void locShowTexturePreview()
 {
@@ -57,6 +57,18 @@ static void locShowTexturePreview()
 	}
 	ImGui::EndChild();
 	ImGui::PopStyleColor();
+}
+
+static void SaveWorkspace(void* someUserData, const char* aFileName)
+{
+    Workspace* workspace = (Workspace*)someUserData;
+    MF_File file(aFileName, MF_File::OPEN_WRITE);
+    MC_Json::Object workspaceObject;
+    workspaceObject["ImageSize"] = workspace->myImageSize;
+    MC_Json jsonObject = MC_Move(workspaceObject);
+    MC_String jsonString = jsonObject.Serialize();
+    file.WriteASCIIZ(jsonString);
+    file.Close();
 }
 
 static void HandleDialogs()
@@ -106,7 +118,20 @@ static void HandleDialogs()
 
         ImGui::EndPopup();
     }
-    theFileDialog.Show();
+
+    static FileDialog* fileDialog = nullptr;
+    if (ImGui::IsPopupOpen(theSaveFileDialogID))
+    {
+        if (!fileDialog)
+            fileDialog = new FileDialog(SaveWorkspace, theWorkspace);
+
+        fileDialog->Show();
+    }
+    else if (fileDialog)
+    {
+        delete fileDialog;
+        fileDialog = nullptr;
+    }
 }
 
 static void app_main_loop(borderless_window_t *window, void * /*userdata*/)

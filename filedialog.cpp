@@ -83,10 +83,16 @@ void FileDialog::Show()
         if (save)
         {
             char buffer[MAX_PATH_LENGTH];
-            MF_File::ReplaceExtension(buffer, filename, "ngen");
-            MF_File file(buffer, MF_File::OPEN_WRITE);
-            file.Write(MC_Vector3f(1, 2, 3));
-            file.Close();
+            MF_File::RemoveExtensionFromPath(buffer, filename);
+            s32 len = MC_Strlen(buffer);
+            buffer[len] = '.';
+            buffer[len + 1] = 'n';
+            buffer[len + 2] = 'a';
+            buffer[len + 3] = 'p';
+            buffer[len + 4] = 's';
+            buffer[len + 5] = '\0';
+
+            myFileSaveCallback(myUserData, buffer);
             ImGui::CloseCurrentPopup();
         }
 
