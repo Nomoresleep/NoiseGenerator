@@ -151,7 +151,7 @@ private:
     enum InPortIdx
     {
         In0Idx = 0,
-        In1Idx = 0,
+        In1Idx = 1,
     };
 
     enum OutPortIdx
@@ -170,14 +170,10 @@ public:
 
     void OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const override
     {
-        if (myInputs[In0Idx]->myConnectedPort && myInputs[In1Idx]->myConnectedPort)
-        {
-            MC_String varName = MC_Strfmt<64>("combine%d", myUID);
-            MC_String source;
-            source.Format("vec2 %s = vec2(%f, %f);\n", varName, myInputs[In0Idx]->myConnectedPort->myData.myValue.myFloat, myInputs[In1Idx]->myConnectedPort->myData.myValue.myFloat);
-            myOutputs[Out0Idx]->myData.myVariableName = varName;
-            aGraphRunnerContext->myGeneratedSource.Add(source);
-        }
+        MC_String param0 = GetInputParameterString<f32>(In0Idx);
+        MC_String param1 = GetInputParameterString<f32>(In1Idx);
+        MC_String varName = MC_Strfmt<128>("vec2(%s, %s)", param0, param1);
+        myOutputs[Out0Idx]->myData.myVariableName = varName;
     };
 };
 
