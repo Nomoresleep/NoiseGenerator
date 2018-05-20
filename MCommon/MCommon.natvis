@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="MC_HashBase&lt;*,*,*&gt;">
+    <DisplayString>{{ mySize = {myNumEntries} }}</DisplayString>
+    <Expand>
+      <Item Name="[mySize]" ExcludeView="simple">myNumEntries</Item>
+      <Item Name="[myCapacity]" ExcludeView="simple">myArraySize</Item>
+      <ArrayItems>
+        <Size>myArraySize</Size>
+        <ValuePointer>myEntries</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+  <Type Name="MC_GrowingArray&lt;*&gt;">
+    <DisplayString>{{ mySize = {myUsedNrOfItems} }}</DisplayString>
+    <Expand>
+      <Item Name="[mySize]" ExcludeView="simple">myUsedNrOfItems</Item>
+      <Item Name="[myCapacity]" ExcludeView="simple">myMaxNrOfItems</Item>
+      <Item Name="[mySafemodeFlag]" ExcludeView="simple">mySafemodeFlag</Item>
+      <ArrayItems>
+        <Size>myMaxNrOfItems</Size>
+        <ValuePointer>myItemList</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+</AutoVisualizer>
