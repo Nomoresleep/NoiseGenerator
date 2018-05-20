@@ -89,7 +89,7 @@ void ExampleUsageOfImageManager()
 ----------[Example ends]---------- */
 
 
-#include <string.h>
+#include "MC_String.h"
 
 // Hash functions
 void			MC_HashMap_HashData( const void* aData, int aByteCount, int aHashSize, unsigned int* aDest, unsigned int* aSeed=0 );
@@ -99,6 +99,7 @@ unsigned int	MC_HashMap_HashString( const void* aData, unsigned int aSeed=0 );
 // Type helpers
 template<class T>	inline unsigned int MC_HashMap_GetHash(const T& anItem)							{ return MC_HashMap_HashData( (const char*)&anItem, sizeof(anItem) ); }
 template<>			inline unsigned int MC_HashMap_GetHash(const char* const &anItem)				{ return MC_HashMap_HashString( anItem ); }
+template<>			inline unsigned int MC_HashMap_GetHash(const MC_String& anItem)					{ return MC_HashMap_HashString( anItem.GetBuffer()); }
 
 template<class T>	inline bool MC_HashMap_Compare(const T& aA, const T& aB)						{ return (aA == aB); }
 template<>			inline bool MC_HashMap_Compare(const char* const &aA, const char* const &aB)	{ return (strcmp( aA, aB ) == 0); }
@@ -208,8 +209,17 @@ public:
         , myNumEntries(anotherHashBase.myNumEntries)
     {
         myEntries = new Entry[myArraySize];
-        for (u32 i = 0; i < myNumEntries; ++i)
-            myEntries[i] = anotherHashBase.myEntries[i];
+		for (unsigned int idx = 0; idx < myArraySize; idx++)
+			myEntries[idx] = anotherHashBase.myEntries[idx];
+
+#if _DEBUG
+		unsigned int valids = 0;
+		for (unsigned int readIndex = 0; readIndex < myArraySize; ++readIndex)
+		{
+			valids += myEntries[readIndex].myValidFlag ? 1 : 0;
+		}
+		assert(valids == myNumEntries);
+#endif 
     }
 
     MC_HashBase(MC_HashBase&& anotherHashBase)
@@ -404,8 +414,6 @@ public:
 private:
 	bool GetIndex( const KEY& aKey, unsigned int& i, unsigned int maxEntries, Entry* pEntries ) const
 	{
-		bool bExists = false;
-
 		i = ((DERIVED*)this)->GetHash(aKey) % maxEntries;
 		int starti = i;
 		
