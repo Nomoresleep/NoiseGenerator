@@ -16,7 +16,7 @@ struct Editor_NodeProperties
 
 	NG_Node* myNode;
 
-	const char* myLabel;
+	MC_String myLabel;
 
 	MC_Vector2f myPosition;
     MC_Vector2f myDeltaPosition;

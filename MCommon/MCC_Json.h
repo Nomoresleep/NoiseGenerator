@@ -5,6 +5,8 @@
 #include "MC_String.h"
 #include "MC_Vector.h"
 
+//TODO[Nomoresleep] this could all be more efficient if MC_ Datastructures had a move constructor
+
 class MC_Json
 {
 public:
@@ -36,16 +38,16 @@ public:
     MC_Json(s32 anInt);
     MC_Json(u32 aUInt);
 	MC_Json(f64 aDouble);
+	MC_Json(const char* aCString);
 	MC_Json(const MC_String& aString);
 	MC_Json(const Array& anArray);
 	MC_Json(const Object& anObject);
+	MC_Json(Object&& anObject);
 
-    MC_Json(Object&& anObject)
-        : myValueType(ObjectType)
-    {
-        //TODO[Nomoresleep]: why is the move constructor not called without MC_Move?
-        myValueData.myObject = new Object(MC_Move(anObject));
-    }
+	MC_Json(const MC_Json& otherJson);
+	MC_Json(MC_Json&& otherJson);
+
+	~MC_Json();
 
     template <typename Type>
     MC_Json(const MC_Vector2<Type>& aVector)
@@ -94,38 +96,6 @@ public:
         return *this;
     }
 
-    MC_Json(const MC_Json& otherJson)
-        : myValueType(otherJson.myValueType)
-    {
-        switch (myValueType)
-        {
-        case StringType:
-        {
-            myValueData.myString = new MC_String(*(otherJson.myValueData.myString));
-        }break;
-        case ArrayType:
-        {
-            myValueData.myArray = new Array(*(otherJson.myValueData.myArray));
-        }break;
-        case ObjectType:
-        {
-            myValueData.myObject = new Object(*(otherJson.myValueData.myObject));
-        }break;
-        default:
-        {
-            memcpy(&myValueData, &otherJson.myValueData, sizeof(ValueData));        
-        }break;
-        }
-    }
-
-    MC_Json(MC_Json&& otherJson)
-        : myValueType(otherJson.myValueType)
-    {
-        memcpy(&myValueData, &otherJson.myValueData, sizeof(ValueData));
-        memset(&otherJson.myValueData, 0, sizeof(ValueData));
-        otherJson.myValueType = NullType;
-    }
-
 	bool IsNull() const;
 	bool IsBool() const;
 	bool IsDouble() const;
@@ -145,15 +115,31 @@ public:
 	Array& GetArray();
 	Object& GetObject();
 
-	bool GetElement(const MC_String& anIdentifier, MC_Json& anOutEntry) const;
-	bool GetElement(s32 anIndex, MC_Json& anOutEntry) const;
+	bool GetJsonElement(const MC_String& anIdentifier, MC_Json& anOutEntry) const;
+	bool GetJsonElement(s32 anIndex, MC_Json& anOutEntry) const;
 
-	~MC_Json();
+	template <typename Type>
+	bool GetElement(const MC_String& anIdentifier, MC_Vector2<Type>& anOutEntry) const;
+	template <typename Type>
+	bool GetElement(const MC_String& anIdentifier, MC_Vector3<Type>& anOutEntry) const;
+	template <typename Type>
+	bool GetElement(const MC_String& anIdentifier, MC_Vector4<Type>& anOutEntry) const;
+	bool GetElement(const MC_String& anIdentifier, MC_String& anOutEntry) const;
+	bool GetElement(const MC_String& anIdentifier, s32& anOutEntry) const;
+	bool GetElement(const MC_String& anIdentifier, u32& anOutEntry) const;
+	bool GetElement(const MC_String& anIdentifier, f32& anOutEntry) const;
+	bool GetElement(s32 anIndex, s32& anOutEntry) const;
+	bool GetElement(s32 anIndex, u32& anOutEntry) const;
+	bool GetElement(s32 anIndex, f32& anOutEntry) const;
 
-    MC_String Serialize() const;
+	static MC_Json FromFile(const char* aFilename);
 
+	MC_String Serialize() const;
 private:
+
+
     void Serialize(MC_String& str, s32 indentationLevel) const;
+	static void Indent(MC_String& str, s32 indentationLevel);
 
     void Destruct();
 
@@ -168,6 +154,91 @@ private:
         }
     }
 
+	struct ParsingContext
+	{
+		char* myPtr;
+	};
+
+	static MC_Json Parse(ParsingContext& aCtxt);
+	static MC_Json ParseString(ParsingContext& aCtxt);
+	static MC_Json ParseArray(ParsingContext& aCtxt);
+	static MC_Json ParseObject(ParsingContext& aCtxt);
+
+	static void SkipWhitespace(char*& aString);
+
 	ValueType myValueType;
 	ValueData myValueData;
 };
+
+
+template <typename Type>
+bool MC_Json::GetElement(const MC_String& anIdentifier, MC_Vector2<Type>& anOutEntry) const
+{
+	MC_Json element;
+	bool result = GetJsonElement(anIdentifier, element);
+	if (!result || !element.IsArray())
+		return false;
+
+	Type x = 0, y = 0;
+	result = element.GetElement(0, x);
+	result &= element.GetElement(1, y);
+	if (!result)
+		return false;
+
+	Type dummy = 0;
+	result = element.GetElement(2, dummy);
+	if (result)
+		return false;
+
+	anOutEntry = MC_Vector2<Type>(x, y);
+	return true;
+}
+
+template <typename Type>
+bool MC_Json::GetElement(const MC_String& anIdentifier, MC_Vector3<Type>& anOutEntry) const
+{
+	MC_Json element;
+	bool result = GetJsonElement(anIdentifier, element);
+	if (!result || !element.IsArray())
+		return false;
+
+	Type x = 0, y = 0, z = 0;
+	result = element.GetElement(0, x);
+	result &= element.GetElement(1, y);
+	result &= element.GetElement(2, z);
+	if (!result)
+		return false;
+
+	Type dummy = 0;
+	result = element.GetElement(3, dummy);
+	if (result)
+		return false;
+
+	anOutEntry = MC_Vector3<Type>(x, y, z);
+	return true;
+}
+
+template <typename Type>
+bool MC_Json::GetElement(const MC_String& anIdentifier, MC_Vector4<Type>& anOutEntry) const
+{
+	MC_Json element;
+	bool result = GetJsonElement(anIdentifier, element);
+	if (!result || !element.IsArray())
+		return false;
+
+	Type x = 0, y = 0, z = 0, w = 0;
+	result = element.GetElement(0, x);
+	result &= element.GetElement(1, y);
+	result &= element.GetElement(2, z);
+	result &= element.GetElement(3, w);
+	if (!result)
+		return false;
+
+	Type dummy = 0;
+	result = element.GetElement(4, dummy);
+	if (result)
+		return false;
+
+	anOutEntry = MC_Vector4<Type>(x, y, z, w);
+	return true;
+}

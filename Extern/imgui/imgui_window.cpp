@@ -131,6 +131,7 @@ void imgui_window_menu_bar(borderless_window_t* window)
 	bool openAboutDialog = false;
     bool saveFileDialog = false;
     bool openCommandWindow = false;
+	bool openOpenDialog = false;
 
 	const bool appRunning = theWorkspace != nullptr;
 	if (ImGui::BeginMenuBar())
@@ -138,7 +139,7 @@ void imgui_window_menu_bar(borderless_window_t* window)
 		if (ImGui::BeginMenu(TR("File")))
 		{
             openNewFileDialog = ImGui::MenuItem(TR("New"));
-			if (ImGui::MenuItem(TR("Open"), KM("Ctrl+O"))) {}
+			openOpenDialog = ImGui::MenuItem(TR("Open"), KM("Ctrl+O"));
 			if (ImGui::BeginMenu(TR("Open Recent")))
 			{
 				ImGui::EndMenu();
@@ -173,6 +174,10 @@ void imgui_window_menu_bar(borderless_window_t* window)
     {
         ImGui::OpenPopup(theNewFileDialogID);
     }
+	if (openOpenDialog)
+	{
+		ImGui::OpenPopup(theOpenDialogID);
+	}
     if (openExportDialog)
     {
         ImGui::OpenPopup(theExportDialogID);

@@ -69,6 +69,8 @@ public:
 
 	void CreateNode(NG_Node* aNode, const char* aNodeLabel, const MC_Vector2f& aPosition);
 	void RemoveNode(NG_Node* aNode);
+
+	const MC_GrowingArray<Editor_NodeProperties*>& GetNodeProperties() const { return myNodeProperties; }
 private:
 
 	MC_Vector2f myScrolling;

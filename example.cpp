@@ -14,6 +14,7 @@
 #include "NG_GraphRunner.h"
 #include "NG_NodeGraph.h"
 #include "Editor_NodeEditor.h"
+#include "Editor_NodeTools.h"
 #include "MCC_Json.h"
 
 #pragma comment(lib, "MCommon.lib")
@@ -59,16 +60,77 @@ static void locShowTexturePreview()
 	ImGui::PopStyleColor();
 }
 
-static void SaveWorkspace(void* someUserData, const char* aFileName)
+static void SaveWorkspace(void* someUserData, const char* aFilename)
 {
     Workspace* workspace = (Workspace*)someUserData;
-    MF_File file(aFileName, MF_File::OPEN_WRITE);
+    MF_File file(aFilename, MF_File::OPEN_WRITE);
     MC_Json::Object workspaceObject;
     workspaceObject["ImageSize"] = workspace->myImageSize;
-    MC_Json jsonObject = MC_Move(workspaceObject);
+	MC_Json::Array nodeGraphArray;
+	const MC_GrowingArray<Editor_NodeProperties*> props = theWorkspace->myNodeEditor->GetNodeProperties();
+	for (const Editor_NodeProperties* prop : props)
+	{
+		MC_Json::Object jsonNode;
+		jsonNode["UID"] = prop->myNode->myUID;
+		jsonNode["ClassName"] = prop->myLabel;
+		jsonNode["Position"] = prop->myPosition;
+
+		NG_Node* node = prop->myNode;
+		MC_Json::Array jsonInputs;
+		for (s32 inIdx = 0; inIdx < node->myInputs.Count(); ++inIdx)
+		{
+			MC_Json::Object inputObject;
+			inputObject["ConnectedNode"] = node->myInputs[inIdx]->myConnectedPort ? node->myInputs[inIdx]->myConnectedPort->myNode->myUID : MC_Json();
+			inputObject["PortIndex"] = node->myInputs[inIdx]->myConnectedPort ? node->myInputs[inIdx]->myConnectedPort->myNode->myOutputs.Find(node->myInputs[inIdx]->myConnectedPort) : MC_Json();
+			jsonInputs.Add(inputObject);
+		}
+		jsonNode["InputConnections"] = jsonInputs;
+		nodeGraphArray.Add(jsonNode);
+	}
+	workspaceObject["NodeGraph"] = nodeGraphArray;
+    MC_Json jsonObject = workspaceObject;
     MC_String jsonString = jsonObject.Serialize();
     file.WriteASCIIZ(jsonString);
     file.Close();
+}
+
+static void LoadWorkspace(const char* aFilename)
+{
+	MC_Json workspaceObject = MC_Json::FromFile(aFilename);
+	MC_Vector3i imageSize;
+	if (workspaceObject.GetElement("ImageSize", imageSize))
+	{
+		if (theWorkspace)
+			delete theWorkspace;
+
+		theWorkspace = new Workspace(imageSize.x, imageSize.y);
+
+		MC_Json nodeGraphObject;
+		workspaceObject.GetJsonElement("NodeGraph", nodeGraphObject);
+		MC_Json::Array nodeGraphArray = nodeGraphObject.GetArray();
+		for (const MC_Json& node : nodeGraphArray)
+		{
+			MC_String className;
+			assert(node.GetElement("ClassName", className));
+			MC_Vector2f position;
+			assert(node.GetElement("Position", position));
+			NG_Node* newNode = NG_NodeModule::Create(className);
+			theWorkspace->myNodeEditor->CreateNode(newNode, className, position);
+		}
+
+		for (const MC_Json& node : nodeGraphArray)
+		{
+			MC_Json inputConnections;
+			node.GetJsonElement("InputConnections", inputConnections);
+			MC_Json::Array inputConnectionArray = inputConnections.GetArray();
+			for (MC_Json& connection : inputConnectionArray)
+			{
+				s32 nodeUID = -1, portIndex = -1;
+				connection.GetElement("ConnectedNode", nodeUID);
+				connection.GetElement("portIdx", nodeUID);
+			}
+		}
+	}
 }
 
 static void HandleDialogs()
@@ -79,6 +141,14 @@ static void HandleDialogs()
 	if (ImGui::BeginPopupModal(theNewFileDialogID, &newFileOpen, modalFlags))
 	{
 		ShowNewFileDialog();
+		ImGui::EndPopup();
+	}
+
+	bool openOpenFile = true;
+	if (ImGui::BeginPopupModal(theOpenDialogID, &openOpenFile, modalFlags))
+	{
+		LoadWorkspace(".naps");
+		ImGui::CloseCurrentPopup();
 		ImGui::EndPopup();
 	}
 
