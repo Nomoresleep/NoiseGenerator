@@ -23,4 +23,28 @@
       </ArrayItems>
     </Expand>
   </Type>
+  <Type Name="MC_Vector2&lt;*&gt;">
+    <DisplayString>{{x={myX} y={myY}}}</DisplayString>
+    <Expand>
+      <Item Name="[x]" ExcludeView="simple">myX</Item>
+      <Item Name="[y]" ExcludeView="simple">myY</Item>
+    </Expand>
+  </Type>
+  <Type Name="MC_Vector3&lt;*&gt;">
+    <DisplayString>{{x={myX} y={myY} z={myZ}}}</DisplayString>
+    <Expand>
+      <Item Name="[x]" ExcludeView="simple">myX</Item>
+      <Item Name="[y]" ExcludeView="simple">myY</Item>
+      <Item Name="[z]" ExcludeView="simple">myZ</Item>
+    </Expand>
+  </Type>
+  <Type Name="MC_Vector4&lt;*&gt;">
+    <DisplayString>{{x={myX} y={myY} z={myZ} w={myW}}}</DisplayString>
+    <Expand>
+      <Item Name="[x]" ExcludeView="simple">myX</Item>
+      <Item Name="[y]" ExcludeView="simple">myY</Item>
+      <Item Name="[z]" ExcludeView="simple">myZ</Item>
+      <Item Name="[w]" ExcludeView="simple">myW</Item>
+    </Expand>
+  </Type>
 </AutoVisualizer>
