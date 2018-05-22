@@ -108,6 +108,7 @@ static void LoadWorkspace(const char* aFilename)
 		MC_Json nodeGraphObject;
 		workspaceObject.GetJsonElement("NodeGraph", nodeGraphObject);
 		MC_Json::Array nodeGraphArray = nodeGraphObject.GetArray();
+        MC_HashMap<s32, s32> oldToNewUID;
 		for (const MC_Json& node : nodeGraphArray)
 		{
 			MC_String className;
@@ -116,18 +117,39 @@ static void LoadWorkspace(const char* aFilename)
 			assert(node.GetElement("Position", position));
 			NG_Node* newNode = NG_NodeModule::Create(className);
 			theWorkspace->myNodeEditor->CreateNode(newNode, className, position);
+
+            s32 oldNodeUID = -1;
+            assert(node.GetElement("UID", oldNodeUID));
+            oldToNewUID[oldNodeUID] = newNode->myUID;
 		}
 
-		for (const MC_Json& node : nodeGraphArray)
+        struct NodeByID
+        {
+            static bool Equals(const NG_Node* aNode, s32 aUID) { return aNode->myUID == aUID; }
+        };
+
+		for (const MC_Json& nodeObject : nodeGraphArray)
 		{
 			MC_Json inputConnections;
-			node.GetJsonElement("InputConnections", inputConnections);
+            nodeObject.GetJsonElement("InputConnections", inputConnections);
+            s32 nodeUID = -1;
+            nodeObject.GetElement("UID", nodeUID);
+            nodeUID = oldToNewUID[nodeUID];
+            s32 nodeIdx = theWorkspace->myNodeGraph->GetNodes().Find2<NodeByID>(nodeUID);
+            NG_Node* node = theWorkspace->myNodeGraph->GetNodes()[nodeIdx];
 			MC_Json::Array inputConnectionArray = inputConnections.GetArray();
+            s32 INPUT_CHANGE = 0;
 			for (MC_Json& connection : inputConnectionArray)
 			{
-				s32 nodeUID = -1, portIndex = -1;
-				connection.GetElement("ConnectedNode", nodeUID);
-				connection.GetElement("portIdx", nodeUID);
+				s32 connectedNodeUID = -1, portIndex = -1;
+				connection.GetElement("ConnectedNode", connectedNodeUID);
+				connection.GetElement("PortIndex", portIndex);
+                if (connectedNodeUID == -1 || portIndex == -1)
+                    continue;
+                connectedNodeUID = oldToNewUID[connectedNodeUID];
+                nodeIdx = theWorkspace->myNodeGraph->GetNodes().Find2<NodeByID>(connectedNodeUID);
+                NG_Node* connectedNode = theWorkspace->myNodeGraph->GetNodes()[nodeIdx];
+                node->myInputs[INPUT_CHANGE++]->Connect(connectedNode->myOutputs[portIndex]);
 			}
 		}
 	}
