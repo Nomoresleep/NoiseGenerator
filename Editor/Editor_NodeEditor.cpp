@@ -314,11 +314,13 @@ void Editor_NodeEditor::Display()
 	{
 		if (mySelection.myNodes.Count())
 		{
+            Editor_MakroCommand* removeMakro = new Editor_MakroCommand("Remove Node(s)");
 			for (s32 nodeIdx = 0; nodeIdx < mySelection.myNodes.Count(); ++nodeIdx)
 			{
 				Editor_NodeProperties* props = mySelection.myNodes[nodeIdx];
-				myCommands.ExecuteCommand(new Editor_RemoveNodeCommand(this, props->myNode, props->myLabel, props->myPosition));
+				removeMakro->AddCommand(new Editor_RemoveNodeCommand(this, props->myNode, props->myLabel, props->myPosition));
 			}
+            myCommands.ExecuteCommand(removeMakro);
 		}
 		else if (mySelection.myConnections.Count())
 		{

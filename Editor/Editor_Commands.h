@@ -7,6 +7,7 @@ struct Editor_NodeProperties;
 class Editor_NodeEditor;
 
 #include "MC_Vector.h"
+#include "MC_String.h"
 #include "MC_GrowingArray.h"
 
 class Editor_Command
@@ -43,7 +44,7 @@ protected:
 
 	Editor_NodeEditor* myEditor;
 	NG_Node* myNode;
-	const char* myNodeLabel;
+	MC_String myNodeLabel;
 	MC_Vector2f myNodePosition;
 };
 
