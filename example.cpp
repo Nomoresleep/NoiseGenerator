@@ -82,6 +82,7 @@ static void SaveWorkspace(void* someUserData, const char* aFilename)
 			MC_Json::Object inputObject;
 			inputObject["ConnectedNode"] = node->myInputs[inIdx]->myConnectedPort ? node->myInputs[inIdx]->myConnectedPort->myNode->myUID : MC_Json();
 			inputObject["PortIndex"] = node->myInputs[inIdx]->myConnectedPort ? node->myInputs[inIdx]->myConnectedPort->myNode->myOutputs.Find(node->myInputs[inIdx]->myConnectedPort) : MC_Json();
+            inputObject["PortData"] = MC_String::ToBase64((const u8*)&node->myInputs[inIdx]->myData.myValue, sizeof(NG_Port::Data::Value));
 			jsonInputs.Add(inputObject);
 		}
 		jsonNode["InputConnections"] = jsonInputs;
@@ -142,8 +143,14 @@ static void LoadWorkspace(const char* aFilename)
 			for (MC_Json& connection : inputConnectionArray)
 			{
 				s32 connectedNodeUID = -1, portIndex = -1;
+                MC_String portData;
 				connection.GetElement("ConnectedNode", connectedNodeUID);
 				connection.GetElement("PortIndex", portIndex);
+                connection.GetElement("PortData", portData);
+                void* portDataBuffer = MC_String::FromBase64(portData);
+                memcpy(&node->myInputs[INPUT_CHANGE]->myData.myValue, portDataBuffer, sizeof(NG_Port::Data::Value));
+                delete portDataBuffer;
+
                 if (connectedNodeUID == -1 || portIndex == -1)
                     continue;
                 connectedNodeUID = oldToNewUID[connectedNodeUID];

@@ -467,8 +467,7 @@ MC_Json MC_Json::ParseString(ParsingContext& aCtxt)
 {
 	SkipWhitespace(aCtxt.myPtr);
 	char* start = aCtxt.myPtr;
-	while (*(++aCtxt.myPtr) != '\"');
-	aCtxt.myPtr++;
+	while (*(aCtxt.myPtr++) != '\"');
 	return MC_Json(MC_String(start, aCtxt.myPtr - start - 1));
 }
 

@@ -20,6 +20,7 @@ enum ExportExtension
     ExportHDR,
     ExportExtensionCount
 };
+
 class Workspace
 {
 public:
