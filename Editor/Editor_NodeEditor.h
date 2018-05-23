@@ -41,6 +41,8 @@ public:
 		: myGraph(aGraph)
 		, myDraggedOutput(nullptr, 0)
 		, myScrolling(0.0f, 0.0f)
+		, myIsDraggingNodes(false)
+		, myIsDraggingSelectionRect(false)
 	{
 		NodeLibrary::RegisterNodeTypes();
 	};
@@ -70,7 +72,8 @@ private:
 
 	Editor_NodeGraphSelection mySelection;
 	MC_Vector2f mySelectionRectHook;
-	bool myIsDraggingSelection;
+	bool myIsDraggingSelectionRect;
+	bool myIsDraggingNodes;
 
 	MC_GrowingArray<Editor_NodeProperties*> myNodeProperties;
 	MC_ArrayMap<NG_OutputPort*, Editor_NodeProperties*> myOutputToPropertyMap;

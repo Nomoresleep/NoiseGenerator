@@ -149,7 +149,6 @@ void Editor_NodeEditor::Display()
 	MC_GrowingArray<ConnectionCurve> connections;
 
 	drawList->ChannelsSplit(3);
-
 	drawList->ChannelsSetCurrent(1);
 	//Node behaviour
 	for (s32 node_idx = myNodeProperties.Count() - 1; node_idx >= 0; node_idx--)
@@ -259,7 +258,7 @@ void Editor_NodeEditor::Display()
 
 		ImGui::SetCursorScreenPos(rect_min);
         ImGui::InvisibleButton("node", props->mySize);
-        if(ImGui::IsItemClicked())
+        if(ImGui::IsItemClicked() && (mySelection.myNodes.Find(props) == -1))
 		{
 			Editor_NodeGraphSelection newSelection;
 			if (ImGui::GetIO().KeyCtrl)
@@ -275,19 +274,32 @@ void Editor_NodeEditor::Display()
 			myCommands.ExecuteCommand(new Editor_SelectionChangeCommand(this, newSelection, mySelection));
 		}
 
-        if (ImGui::IsItemActive() && ImGui::IsMouseDragging(0))
-        {
-            props->myDeltaPosition += ImGui::GetIO().MouseDelta;
-			props->myIsDragging = true;
-        }
-        else if (props->myIsDragging && ImGui::IsMouseReleased(0))
-        {
-            myCommands.ExecuteCommand(new Editor_NodeMoveCommand(props, props->myPosition + props->myDeltaPosition, props->myPosition));
-            props->myDeltaPosition = MC_Vector2f(0, 0);
-			props->myIsDragging = false;
-        }
+		if (ImGui::IsItemActive() && ImGui::IsMouseDown(0))
+		{
+			for (Editor_NodeProperties* selectedProps : mySelection.myNodes)
+			{
+				selectedProps->myDeltaPosition += ImGui::GetIO().MouseDelta;
+			}
+			myIsDraggingNodes = true;
+		}
 
 		ImGui::PopID();
+	}
+
+	//Apply move command to nodes
+	if (myIsDraggingNodes && ImGui::IsMouseReleased(0))
+	{
+		Editor_MakroCommand* batchMove = new Editor_MakroCommand("Move Nodes");
+
+		for (Editor_NodeProperties* selectedProps : mySelection.myNodes)
+		{
+			selectedProps->myDeltaPosition += ImGui::GetIO().MouseDelta;
+			batchMove->AddCommand(new Editor_NodeMoveCommand(selectedProps, selectedProps->myPosition + selectedProps->myDeltaPosition, selectedProps->myPosition));
+			selectedProps->myDeltaPosition = MC_Vector2f(0, 0);
+		}
+		myCommands.ExecuteCommand(batchMove);
+
+		myIsDraggingNodes = false;
 	}
 
 	// Display nodes
@@ -355,15 +367,18 @@ void Editor_NodeEditor::Display()
 		if (ImGui::IsMouseClicked(0))
 		{
 			mySelectionRectHook = ImGui::GetIO().MousePos;
-			myIsDraggingSelection = true;
+			myIsDraggingSelectionRect = true;
 		}
 	}
-	if (myIsDraggingSelection)
+	if (myIsDraggingSelectionRect)
 	{
 		if (ImGui::IsMouseDown(0))
 		{
-			drawList->AddRectFilled(mySelectionRectHook, ImGui::GetIO().MousePos, IM_COL32(255, 140, 0, 35));
-			drawList->AddRect(mySelectionRectHook, ImGui::GetIO().MousePos, IM_COL32(255, 140, 0, 170));
+			if (mySelectionRectHook != ImGui::GetIO().MousePos)
+			{
+				drawList->AddRectFilled(mySelectionRectHook, ImGui::GetIO().MousePos, IM_COL32(255, 140, 0, 35));
+				drawList->AddRect(mySelectionRectHook, ImGui::GetIO().MousePos, IM_COL32(255, 140, 0, 170));
+			}
 		}
 		else
 		{
@@ -390,7 +405,7 @@ void Editor_NodeEditor::Display()
 				newSelection.myNodes.AddUnique(props);
 			}
 			myCommands.ExecuteCommand(new Editor_SelectionChangeCommand(this, newSelection, mySelection));
-			myIsDraggingSelection = false;
+			myIsDraggingSelectionRect = false;
 		}
 	}
 

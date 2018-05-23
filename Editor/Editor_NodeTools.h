@@ -10,7 +10,6 @@ struct Editor_NodeProperties
 		, myLabel(aLabel)
 		, myPosition(aPosition)
 		, myDeltaPosition(0, 0)
-		, myIsDragging(false)
 	{
 		CalculateSize();
 	};
@@ -22,7 +21,6 @@ struct Editor_NodeProperties
 	MC_Vector2f myPosition;
     MC_Vector2f myDeltaPosition;
 	MC_Vector2f mySize;
-	bool myIsDragging;
 
     void CalculateSize();
 };
