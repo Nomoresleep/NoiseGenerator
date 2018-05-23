@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Editor_CommandList.h"
+#include "Editor_NodeTools.h"
 #include "NG_NodeGraph.h"
 #include "MC_GrowingArray.h"
 #include "MC_ArrayMap.h"
@@ -11,7 +12,6 @@ static const MC_Vector2f NODE_PORT_SIZE = MC_Vector2f(2.0f * NODE_SLOT_RADIUS, 2
 static const MC_Vector2f NODE_WINDOW_PADDING = MC_Vector2f(8.0f, 4.0f);
 static const f32 NODE_PROPERTY_WIDTH = 120.0f;
 
-struct Editor_NodeProperties;
 
 static ImU32 GetColorFromPortType(NG_Port::Type aType)
 {
@@ -26,18 +26,6 @@ static ImU32 GetColorFromPortType(NG_Port::Type aType)
 	}
 	return IM_COL32(255, 255, 255, 255);
 }
-
-struct Editor_NodeGraphSelection
-{
-	MC_GrowingArray<Editor_NodeProperties*> myNodes;
-	MC_GrowingArray<int*> myConnections;
-
-	void Clear() 
-	{
-		myNodes.RemoveAll();
-		myConnections.RemoveAll();
-	}
-};
 
 class Editor_NodeEditor
 {
@@ -71,6 +59,7 @@ public:
 	void RemoveNode(NG_Node* aNode);
 
 	const MC_GrowingArray<Editor_NodeProperties*>& GetNodeProperties() const { return myNodeProperties; }
+	void SetSelection(const Editor_NodeGraphSelection& aSelection) { mySelection = aSelection; }
 private:
 
 	MC_Vector2f myScrolling;

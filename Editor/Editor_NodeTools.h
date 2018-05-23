@@ -5,11 +5,12 @@
 
 struct Editor_NodeProperties
 {
-    Editor_NodeProperties(NG_Node* aNode, const char* aLabel, const MC_Vector2f& aPosition)
-        : myNode(aNode)
-        , myLabel(aLabel)
-        , myPosition(aPosition)
-        , myDeltaPosition(0, 0)
+	Editor_NodeProperties(NG_Node* aNode, const char* aLabel, const MC_Vector2f& aPosition)
+		: myNode(aNode)
+		, myLabel(aLabel)
+		, myPosition(aPosition)
+		, myDeltaPosition(0, 0)
+		, myIsDragging(false)
 	{
 		CalculateSize();
 	};
@@ -21,8 +22,21 @@ struct Editor_NodeProperties
 	MC_Vector2f myPosition;
     MC_Vector2f myDeltaPosition;
 	MC_Vector2f mySize;
+	bool myIsDragging;
 
     void CalculateSize();
+};
+
+struct Editor_NodeGraphSelection
+{
+	MC_GrowingArray<Editor_NodeProperties*> myNodes;
+	MC_GrowingArray<int*> myConnections;
+
+	void Clear()
+	{
+		myNodes.RemoveAll();
+		myConnections.RemoveAll();
+	}
 };
 
 void Editor_DisplayProperty(NG_Port::Data& somePortData, NG_Port::Type aPortType);

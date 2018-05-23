@@ -143,3 +143,20 @@ void Editor_NodeMoveCommand::Undo()
 {
     myNodeProps->myPosition = myOldPosition;
 }
+
+Editor_SelectionChangeCommand::Editor_SelectionChangeCommand(Editor_NodeEditor* aNodeEditor, const Editor_NodeGraphSelection& aNewSelection, const Editor_NodeGraphSelection& anOldSelection)
+	: myNodeEditor(aNodeEditor)
+	, myNewSelection(aNewSelection)
+	, myOldSelection(anOldSelection)
+{
+}
+
+void Editor_SelectionChangeCommand::Execute()
+{
+	myNodeEditor->SetSelection(myNewSelection);
+}
+
+void Editor_SelectionChangeCommand::Undo()
+{
+	myNodeEditor->SetSelection(myOldSelection);
+}

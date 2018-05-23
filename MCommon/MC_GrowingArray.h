@@ -883,7 +883,6 @@ MC_GrowingArray<Type>& MC_GrowingArray<Type>::operator=(const MC_GrowingArray<Ty
 	myMaxNrOfItems = aArray.myMaxNrOfItems;
 	myUsedNrOfItems = aArray.myUsedNrOfItems;
 	mySafemodeFlag = aArray.mySafemodeFlag;
-	myItemIncreaseSize = aArray.myItemIncreaseSize;
 
 	if(aArray.myItemList)
 	{

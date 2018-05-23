@@ -261,25 +261,30 @@ void Editor_NodeEditor::Display()
         ImGui::InvisibleButton("node", props->mySize);
         if(ImGui::IsItemClicked())
 		{
-			if (!ImGui::GetIO().KeyCtrl)
+			Editor_NodeGraphSelection newSelection;
+			if (ImGui::GetIO().KeyCtrl)
 			{
-				mySelection.Clear();
+				newSelection = mySelection;
 			}
 
-			if (mySelection.myNodes.Find(props) == -1)
-				mySelection.myNodes.Add(props);
+			if (newSelection.myNodes.Find(props) == -1)
+				newSelection.myNodes.Add(props);
 			else
-				mySelection.myNodes.Remove(props);
+				newSelection.myNodes.Remove(props);
+
+			myCommands.ExecuteCommand(new Editor_SelectionChangeCommand(this, newSelection, mySelection));
 		}
 
         if (ImGui::IsItemActive() && ImGui::IsMouseDragging(0))
         {
             props->myDeltaPosition += ImGui::GetIO().MouseDelta;
+			props->myIsDragging = true;
         }
-        else if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(0))
+        else if (props->myIsDragging && ImGui::IsMouseReleased(0))
         {
             myCommands.ExecuteCommand(new Editor_NodeMoveCommand(props, props->myPosition + props->myDeltaPosition, props->myPosition));
             props->myDeltaPosition = MC_Vector2f(0, 0);
+			props->myIsDragging = false;
         }
 
 		ImGui::PopID();
@@ -362,8 +367,9 @@ void Editor_NodeEditor::Display()
 		}
 		else
 		{
-			if (!ImGui::GetIO().KeyCtrl)
-				mySelection.Clear();
+			Editor_NodeGraphSelection newSelection;
+			if (ImGui::GetIO().KeyCtrl)
+				newSelection = mySelection;
 
 			f32 left = MC_Min(mySelectionRectHook.x, ImGui::GetIO().MousePos.x);
 			f32 right = MC_Max(mySelectionRectHook.x, ImGui::GetIO().MousePos.x);
@@ -381,8 +387,9 @@ void Editor_NodeEditor::Display()
 				if ((top < pBottom) || (bottom > pTop))
 					continue;
 				
-				mySelection.myNodes.AddUnique(props);
+				newSelection.myNodes.AddUnique(props);
 			}
+			myCommands.ExecuteCommand(new Editor_SelectionChangeCommand(this, newSelection, mySelection));
 			myIsDraggingSelection = false;
 		}
 	}

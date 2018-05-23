@@ -6,9 +6,7 @@ struct NG_InputPort;
 struct Editor_NodeProperties;
 class Editor_NodeEditor;
 
-#include "MC_Vector.h"
-#include "MC_String.h"
-#include "MC_GrowingArray.h"
+#include "Editor_NodeTools.h"
 
 class Editor_Command
 {
@@ -106,4 +104,19 @@ private:
     Editor_NodeProperties* myNodeProps;
     MC_Vector2f myNewPosition;
     MC_Vector2f myOldPosition;
+};
+
+class Editor_SelectionChangeCommand : public Editor_Command
+{
+public:
+	Editor_SelectionChangeCommand(Editor_NodeEditor* anEditor, const Editor_NodeGraphSelection& aNewSelection, const Editor_NodeGraphSelection& anOldSelection);
+
+	const char* GetCommandName() const override { return "Selection Change"; }
+	void Execute() override;
+	void Undo() override;
+private:
+
+	Editor_NodeEditor* myNodeEditor;
+	Editor_NodeGraphSelection myNewSelection;
+	Editor_NodeGraphSelection myOldSelection;
 };
