@@ -6,6 +6,7 @@
 #include "opengl_context.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_window.h"
+#include "imgui/imgui_dock.h"
 #include "exporter.h"
 
 #include "opengl_context.h"
@@ -276,10 +277,19 @@ static void app_main_loop(borderless_window_t *window, void * /*userdata*/)
 				theWorkspace->myNodeEditor->Redo();
 			}
 		}
-        ImGui::Columns(2);
-        locShowTexturePreview();
-        ImGui::NextColumn();
-		theWorkspace->myNodeEditor->Display();
+        ImGui::BeginDockspace();
+        if (ImGui::BeginDock("Texture Preview Dock"))
+        {
+            locShowTexturePreview();
+        }
+        ImGui::EndDock();
+
+        if (ImGui::BeginDock("Nodegraph Dock"))
+        {
+            theWorkspace->myNodeEditor->Display();
+        }
+        ImGui::EndDock();
+        ImGui::EndDockspace();
     }
 	imgui_window_end();
 }
