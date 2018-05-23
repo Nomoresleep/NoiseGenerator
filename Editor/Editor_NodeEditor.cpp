@@ -50,7 +50,7 @@ static void locDrawBezierCurve(ImDrawList* aDrawList, MC_Vector2f aP0, MC_Vector
 	aDrawList->AddBezierCurve(aP0, aP0 + MC_Vector2f(xdist, 0), aP1 + MC_Vector2f(-xdist, 0), aP1, aColor, CURVE_THICKNESS);
 }
 
-static void locDrawNode(ImDrawList* aDrawList, Editor_NodeProperties* aProp, MC_Vector2f anOffset)
+static void locDrawNode(ImDrawList* aDrawList, Editor_NodeProperties* aProp, MC_Vector2f anOffset, bool selected)
 {
 	NG_Node* node = aProp->myNode;
 	MC_Vector2f rect_min = anOffset + aProp->myPosition + aProp->myDeltaPosition;
@@ -66,10 +66,10 @@ static void locDrawNode(ImDrawList* aDrawList, Editor_NodeProperties* aProp, MC_
 
 	//Node body with outline
 	aDrawList->AddRectFilled(rect_min, rect_max, color);
-	aDrawList->AddRect(rect_min, rect_max, IM_COL32(100, 100, 100, 255));
+	aDrawList->AddRect(rect_min, rect_max, selected ? IM_COL32(255, 140, 0, 255) : IM_COL32(100, 100, 100, 255), 0.0f, 15, selected? 2.0f : 1.0f);
 	//Node header with outline
 	aDrawList->AddRectFilled(rect_min, rect_header_max, IM_COL32(80, 80, 80, 255));
-	aDrawList->AddRect(rect_min, rect_header_max, IM_COL32(100, 100, 100, 255));
+	aDrawList->AddRect(rect_min, rect_header_max, selected ? IM_COL32(255, 140, 0, 255) : IM_COL32(100, 100, 100, 255), 0.0f, 15, selected ? 2.0f : 1.0f);
 
 	ImGui::SetCursorScreenPos(rect_min + NODE_WINDOW_PADDING);
 	ImGui::Text("%s", aProp->myLabel);
@@ -257,7 +257,8 @@ void Editor_NodeEditor::Display()
 		}
 
 		ImGui::SetCursorScreenPos(rect_min);
-		if (ImGui::InvisibleButton("node", props->mySize))
+        ImGui::InvisibleButton("node", props->mySize);
+        if(ImGui::IsItemClicked())
 		{
 			mySelection.Clear();
 			mySelection.myNodes.Add(props);
@@ -282,7 +283,8 @@ void Editor_NodeEditor::Display()
 		Editor_NodeProperties* prop = myNodeProperties[node_idx];
 
 		ImGui::PushID(prop->myNode->myUID);
-		locDrawNode(drawList, prop, offset);
+        s32 selectionIndex = mySelection.myNodes.Find(prop);
+		locDrawNode(drawList, prop, offset, selectionIndex != -1);
 		ImGui::PopID();
 	}
 
