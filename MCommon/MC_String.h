@@ -115,6 +115,9 @@ public:
 	MC_Str& operator+=(TCHAR aChar);
 	MC_Str& operator+=(wchar_t aChar);
 
+    static void* FromBase64(const MC_Str& aBase64String);
+    static MC_Str ToBase64(const u8* someData, int aDataSize);
+
 	friend MC_Str operator+(const MC_Str& aString, const C* aString2)		{ MC_Str s=aString; s+=aString2; return s; }
 	friend MC_Str operator+(const MC_Str& aString, const C aChar)			{ MC_Str s=aString; s+=aChar; return s; }
 
@@ -912,6 +915,99 @@ MC_Str<C,S>& MC_Str<C,S>::operator+=(wchar_t aChar)
 			pBuf[oldLen] = InternalConvertChar<C>( aChar );
 	}
 	return *this;
+}
+
+static const char* locBase64Characters =
+"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+"abcdefghijklmnopqrstuvwxyz"
+"0123456789+/";
+
+
+static inline bool locIsBase64(unsigned char c) {
+    if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '+' || c == '/')
+        return true;
+    return false;
+}
+
+static inline char locFromBase64(unsigned char c) 
+{
+    if (c >= 'A' && c <= 'Z')
+        return c - 'A';
+    else if (c >= 'a' && c <= 'z')
+        return c - 'a' + 26;
+    else if (c >= '0' && c <= '9')
+        return c - '0' + 52;
+    else if (c == '+')
+        return 62;
+    else if (c == '/')
+        return 63;
+
+    return 0;
+}
+
+template<class C, int S>
+void* MC_Str<C, S>::FromBase64(const MC_Str<C,S>& aBase64String)
+{
+    u8 buffer4[4];
+    MC_GrowingArray<u8> ret;
+
+    int bufferIndex = 0;
+    int sourceIndex = 0;
+    for (s32 remLength = aBase64String.GetLength() - 1; remLength >= 0 && (aBase64String[sourceIndex] != '=') && locIsBase64(aBase64String[sourceIndex]); remLength--) {
+        buffer4[bufferIndex++] = aBase64String[sourceIndex]; sourceIndex++;
+        if (bufferIndex == 4) {
+            for (bufferIndex = 0; bufferIndex <4; bufferIndex++)
+                buffer4[bufferIndex] = locFromBase64(buffer4[bufferIndex]);
+
+            ret.Add((buffer4[0] << 2)           + ((buffer4[1] & 0x30) >> 4));
+            ret.Add(((buffer4[1] & 0x0F) << 4)  + ((buffer4[2] & 0x3C) >> 2));
+            ret.Add(((buffer4[2] & 0x03) << 6)  + buffer4[3]);
+
+            bufferIndex = 0;
+        }
+    }
+
+    for (s32 j = 0; j < bufferIndex; j++)
+        buffer4[j] = locFromBase64(buffer4[j]);
+
+    if(bufferIndex >= 1) ret.Add((buffer4[0] << 2)          + ((buffer4[1] & 0x30) >> 4));
+    if(bufferIndex >= 2) ret.Add(((buffer4[1] & 0x0F) << 4) + ((buffer4[2] & 0x3C) >> 2));
+
+    u8* buffer = new u8[ret.Count()];
+    memcpy(buffer, ret.GetBuffer(), ret.Count());
+    return buffer;
+}
+
+template<class C, int S>
+MC_Str<C,S> MC_Str<C,S>::ToBase64(const u8* someData, s32 aDataSize)
+{
+    MC_String ret = "";
+    s32 bufferIndex = 0;
+    u8 buffer3[3];
+
+    for(s32 remLength = aDataSize - 1; remLength >= 0; remLength--){
+        buffer3[bufferIndex++] = *(someData++);
+        if (bufferIndex == 3) {
+            ret += locBase64Characters[(buffer3[0] & 0xfc) >> 2];
+            ret += locBase64Characters[((buffer3[0] & 0x03) << 4) + ((buffer3[1] & 0xf0) >> 4)];
+            ret += locBase64Characters[((buffer3[1] & 0x0f) << 2) + ((buffer3[2] & 0xc0) >> 6)];
+            ret += locBase64Characters[buffer3[2] & 0x3f];
+
+            bufferIndex = 0;
+        }
+    }
+
+    for (s32 j = bufferIndex; j < 3; j++)
+        buffer3[j] = '\0';
+
+    if (bufferIndex)
+    {
+        ret += locBase64Characters[(buffer3[0] & 0xfc) >> 2];
+        ret += locBase64Characters[((buffer3[0] & 0x03) << 4) + ((buffer3[1] & 0xf0) >> 4)];
+        ret += locBase64Characters[((buffer3[1] & 0x0f) << 2) + ((buffer3[2] & 0xc0) >> 6)];
+    }
+
+    return ret;
 }
 
 template<class C, int S>
