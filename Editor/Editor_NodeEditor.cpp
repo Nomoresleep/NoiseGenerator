@@ -260,7 +260,8 @@ void Editor_NodeEditor::Display()
         ImGui::InvisibleButton("node", props->mySize);
         if(ImGui::IsItemClicked())
 		{
-			mySelection.Clear();
+			if(!ImGui::GetIO().KeyCtrl)
+                mySelection.Clear();
 			mySelection.myNodes.Add(props);
 		}
 
