@@ -66,10 +66,11 @@ static void locDrawNode(ImDrawList* aDrawList, Editor_NodeProperties* aProp, MC_
 
 	//Node body with outline
 	aDrawList->AddRectFilled(rect_min, rect_max, color);
-	aDrawList->AddRect(rect_min, rect_max, selected ? IM_COL32(255, 140, 0, 255) : IM_COL32(100, 100, 100, 255), 0.0f, 15, selected? 2.0f : 1.0f);
 	//Node header with outline
 	aDrawList->AddRectFilled(rect_min, rect_header_max, IM_COL32(80, 80, 80, 255));
-	aDrawList->AddRect(rect_min, rect_header_max, selected ? IM_COL32(255, 140, 0, 255) : IM_COL32(100, 100, 100, 255), 0.0f, 15, selected ? 2.0f : 1.0f);
+	aDrawList->AddRect(rect_min, rect_header_max, IM_COL32(100, 100, 100, 255));
+
+	aDrawList->AddRect(rect_min, rect_max, selected ? IM_COL32(255, 140, 0, 128) : IM_COL32(100, 100, 100, 255), 0.0f, 15, selected ? 2.0f : 1.0f);
 
 	ImGui::SetCursorScreenPos(rect_min + NODE_WINDOW_PADDING);
 	ImGui::Text("%s", aProp->myLabel);
@@ -260,9 +261,15 @@ void Editor_NodeEditor::Display()
         ImGui::InvisibleButton("node", props->mySize);
         if(ImGui::IsItemClicked())
 		{
-			if(!ImGui::GetIO().KeyCtrl)
-                mySelection.Clear();
-			mySelection.myNodes.Add(props);
+			if (!ImGui::GetIO().KeyCtrl)
+			{
+				mySelection.Clear();
+			}
+
+			if (mySelection.myNodes.Find(props) == -1)
+				mySelection.myNodes.Add(props);
+			else
+				mySelection.myNodes.Remove(props);
 		}
 
         if (ImGui::IsItemActive() && ImGui::IsMouseDragging(0))
@@ -339,6 +346,44 @@ void Editor_NodeEditor::Display()
 		if (ImGui::IsMouseClicked(1))
 		{
 			ImGui::OpenPopup(contextMenuLabel);
+		}
+		if (ImGui::IsMouseClicked(0))
+		{
+			mySelectionRectHook = ImGui::GetIO().MousePos;
+			myIsDraggingSelection = true;
+		}
+	}
+	if (myIsDraggingSelection)
+	{
+		if (ImGui::IsMouseDown(0))
+		{
+			drawList->AddRectFilled(mySelectionRectHook, ImGui::GetIO().MousePos, IM_COL32(255, 140, 0, 35));
+			drawList->AddRect(mySelectionRectHook, ImGui::GetIO().MousePos, IM_COL32(255, 140, 0, 170));
+		}
+		else
+		{
+			if (!ImGui::GetIO().KeyCtrl)
+				mySelection.Clear();
+
+			f32 left = MC_Min(mySelectionRectHook.x, ImGui::GetIO().MousePos.x);
+			f32 right = MC_Max(mySelectionRectHook.x, ImGui::GetIO().MousePos.x);
+			f32 top = MC_Max(mySelectionRectHook.y, ImGui::GetIO().MousePos.y);
+			f32 bottom = MC_Min(mySelectionRectHook.y, ImGui::GetIO().MousePos.y);
+			for (Editor_NodeProperties* props : myNodeProperties)
+			{
+				f32 pLeft = offset.x + props->myPosition.x;
+				f32 pRight = offset.x + props->myPosition.x + props->mySize.x;
+				f32 pTop = offset.y + props->myPosition.y + props->mySize.y;
+				f32 pBottom = offset.y + props->myPosition.y;
+				if ((left > pRight) || (right < pLeft))
+					continue;
+
+				if ((top < pBottom) || (bottom > pTop))
+					continue;
+				
+				mySelection.myNodes.AddUnique(props);
+			}
+			myIsDraggingSelection = false;
 		}
 	}
 

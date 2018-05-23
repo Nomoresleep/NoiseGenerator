@@ -80,6 +80,9 @@ private:
 	Editor_CommandList myCommands;
 
 	Editor_NodeGraphSelection mySelection;
+	MC_Vector2f mySelectionRectHook;
+	bool myIsDraggingSelection;
+
 	MC_GrowingArray<Editor_NodeProperties*> myNodeProperties;
 	MC_ArrayMap<NG_OutputPort*, Editor_NodeProperties*> myOutputToPropertyMap;
 	MC_ArrayMap<NG_InputPort*, Editor_NodeProperties*> myInputToPropertyMap;
