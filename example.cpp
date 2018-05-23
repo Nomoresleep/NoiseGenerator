@@ -6,6 +6,7 @@
 #include "opengl_context.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_window.h"
+#include "exporter.h"
 
 #include "opengl_context.h"
 #include "workspace.h"
@@ -318,6 +319,8 @@ static void app_init_resources()
 
 s32 CALLBACK wWinMain(HINSTANCE /*inst*/, HINSTANCE /*prev*/, LPWSTR /*cmd*/, int /*show*/)
 {
+    RegisterCommonExporters();
+
     MC_IniFile iniFile(thePathToIni);
     iniFile.Process();
     u32 width = iniFile.GetUInt("WindowWidth", 1920);

@@ -11,23 +11,13 @@ class Editor_NodeEditor;
 
 static const char* locPerlinNoise2DSource = DEPENDENCY_FILE("shaders/noise/perlin2d.glsl");
 
-enum ExportExtension
-{
-    ExportPNG = 0,
-    ExportBMP,
-    ExportTGA,
-    ExportJPG,
-    ExportHDR,
-    ExportExtensionCount
-};
-
 class Workspace
 {
 public:
     Workspace(s32 anImageWidth, s32 anImageHeight);
     ~Workspace();
 
-    void Export(ExportExtension anExtension) const;
+    void ExportImage(const char* anExtension) const;
     void SetProgramSource(const MC_String& aSourceCode);
 
     GLuint myComputeProgram;

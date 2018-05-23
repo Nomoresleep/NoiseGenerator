@@ -1,6 +1,7 @@
 #include "dialogs.h"
 #include "workspace.h"
 #include "imgui/imgui.h"
+#include "exporter.h"
 
 void ShowNewFileDialog()
 {
@@ -20,18 +21,12 @@ void ShowNewFileDialog()
 
 void ShowExportDialog()
 {
-	const char* extensions[ExportExtensionCount] = {
-		"png",
-		"bmp",
-		"tga",
-		"jpg",
-		"hdr",
-	};
+    MC_GrowingArray<const char*> extensions = ExporterFactory::GetExtensionList();
 	static s32 currentExtension = 0;
-	ImGui::Combo("Extension", &currentExtension, extensions, ExportExtensionCount);
+	ImGui::Combo("Extension", &currentExtension, extensions.GetBuffer(), extensions.Count());
 	if (ImGui::Button("Export"))
 	{
-		theWorkspace->Export((ExportExtension)currentExtension);
+		theWorkspace->ExportImage(extensions[currentExtension]);
 		ImGui::CloseCurrentPopup();
 	}
 }
