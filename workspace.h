@@ -7,10 +7,6 @@
 class NG_NodeGraph;
 class Editor_NodeEditor;
 
-#define DEPENDENCY_FILE(text) text
-
-static const char* locPerlinNoise2DSource = DEPENDENCY_FILE("shaders/noise/perlin2d.glsl");
-
 class Workspace
 {
 public:

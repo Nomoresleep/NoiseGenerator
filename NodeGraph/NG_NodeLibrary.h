@@ -212,6 +212,40 @@ public:
     };
 };
 
+class WorleyNoise2D : public NG_Node
+{
+    enum InPortIdx
+    {
+        UVInIdx = 0
+    };
+    enum OutPortIdx
+    {
+        WorleyOutIdx = 0
+    };
+public:
+    WorleyNoise2D(u32 aNodeUID)
+        : NG_Node(aNodeUID)
+    {
+        AddInputPort(new NG_InputPort(this, NG_Port::Vec2Port));
+
+        AddOutputPort(new NG_OutputPort(this, NG_Port::FloatPort, true));
+    }
+
+    void OnTraverse(NG_GraphRunnerContext* aGraphRunnerContext) const override
+    {
+        MC_String varName = MC_Strfmt<32>("worleyNoise2D%d", myUID);
+        MC_String argName;
+        if (myInputs[UVInIdx]->myConnectedPort)
+        {
+            argName = myInputs[UVInIdx]->myConnectedPort->myData.myVariableName;
+        }
+        MC_String source;
+        source.Format("float %s = WorleyNoise2D(%s);\n", varName, argName);
+        aGraphRunnerContext->myGeneratedSource.Add(source);
+        myOutputs[WorleyOutIdx]->myData.myVariableName = varName;
+    };
+};
+
 namespace NodeLibrary
 {
 	void RegisterNodeTypes();

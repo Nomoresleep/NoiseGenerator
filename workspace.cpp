@@ -9,6 +9,11 @@
 
 Workspace* theWorkspace = nullptr;
 
+#define DEPENDENCY_FILE(text) text
+
+static const char* locPerlinNoise2DSource = DEPENDENCY_FILE("shaders/noise/perlin2d.glsl");
+static const char* locWorleyNoise2DSource = DEPENDENCY_FILE("shaders/noise/worley2d.glsl");
+
 Workspace::Workspace(s32 anImageWidth, s32 anImageHeight)
     : myImageSize(anImageWidth, anImageHeight, 0)
 {
@@ -58,10 +63,15 @@ void Workspace::SetProgramSource(const MC_String& aSourceCode)
     perlinNoiseFile.Read(perlinSource.Data(), perlinNoiseFile.GetSize());
     perlinSource[perlinNoiseFile.GetSize()] = '\0';
 
-    const char* strs[] = { perlinSource.Data(), mySourceCode.GetBuffer() };
+    MF_File worleyNoiseFile(locWorleyNoise2DSource);
+    MC_ScopedArray<char> worleySource = new char[worleyNoiseFile.GetSize() + 1];
+    worleyNoiseFile.Read(worleySource.Data(), worleyNoiseFile.GetSize());
+    worleySource[worleyNoiseFile.GetSize()] = '\0';
+
+    const char* strs[] = { perlinSource.Data(), worleySource.Data(), mySourceCode.GetBuffer() };
 
     GLuint computeShader = glCreateShader(GL_COMPUTE_SHADER);
-    glShaderSource(computeShader, 2, strs, 0);
+    glShaderSource(computeShader, sizeof(strs)/sizeof(strs[0]), strs, 0);
     glCompileShader(computeShader);
     GLint logLength = 0;
     glGetShaderiv(computeShader, GL_INFO_LOG_LENGTH, &logLength);

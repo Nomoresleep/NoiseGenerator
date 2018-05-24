@@ -97,6 +97,7 @@ void NodeLibrary::RegisterNodeTypes()
     NG_RegisterNodeType<Split1To2Node>("Split1To2");
     NG_RegisterNodeType<Combine2To1Node>("Combine2To1");
 	NG_RegisterNodeType<PerlinNoise2D>("PerlinNoise2D");
+    NG_RegisterNodeType<WorleyNoise2D>("WorleyNoise2D");
 	NG_RegisterNodeType<ResultNode>("ResultNode");
 }
 
@@ -118,5 +119,6 @@ void NodeLibrary::UnregisterNodeTypes()
     NG_UnregisterNodeType("Split1To2");
     NG_UnregisterNodeType("Combine2To1");
 	NG_UnregisterNodeType("PerlinNoise2D");
+    NG_UnregisterNodeType("WorleyNoise2D");
 	NG_UnregisterNodeType("ResultNode");
 }
