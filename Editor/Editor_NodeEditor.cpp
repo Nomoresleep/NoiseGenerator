@@ -172,7 +172,18 @@ void Editor_NodeEditor::Display()
 
 			if (ImGui::IsItemActive())
 			{
-				myDraggedOutput = MC_MakePair<Editor_NodeProperties*, u32>(props, slotIdx);
+                if(!ImGui::GetIO().KeyCtrl)
+				    myDraggedOutput = MC_MakePair<Editor_NodeProperties*, u32>(props, slotIdx);
+                else if(port->myConnectedInputs.Count() > 0)
+                {
+                    myDraggedInputs = port->myConnectedInputs;
+                    Editor_MakroCommand* makroDisconnect = new Editor_MakroCommand("Disconnect Nodes");
+                    for (NG_InputPort* inPort : port->myConnectedInputs)
+                    {
+                        makroDisconnect->AddCommand(new Editor_NodeDisconnectCommand(port, inPort));
+                    }
+                    myCommands.ExecuteCommand(makroDisconnect);
+                }
 			}
             
             if (!port->myResultIsCalculated)
@@ -324,6 +335,7 @@ void Editor_NodeEditor::Display()
 	if (!ImGui::IsMouseDown(0) && !ImGui::GetIO().KeyShift)
 	{
 		myDraggedOutput = MC_MakePair<Editor_NodeProperties*, u32>(nullptr, 0);
+        myDraggedInputs.RemoveAll();
 	}
 	if (myDraggedOutput.myFirst != nullptr)
 	{
@@ -331,6 +343,16 @@ void Editor_NodeEditor::Display()
 		ImU32 color = (connectionError == ConnectionMisMatch) ? IM_COL32(200, 100, 100, 255) : ((connectionError == ConnectionValid) ? IM_COL32(100, 200, 100, 255) : IM_COL32(100, 100, 100, 255));
 		locDrawBezierCurve(drawList, p0, ImGui::GetIO().MousePos, color);
 	}
+    for (auto inPort : myDraggedInputs)
+    {
+        Editor_NodeProperties* inPortProp = myInputToPropertyMap.At(inPort);
+        MC_Vector2f p0 = locGetGlobalInputPortPosition(inPortProp, inPortProp->myNode->myInputs.Find(inPort), offset) + MC_Vector2f(NODE_SLOT_RADIUS, NODE_SLOT_RADIUS);
+        ImU32 color = (connectionError == ConnectionMisMatch) ? IM_COL32(200, 100, 100, 255) : ((connectionError == ConnectionValid) ? IM_COL32(100, 200, 100, 255) : IM_COL32(100, 100, 100, 255));
+        if (p0.x < ImGui::GetIO().MousePos.x)
+            locDrawBezierCurve(drawList, p0, ImGui::GetIO().MousePos, color);
+        else
+            locDrawBezierCurve(drawList, ImGui::GetIO().MousePos, p0, color);
+    }
 	drawList->ChannelsMerge();
 
 	//TODO: Custom Key bindings

@@ -67,6 +67,7 @@ private:
 	MC_Vector2f myScrolling;
 
 	MC_Pair<Editor_NodeProperties*, u32> myDraggedOutput;
+    MC_GrowingArray<NG_InputPort*> myDraggedInputs;
 
 	Editor_CommandList myCommands;
 
