@@ -170,6 +170,37 @@ void Editor_NodeEditor::Display()
 			ImGui::SetCursorScreenPos(portPosition);
 			ImGui::InvisibleButton("##output", NODE_PORT_SIZE);
 
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly) && myDraggedInputs.Count() > 0)
+            {
+                bool connectionMismatch = false;
+                connectionError = ConnectionValid;
+                for (NG_InputPort* inPort : myDraggedInputs)
+                {
+                    connectionMismatch |= port->myType != inPort->myType;
+                    if (connectionMismatch)
+                    {
+                        locDisplayWarning("Error, Port type mismatch!");
+                        connectionError = ConnectionMisMatch;
+                        break;
+                    }
+                    if (!inPort->TryConnect(port))
+                    {
+                        locDisplayWarning("Error, Nodegraph must not be cyclic!");
+                        connectionError = ConnectionMisMatch;
+                        break;
+                    }
+                }
+                if (connectionError == ConnectionValid && ImGui::IsMouseReleased(0))
+                {
+                    Editor_MakroCommand* batchConnect = new Editor_MakroCommand("Connect Nodes");
+                    for (NG_InputPort* inPort : myDraggedInputs)
+                    {
+                        batchConnect->AddCommand(new Editor_NodeConnectCommand(port, inPort));
+                    }
+                    myCommands.ExecuteCommand(batchConnect);
+                }
+            }
+
 			if (ImGui::IsItemActive())
 			{
                 if(!ImGui::GetIO().KeyCtrl)
